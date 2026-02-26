@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Калькулятор и курсы валют</title>
+    <link rel="stylesheet" href="./currency-styles.css" />
+  </head>
+  <body>
+    <main class="layout">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Камкомбанк • Москва</p>
+          <h1>Калькулятор и конвертер валют</h1>
+          <p class="subtitle">
+            USD/RUB и EUR/RUB с загрузкой курсов с сайта Камкомбанка.
+          </p>
+        </div>
+        <button id="refreshRatesBtn" class="btn btn-primary" type="button">Обновить курсы</button>
+      </header>
+
+      <section class="card rates-card" aria-labelledby="ratesTitle">
+        <div class="card-head">
+          <h2 id="ratesTitle">Курсы валют</h2>
+          <span id="ratesStatus" class="status">Загрузка не выполнена</span>
+        </div>
+
+        <div class="meta-grid">
+          <div>
+            <div class="meta-label">Источник</div>
+            <div id="sourceLabel" class="meta-value">kamkombank.ru</div>
+          </div>
+          <div>
+            <div class="meta-label">Дата на сайте</div>
+            <div id="siteDate" class="meta-value">—</div>
+          </div>
+          <div>
+            <div class="meta-label">Отделение</div>
+            <select id="branchSelect" class="select"></select>
+          </div>
+        </div>
+
+        <div class="rate-table-wrap">
+          <table class="rate-table">
+            <thead>
+              <tr>
+                <th>Валюта</th>
+                <th>Покупка банком</th>
+                <th>Продажа банком</th>
+                <th>Ед.</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>USD</td>
+                <td id="usdBuy">—</td>
+                <td id="usdSell">—</td>
+                <td id="usdUnits">1</td>
+              </tr>
+              <tr>
+                <td>EUR</td>
+                <td id="eurBuy">—</td>
+                <td id="eurSell">—</td>
+                <td id="eurUnits">1</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <details class="manual-box">
+          <summary>Ручной ввод курсов (если сайт не загрузился)</summary>
+          <div class="manual-grid">
+            <label>USD покупка <input id="manualUsdBuy" type="number" step="0.01" placeholder="например 90.50" /></label>
+            <label>USD продажа <input id="manualUsdSell" type="number" step="0.01" placeholder="например 92.00" /></label>
+            <label>EUR покупка <input id="manualEurBuy" type="number" step="0.01" placeholder="например 98.50" /></label>
+            <label>EUR продажа <input id="manualEurSell" type="number" step="0.01" placeholder="например 100.00" /></label>
+            <button id="applyManualBtn" class="btn" type="button">Применить вручную</button>
+          </div>
+        </details>
+      </section>
+
+      <section class="grid-2">
+        <section class="card" aria-labelledby="calcTitle">
+          <h2 id="calcTitle">Калькулятор</h2>
+          <form id="calcForm" class="stack">
+            <label for="calcExpression">Выражение</label>
+            <input id="calcExpression" type="text" placeholder="Например: (2+3)*4-5/2" />
+            <button class="btn btn-primary" type="submit">Посчитать</button>
+            <output id="calcResult" class="result">Результат: —</output>
+          </form>
+        </section>
+
+        <section class="card" aria-labelledby="convTitle">
+          <h2 id="convTitle">Конвертер валют</h2>
+          <form id="converterForm" class="stack">
+            <label for="direction">Направление</label>
+            <select id="direction" class="select">
+              <option value="USD_TO_RUB">USD → RUB (по покупке)</option>
+              <option value="RUB_TO_USD">RUB → USD (по продаже)</option>
+              <option value="EUR_TO_RUB">EUR → RUB (по покупке)</option>
+              <option value="RUB_TO_EUR">RUB → EUR (по продаже)</option>
+            </select>
+
+            <label for="amount">Сумма</label>
+            <input id="amount" type="number" step="0.01" min="0" placeholder="0.00" />
+
+            <button class="btn btn-primary" type="submit">Конвертировать</button>
+            <output id="convertResult" class="result">Результат: —</output>
+          </form>
+        </section>
+      </section>
+
+      <section class="card note" aria-labelledby="noteTitle">
+        <h2 id="noteTitle">Важно</h2>
+        <p>
+          Браузер может блокировать прямую загрузку с сайта банка из-за CORS. На странице используются публичные CORS-прокси как обходной вариант.
+          Если не сработает, используйте ручной ввод курсов или откройте страницу через локальный сервер.
+        </p>
+      </section>
+    </main>
+
+    <script src="./currency-app.js" defer></script>
+  </body>
+</html>

@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Deck {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  cards     Card[]
+}
+
+model Card {
+  id          String       @id @default(cuid())
+  deckId       String
+  targetWord   String?
+  phonetic     String?
+  audioUrl     String?
+  frontText    String
+  backText     String
+  imageUrl     String?
+  tags         String?
+  level        Int?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  deck         Deck         @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  reviewState  ReviewState?
+  reviewLogs   ReviewLog[]
+
+  @@index([deckId, createdAt])
+}
+
+model ReviewState {
+  id             String   @id @default(cuid())
+  cardId         String   @unique
+  ease           Float    @default(2.5)
+  intervalDays   Int      @default(0)
+  dueDate        DateTime
+  reps           Int      @default(0)
+  lapses         Int      @default(0)
+  lastReviewedAt DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  card           Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@index([dueDate])
+}
+
+model ReviewLog {
+  id               String   @id @default(cuid())
+  cardId           String
+  reviewedAt       DateTime @default(now())
+  rating           String
+  prevEase         Float
+  newEase          Float
+  prevIntervalDays Int
+  newIntervalDays  Int
+  prevReps         Int
+  newReps          Int
+  dueDateAfter     DateTime
+  card             Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@index([cardId, reviewedAt])
+}
