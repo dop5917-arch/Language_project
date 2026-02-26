@@ -23,6 +23,8 @@ type SmartDraftResponse = {
   error?: string;
 };
 
+type SmartDraft = NonNullable<SmartDraftResponse["draft"]>;
+
 function normalizeWord(value: string) {
   return value
     .trim()
@@ -118,7 +120,7 @@ function extractWordsFromDetectedColumn(rows: string[][], columnIndex: number) {
   };
 }
 
-async function fetchSmartDraft(req: NextRequest, word: string): Promise<SmartDraftResponse["draft"]> {
+async function fetchSmartDraft(req: NextRequest, word: string): Promise<SmartDraft> {
   const url = new URL("/api/word-helper", req.url);
   const res = await fetch(url.toString(), {
     method: "POST",

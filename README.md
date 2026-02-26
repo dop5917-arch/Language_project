@@ -6,7 +6,7 @@ Minimal Anki-like English study app with spaced repetition.
 
 - Next.js 14 (App Router) + TypeScript
 - Prisma ORM
-- SQLite (`prisma/dev.db`)
+- PostgreSQL (recommended for deployment, e.g. Neon)
 - Tailwind CSS
 - Zod validation
 
@@ -45,17 +45,21 @@ Optional (better image search in Smart Add):
 npm run prisma:generate
 ```
 
-4. Run migration (creates `prisma/dev.db`)
+4. Create database schema
+
+If using PostgreSQL/Neon (recommended):
 
 ```bash
-npx prisma migrate dev --name init
+npx prisma db push
 ```
 
 Or via script:
 
 ```bash
-npm run prisma:migrate -- --name init
+npm run prisma:push
 ```
+
+If you are starting a fresh local SQLite-only version, you can still use `prisma migrate dev`, but this repo is now configured for PostgreSQL deployment.
 
 5. Seed demo data
 
@@ -105,6 +109,7 @@ Notes:
 - `npm run start`
 - `npm run prisma:generate`
 - `npm run prisma:migrate`
+- `npm run prisma:push`
 - `npm run prisma:studio`
 - `npm run db:seed`
 
@@ -120,7 +125,7 @@ Notes:
 - `app/api/decks/[deckId]/review-queue/route.ts` - queue endpoint
 - `app/api/decks/[deckId]/import/route.ts` - CSV import endpoint
 - `lib/srs.ts` - `getTodayQueue` + `applyRating`
-- `prisma/schema.prisma` - DB models
+- `prisma/schema.prisma` - DB models (PostgreSQL datasource)
 - `prisma/seed.ts` - demo deck seed
 
 ## Date Handling
