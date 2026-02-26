@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Rating = "Again" | "Hard" | "Good" | "Easy";
 
@@ -23,6 +23,7 @@ type SessionResultItem = {
   cardId: string;
   card: QueueCard;
   rating: Rating;
+  localOnly?: boolean;
 };
 
 type AgainHelpState = {
@@ -62,9 +63,12 @@ export default function ReviewClient({
   const finalHref = returnHref ?? `/decks/${deckId}/today`;
   const finalLabel = returnLabel ?? "Back to Today";
   const isAgainHelpOpenForCurrent = Boolean(againHelp && current && againHelp.card.id === current.id);
+  const latestSessionRatingByCardId = new Map(sessionResults.map((item) => [item.cardId, item.rating]));
+  const currentSavedRating = current ? latestSessionRatingByCardId.get(current.id) : undefined;
+  const isViewingAlreadyRatedCard = Boolean(currentSavedRating && !isAgainHelpOpenForCurrent);
 
   async function rate(rating: Rating) {
-    if (!current || submitting) return;
+    if (!current || submitting || isViewingAlreadyRatedCard) return;
     setSubmitting(true);
     setError(null);
 
@@ -112,6 +116,99 @@ export default function ReviewClient({
     setAgainHelp(null);
     setIndex((value) => value + 1);
   }
+
+  function goToPreviousCard() {
+    setAgainHelp(null);
+    setError(null);
+    setFlipped(false);
+    setIndex((value) => Math.max(0, value - 1));
+  }
+
+  function goToNextCard() {
+    if (!current) return;
+    setAgainHelp(null);
+    setError(null);
+    setFlipped(false);
+    setIndex((value) => Math.min(queue.length, value + 1));
+  }
+
+  function overrideSessionRating(rating: Rating) {
+    if (!current) return;
+    setSessionResults((prev) => [
+      ...prev,
+      {
+        cardId: current.id,
+        card: current,
+        rating,
+        localOnly: true
+      }
+    ]);
+  }
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null;
+      const tag = target?.tagName?.toLowerCase();
+      const isTyping =
+        tag === "input" || tag === "textarea" || target?.isContentEditable === true;
+      if (isTyping) return;
+
+      if (event.key === "Escape" && isAgainHelpOpenForCurrent) {
+        event.preventDefault();
+        continueAfterAgainHelp();
+        return;
+      }
+
+      if (!current) return;
+
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        goToPreviousCard();
+        return;
+      }
+
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        goToNextCard();
+        return;
+      }
+
+      if ((event.key === " " || event.key === "Spacebar") && !flipped) {
+        event.preventDefault();
+        setFlipped(true);
+        return;
+      }
+
+      const hotkeyToRating: Partial<Record<string, Rating>> = {
+        "1": "Again",
+        "2": "Hard",
+        "3": "Good",
+        "4": "Easy"
+      };
+      const rating = hotkeyToRating[event.key];
+      if (
+        rating &&
+        flipped &&
+        !submitting &&
+        !isAgainHelpOpenForCurrent &&
+        !isViewingAlreadyRatedCard
+      ) {
+        event.preventDefault();
+        void rate(rating);
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [
+    current,
+    flipped,
+    submitting,
+    isAgainHelpOpenForCurrent,
+    isViewingAlreadyRatedCard,
+    index,
+    queue.length
+  ]);
 
   if (!current) {
     const uniqueLatestResults = Array.from(
@@ -209,6 +306,35 @@ export default function ReviewClient({
         <span>Done: {done}</span>
         <span>Remaining: {remaining}</span>
       </div>
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+        <span className="text-slate-600">
+          Карточка {Math.min(index + 1, queue.length)} из {queue.length}
+        </span>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={goToPreviousCard}
+            disabled={index === 0}
+            className="rounded border px-3 py-1.5 disabled:opacity-50"
+            title="←"
+          >
+            Назад
+          </button>
+          <button
+            type="button"
+            onClick={goToNextCard}
+            disabled={!current || isAgainHelpOpenForCurrent}
+            className="rounded border px-3 py-1.5 disabled:opacity-50"
+            title="→"
+          >
+            Дальше
+          </button>
+        </div>
+      </div>
+      <p className="text-xs text-slate-500">
+        Горячие клавиши: `Space` - показать ответ, `1-4` - оценка, `←/→` - навигация, `Esc` -
+        закрыть блок помощи.
+      </p>
 
       <div className="rounded-lg border bg-white p-6 shadow-sm">
         <div className="mb-2 text-xs uppercase tracking-wide text-slate-500">
@@ -225,6 +351,11 @@ export default function ReviewClient({
         ) : null}
         <p className="text-2xl font-semibold">{current.frontText}</p>
         {current.tags ? <p className="mt-2 text-sm text-slate-500">Tags: {current.tags}</p> : null}
+        {currentSavedRating ? (
+          <p className="mt-2 text-sm text-blue-700">
+            Уже оценено в этой сессии: <span className="font-medium">{currentSavedRating}</span>
+          </p>
+        ) : null}
 
         {!flipped ? (
           <button
@@ -250,7 +381,7 @@ export default function ReviewClient({
                 <button
                   key={rating}
                   type="button"
-                  disabled={submitting || isAgainHelpOpenForCurrent}
+                  disabled={submitting || isAgainHelpOpenForCurrent || isViewingAlreadyRatedCard}
                   onClick={() => rate(rating)}
                   className="rounded border px-3 py-2 text-sm font-medium hover:bg-slate-50 disabled:opacity-50"
                 >
@@ -258,6 +389,26 @@ export default function ReviewClient({
                 </button>
               ))}
             </div>
+            {isViewingAlreadyRatedCard ? (
+              <div className="space-y-2">
+                <p className="text-xs text-slate-500">
+                  Это просмотр предыдущей карточки. Можно изменить оценку для результата текущей
+                  сессии (без пересчета базы/SRS).
+                </p>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {(["Again", "Hard", "Good", "Easy"] as Rating[]).map((rating) => (
+                    <button
+                      key={`override-${rating}`}
+                      type="button"
+                      onClick={() => overrideSessionRating(rating)}
+                      className="rounded border px-3 py-2 text-sm hover:bg-slate-50"
+                    >
+                      Изменить на {rating}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
 
             {againHelp && againHelp.card.id === current.id ? (
               <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
