@@ -200,6 +200,9 @@ export async function POST(req: NextRequest, { params }: Context) {
 
       try {
         const draft = await fetchSmartDraft(req, word);
+        if (!draft) {
+          throw new Error(`Empty draft for "${word}"`);
+        }
         await prisma.card.create({
           data: {
             deckId: params.deckId,
