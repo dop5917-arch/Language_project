@@ -37,18 +37,24 @@ export default async function DecksPage() {
           <p className="text-sm text-slate-600">No decks yet.</p>
         ) : (
           decks.map((deck) => (
-            <div key={deck.id} className="relative rounded-lg border bg-white p-4">
+            <div
+              key={deck.id}
+              className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white/95 px-4 py-3 shadow-sm transition hover:border-emerald-300 hover:shadow"
+            >
               <Link
                 href={`/decks/${deck.id}`}
                 aria-label={`Open deck ${deck.name}`}
                 className="absolute inset-0 rounded-lg"
               />
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div className="relative z-10">
-                  <div className="text-lg font-medium text-slate-900">{deck.name}</div>
-                  <p className="text-sm text-slate-600">{deck._count.cards} cards</p>
+              <div className="grid grid-cols-[1fr_auto] items-center gap-3">
+                <div className="relative z-10 flex min-w-0 items-center gap-3">
+                  <div className="truncate text-lg font-semibold text-slate-900">{deck.name}</div>
+                  <span className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs text-slate-600">
+                    {deck._count.cards} cards
+                  </span>
                 </div>
-                <div className="relative z-10 flex flex-wrap items-center gap-2">
+                <div className="relative z-10 flex items-center gap-2">
+                  <span className="text-sm text-slate-400 transition group-hover:text-emerald-700">→</span>
                   <details className="relative">
                     <summary className="cursor-pointer list-none rounded border px-3 py-2 text-sm">
                       ⋯

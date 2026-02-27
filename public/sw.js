@@ -1,5 +1,5 @@
-const CACHE_NAME = "english-srs-v1";
-const APP_SHELL = ["/", "/decks"];
+const CACHE_NAME = "english-srs-v2";
+const APP_SHELL = ["/", "/decks", "/manifest.webmanifest", "/icon", "/apple-icon"];
 
 function isStaticAssetRequest(req) {
   const url = new URL(req.url);
@@ -28,10 +28,24 @@ self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
 
-  // For page navigation, always prefer network to avoid stale dynamic page redirects.
+  // For page navigation: network-first, but save successful pages to cache for offline usage.
   if (req.mode === "navigate") {
     event.respondWith(
-      fetch(req).catch(() => caches.match(req).then((cached) => cached || caches.match("/decks")))
+      fetch(req)
+        .then((res) => {
+          if (res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, copy)).catch(() => undefined);
+          }
+          return res;
+        })
+        .catch(async () => {
+          const cachedExact = await caches.match(req);
+          if (cachedExact) return cachedExact;
+          const cachedDecks = await caches.match("/decks");
+          if (cachedDecks) return cachedDecks;
+          return caches.match("/");
+        })
     );
     return;
   }
