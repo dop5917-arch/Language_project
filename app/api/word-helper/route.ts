@@ -324,7 +324,8 @@ export async function POST(req: NextRequest) {
         exampleOptions,
         backText: definitionOptions[0] ?? definition,
         definitionOptions,
-        imageUrl: imageOptions[0]?.url,
+        // Do not auto-select image: user can choose manually if needed.
+        imageUrl: undefined,
         imageOptions,
         tags: `smart-add,vocab,${rawWord}`,
         level: 1

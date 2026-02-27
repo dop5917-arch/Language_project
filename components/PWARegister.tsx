@@ -9,6 +9,12 @@ export default function PWARegister() {
 
     const register = async () => {
       try {
+        // Keep development predictable: disable SW locally to avoid stale route cache.
+        if (process.env.NODE_ENV !== "production") {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map((reg) => reg.unregister()));
+          return;
+        }
         await navigator.serviceWorker.register("/sw.js");
       } catch {
         // Silent fail; app works without PWA features.

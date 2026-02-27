@@ -41,11 +41,8 @@ export default async function DeckDetailPage({ params }: Props) {
           <Link href={`/decks/${deck.id}/add-smart`} className="rounded border px-3 py-2 text-sm">
             Smart Add
           </Link>
-          <Link href={`/decks/${deck.id}/import`} className="rounded border px-3 py-2 text-sm">
-            Import CSV
-          </Link>
           <Link href={`/decks/${deck.id}/import-words`} className="rounded border px-3 py-2 text-sm">
-            Import Words (C)
+            Import CSV from Google Sheets
           </Link>
         </div>
       </div>
@@ -56,9 +53,7 @@ export default async function DeckDetailPage({ params }: Props) {
             <tr>
               <th className="px-3 py-2">Front</th>
               <th className="px-3 py-2">Back</th>
-              <th className="px-3 py-2">Tags</th>
-              <th className="px-3 py-2">Level</th>
-              <th className="px-3 py-2">Status</th>
+              <th className="px-3 py-2">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -66,16 +61,16 @@ export default async function DeckDetailPage({ params }: Props) {
               <tr key={card.id} className="border-t align-top">
                 <td className="px-3 py-2">{card.frontText}</td>
                 <td className="px-3 py-2 text-slate-700">{card.backText}</td>
-                <td className="px-3 py-2">{card.tags ?? "-"}</td>
-                <td className="px-3 py-2">{card.level ?? "-"}</td>
                 <td className="px-3 py-2">
-                  {card.reviewState ? `Due ${card.reviewState.dueDate.toLocaleDateString()}` : "New"}
+                  <Link href={`/decks/${deck.id}/cards/${card.id}/edit`} className="rounded border px-2 py-1 text-xs">
+                    Edit
+                  </Link>
                 </td>
               </tr>
             ))}
             {deck.cards.length === 0 ? (
               <tr>
-                <td className="px-3 py-4 text-slate-600" colSpan={5}>
+                <td className="px-3 py-4 text-slate-600" colSpan={3}>
                   No cards yet.
                 </td>
               </tr>

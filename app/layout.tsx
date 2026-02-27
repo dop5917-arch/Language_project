@@ -1,7 +1,14 @@
 import type { Metadata } from "next";
+import { Lora } from "next/font/google";
 import Link from "next/link";
 import PWARegister from "@/components/PWARegister";
 import "./globals.css";
+
+const lora = Lora({
+  subsets: ["latin", "latin-ext"],
+  display: "swap",
+  variable: "--font-lora"
+});
 
 export const metadata: Metadata = {
   title: "English SRS",
@@ -25,10 +32,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>
+      <body className={lora.variable}>
         <PWARegister />
-        <header className="border-b bg-white">
-          <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
+        <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/85 backdrop-blur">
+          <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
             <Link href="/decks" className="text-lg font-semibold text-slate-900">
               English SRS
             </Link>
@@ -40,7 +47,7 @@ export default function RootLayout({
             </Link>
           </div>
         </header>
-        <main className="mx-auto max-w-4xl px-4 py-6">{children}</main>
+        <main className="mx-auto max-w-5xl px-4 py-6">{children}</main>
       </body>
     </html>
   );

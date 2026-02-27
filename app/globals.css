@@ -2,10 +2,107 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  @apply bg-slate-50 text-slate-900;
+@layer base {
+  :root {
+    --premium-bg: #f8fafc;
+    --premium-bg-soft: #f1f5f9;
+    --premium-surface: #ffffff;
+    --premium-text: #111827;
+    --premium-muted: #64748b;
+    --premium-border: #dbe3ea;
+    --premium-accent: #059669;
+    --premium-accent-strong: #047857;
+  }
+
+  body {
+    @apply min-h-screen;
+    background:
+      radial-gradient(circle at top, #eef6f4 0%, rgba(238, 246, 244, 0) 35%),
+      var(--premium-bg);
+    color: #000;
+    font-family: var(--font-lora), Georgia, Cambria, "Times New Roman", Times, serif;
+  }
+
+  a {
+    color: #000;
+  }
+
+  a:hover {
+    color: #000;
+  }
+
+  input,
+  textarea,
+  select {
+    border-color: var(--premium-border);
+  }
+
+  input:focus,
+  textarea:focus,
+  select:focus {
+    outline: none;
+    border-color: color-mix(in oklab, var(--premium-accent) 55%, white);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--premium-accent) 18%, white);
+  }
+
+  button {
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+  }
 }
 
-a {
-  @apply text-blue-700 hover:text-blue-900;
+body {
+  margin: 0;
+}
+
+.font-card {
+  font-family: var(--font-lora), serif;
+}
+
+.flip-card {
+  perspective: 1200px;
+}
+
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  min-height: 340px;
+  transform-style: preserve-3d;
+  transition: transform 300ms ease;
+}
+
+.flip-card-inner.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.flip-card-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--premium-border);
+  border-radius: 0.5rem;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  padding: 2rem;
+  text-align: center;
+}
+
+.flip-card-front {
+  background: #f8fafc;
+}
+
+.flip-card-back {
+  background: #fff;
+  transform: rotateY(180deg);
+}
+
+/* Force common text utility colors to black for a uniform look */
+[class*="text-slate-"],
+[class*="text-blue-"],
+[class*="text-emerald-"],
+[class*="text-red-"],
+[class*="text-green-"],
+[class*="text-amber-"] {
+  color: #000 !important;
 }

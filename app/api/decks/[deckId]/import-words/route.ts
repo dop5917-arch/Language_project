@@ -211,7 +211,8 @@ export async function POST(req: NextRequest, { params }: Context) {
             audioUrl: draft.audioUrl,
             frontText: draft.frontText,
             backText: draft.backText,
-            imageUrl: draft.imageUrl,
+            // For automatic import, keep cards image-free by default.
+            imageUrl: null,
             tags: draft.tags ?? `smart-add,vocab,${normalized}`,
             level: draft.level ?? 1
           }
