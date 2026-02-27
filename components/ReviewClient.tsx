@@ -236,7 +236,11 @@ export default function ReviewClient({
         <div className="mt-3 text-center text-xs uppercase tracking-wide text-slate-500">
           {flipped ? "Answer" : "Question"}
         </div>
-        <div className="relative mt-3 min-h-[340px]">
+        <button
+          type="button"
+          onClick={() => setFlipped((prev) => !prev)}
+          className="relative mt-3 min-h-[340px] w-full cursor-pointer text-left"
+        >
           <div
             aria-hidden={flipped}
             className={`absolute inset-0 flex items-center justify-center rounded-lg border bg-white p-8 text-center transition-all duration-300 motion-reduce:transition-none ${
@@ -253,24 +257,11 @@ export default function ReviewClient({
           >
             <p className={cardTextClass}>{current.backText}</p>
           </div>
-        </div>
+        </button>
         {!flipped ? (
-          <button
-            type="button"
-            onClick={() => setFlipped(true)}
-            className="mt-6 rounded bg-emerald-700 px-6 py-3 text-lg font-semibold text-white hover:bg-emerald-800"
-          >
-            Show Answer
-          </button>
+          <p className="mt-4 text-sm text-slate-500">Нажми на карточку, чтобы перевернуть</p>
         ) : (
           <div className="mt-6 space-y-4 border-t pt-4">
-            <button
-              type="button"
-              onClick={() => setFlipped(false)}
-              className="rounded border px-4 py-2 text-sm font-medium hover:bg-slate-50"
-            >
-              Back to Question
-            </button>
             {current.imageUrl ? (
               <img
                 src={current.imageUrl}
