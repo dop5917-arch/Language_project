@@ -37,21 +37,18 @@ export default async function DecksPage() {
           <p className="text-sm text-slate-600">No decks yet.</p>
         ) : (
           decks.map((deck) => (
-            <div key={deck.id} className="rounded-lg border bg-white p-4">
+            <div key={deck.id} className="relative rounded-lg border bg-white p-4">
+              <Link
+                href={`/decks/${deck.id}`}
+                aria-label={`Open deck ${deck.name}`}
+                className="absolute inset-0 rounded-lg"
+              />
               <div className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <Link href={`/decks/${deck.id}`} className="text-lg font-medium text-slate-900">
-                    {deck.name}
-                  </Link>
+                <div className="relative z-10">
+                  <div className="text-lg font-medium text-slate-900">{deck.name}</div>
                   <p className="text-sm text-slate-600">{deck._count.cards} cards</p>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <Link
-                    href={`/decks/${deck.id}/today`}
-                    className="rounded border px-3 py-2 text-sm font-medium"
-                  >
-                    Study Today
-                  </Link>
+                <div className="relative z-10 flex flex-wrap items-center gap-2">
                   <details className="relative">
                     <summary className="cursor-pointer list-none rounded border px-3 py-2 text-sm">
                       ⋯
