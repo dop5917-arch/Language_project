@@ -98,11 +98,8 @@ export default async function TodayPage({ params, searchParams }: Props) {
           <Link href={`/decks/${deck.id}/review-all`} className="rounded border bg-white px-3 py-2 text-sm">
             Review All (вся колода)
           </Link>
-          <Link href="/review/all?mode=all" className="rounded border bg-white px-3 py-2 text-sm">
-            Global Review (все колоды)
-          </Link>
-          <Link href="/review/all?mode=today" className="rounded border bg-white px-3 py-2 text-sm">
-            Global Review (по расписанию)
+          <Link href="/review/all" className="rounded border bg-white px-3 py-2 text-sm">
+            Global Review (choose mode)
           </Link>
         </div>
       </div>

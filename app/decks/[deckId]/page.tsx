@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import DeckAddMenu from "@/components/DeckAddMenu";
 import { prisma } from "@/lib/prisma";
 
 type Props = {
@@ -33,17 +34,21 @@ export default async function DeckDetailPage({ params }: Props) {
             Today
           </Link>
           <Link href={`/decks/${deck.id}/review-all`} className="rounded border px-3 py-2 text-sm">
-            Review All
+            Anytime (All)
           </Link>
-          <Link href={`/decks/${deck.id}/add`} className="rounded border px-3 py-2 text-sm">
-            Add Card
+          <Link
+            href={`/decks/${deck.id}/review-all?rating=Difficult`}
+            className="rounded border px-3 py-2 text-sm"
+          >
+            Difficult
           </Link>
-          <Link href={`/decks/${deck.id}/add-smart`} className="rounded border px-3 py-2 text-sm">
-            Smart Add
+          <Link
+            href={`/decks/${deck.id}/review-all?rating=Learned`}
+            className="rounded border px-3 py-2 text-sm"
+          >
+            Learned
           </Link>
-          <Link href={`/decks/${deck.id}/import-words`} className="rounded border px-3 py-2 text-sm">
-            Import CSV from Google Sheets
-          </Link>
+          <DeckAddMenu deckId={deck.id} />
         </div>
       </div>
 

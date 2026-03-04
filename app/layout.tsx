@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Lora } from "next/font/google";
 import Link from "next/link";
 import PWARegister from "@/components/PWARegister";
+import TopNavLinks from "@/components/TopNavLinks";
 import "./globals.css";
 
 const lora = Lora({
@@ -39,12 +40,7 @@ export default function RootLayout({
             <Link href="/decks" className="text-lg font-semibold text-slate-900">
               English SRS
             </Link>
-            <Link href="/decks" className="text-sm">
-              Decks
-            </Link>
-            <Link href="/review/all" className="text-sm">
-              Global Review
-            </Link>
+            <TopNavLinks />
           </div>
         </header>
         <main className="mx-auto max-w-5xl px-4 py-6">{children}</main>

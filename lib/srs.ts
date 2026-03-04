@@ -281,7 +281,7 @@ export async function filterQueueByLatestRating(
       return lastRating === "Again" || lastRating === "Hard";
     }
     if (ratingFilter === "Learned") {
-      return lastRating === "Good" || lastRating === "Easy";
+      return lastRating === "Easy";
     }
     return lastRating === ratingFilter;
   });

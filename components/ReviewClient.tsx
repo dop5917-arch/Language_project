@@ -35,12 +35,39 @@ type AgainHelpState = {
   imageIndex: number;
 };
 
+type FrontHintState = {
+  cardId: string;
+  examples: string[];
+  index: number;
+};
+
 type Props = {
   deckId: string;
   initialQueue: QueueCard[];
   returnHref?: string;
   returnLabel?: string;
 };
+
+const ratingControls: Array<{ label: string; hint: string; rating: Rating; className: string }> = [
+  {
+    label: "Didn't remember",
+    hint: "Show more often",
+    rating: "Again",
+    className: "border-red-300 bg-red-50 hover:bg-red-100"
+  },
+  {
+    label: "Hard to recall",
+    hint: "Repeat soon",
+    rating: "Hard",
+    className: "border-amber-300 bg-amber-50 hover:bg-amber-100"
+  },
+  {
+    label: "Easy recall",
+    hint: "Repeat later",
+    rating: "Easy",
+    className: "border-blue-300 bg-blue-50 hover:bg-blue-100"
+  }
+];
 
 export default function ReviewClient({
   deckId,
@@ -57,14 +84,44 @@ export default function ReviewClient({
   const [error, setError] = useState<string | null>(null);
   const [sessionResults, setSessionResults] = useState<SessionResultItem[]>([]);
   const [againHelp, setAgainHelp] = useState<AgainHelpState | null>(null);
+  const [frontHint, setFrontHint] = useState<FrontHintState | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null;
+      const tag = target?.tagName?.toLowerCase();
+      if (tag === "input" || tag === "textarea" || target?.isContentEditable) return;
+      if (submitting) return;
+
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        setFlipped(false);
+        setAgainHelp(null);
+        setFrontHint(null);
+        setIndex((value) => Math.max(0, value - 1));
+      }
+
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        setFlipped(false);
+        setAgainHelp(null);
+        setFrontHint(null);
+        setIndex((value) => Math.min(queue.length, value + 1));
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [queue.length, submitting]);
+
   const current = queue[index] ?? null;
   const remaining = useMemo(() => Math.max(0, queue.length - index), [queue.length, index]);
+  const position = Math.min(index + 1, queue.length);
   const finalHref = returnHref ?? `/decks/${deckId}/today`;
   const finalLabel = returnLabel ?? "Back to Today";
   const isAgainHelpOpenForCurrent = Boolean(againHelp && current && againHelp.card.id === current.id);
@@ -104,12 +161,6 @@ export default function ReviewClient({
         }
       ]);
 
-      if (rating === "Again") {
-        setQueue((prev) => [...prev, { ...current, isNew: false }]);
-        setAgainHelp(buildAgainHelp(current));
-        return;
-      }
-
       setIndex((value) => value + 1);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
@@ -121,6 +172,31 @@ export default function ReviewClient({
   function continueAfterAgainHelp() {
     setAgainHelp(null);
     setIndex((value) => value + 1);
+  }
+
+  function goPrev() {
+    setFlipped(false);
+    setAgainHelp(null);
+    setFrontHint(null);
+    setIndex((value) => Math.max(0, value - 1));
+  }
+
+  function goNext() {
+    setFlipped(false);
+    setAgainHelp(null);
+    setFrontHint(null);
+    setIndex((value) => Math.min(queue.length, value + 1));
+  }
+
+  function openFrontHint() {
+    if (!current) return;
+    const examples = buildFrontHintExamples(current);
+    setFrontHint((prev) => {
+      if (prev && prev.cardId === current.id) {
+        return { ...prev, index: (prev.index + 1) % prev.examples.length };
+      }
+      return { cardId: current.id, examples, index: 0 };
+    });
   }
 
   if (!current) {
@@ -142,6 +218,19 @@ export default function ReviewClient({
         .filter((item) => item.rating === target)
         .map((item) => ({ ...item.card, isNew: false }));
 
+      if (subset.length === 0) return;
+
+      setQueue(subset);
+      setIndex(0);
+      setDone(0);
+      setFlipped(false);
+      setError(null);
+      setSessionResults([]);
+      setAgainHelp(null);
+    }
+
+    function startRetryAllSession() {
+      const subset = uniqueLatestResults.map((item) => ({ ...item.card, isNew: false }));
       if (subset.length === 0) return;
 
       setQueue(subset);
@@ -190,6 +279,14 @@ export default function ReviewClient({
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
+            onClick={startRetryAllSession}
+            disabled={uniqueLatestResults.length === 0}
+            className="rounded border px-4 py-2 disabled:opacity-50"
+          >
+            Repeat all
+          </button>
+          <button
+            type="button"
             onClick={() => startRetrySession("Again")}
             disabled={notRemembered.length === 0}
             className="rounded border px-4 py-2 disabled:opacity-50"
@@ -215,9 +312,30 @@ export default function ReviewClient({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between text-sm text-slate-600">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-slate-600">
         <span>Done: {done}</span>
         <span>Remaining: {remaining}</span>
+        <span>
+          Card {position}/{queue.length}
+        </span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={goPrev}
+            disabled={index <= 0 || submitting}
+            className="rounded border px-3 py-1.5 disabled:opacity-50"
+          >
+            ← Prev
+          </button>
+          <button
+            type="button"
+            onClick={goNext}
+            disabled={submitting}
+            className="rounded border px-3 py-1.5 disabled:opacity-50"
+          >
+            Next →
+          </button>
+        </div>
       </div>
 
       <div className="rounded-xl border bg-white p-7 shadow-sm">
@@ -236,32 +354,101 @@ export default function ReviewClient({
         <div className="mt-3 text-center text-xs uppercase tracking-wide text-slate-500">
           {flipped ? "Answer" : "Question"}
         </div>
-        <button
-          type="button"
+        <div
+          role="button"
+          tabIndex={0}
           onClick={() => setFlipped((prev) => !prev)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setFlipped((prev) => !prev);
+            }
+          }}
           className="relative mt-3 min-h-[340px] w-full cursor-pointer text-left"
         >
           <div
             aria-hidden={flipped}
             className={`absolute inset-0 flex items-center justify-center rounded-lg border bg-white p-8 text-center transition-all duration-300 motion-reduce:transition-none ${
-              flipped ? "translate-y-1 opacity-0" : "translate-y-0 opacity-100"
+              flipped
+                ? "pointer-events-none translate-y-1 opacity-0"
+                : "pointer-events-auto translate-y-0 opacity-100"
             }`}
           >
-            <p className={cardTextClass}>{current.frontText}</p>
+            <button
+              type="button"
+              aria-label="Hint"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                openFrontHint();
+              }}
+              className="absolute right-3 top-3 z-20 rounded-full border-2 border-emerald-400 bg-emerald-100 px-3 py-2 text-xl shadow-md hover:bg-emerald-200"
+            >
+              💡
+            </button>
+            <p className={cardTextClass}>{renderHighlightedText(current.frontText, resolveStudyWord(current))}</p>
+            {frontHint && frontHint.cardId === current.id ? (
+              <div className="absolute inset-x-4 bottom-4 rounded border border-emerald-200 bg-emerald-50 p-3 text-sm">
+                {renderHighlightedText(frontHint.examples[frontHint.index], resolveStudyWord(current))}
+              </div>
+            ) : null}
           </div>
           <div
             aria-hidden={!flipped}
-            className={`absolute inset-0 flex items-center justify-center rounded-lg border bg-white p-8 text-center transition-all duration-300 motion-reduce:transition-none ${
-              flipped ? "translate-y-0 opacity-100" : "-translate-y-1 opacity-0"
+            className={`absolute inset-0 flex flex-col items-center justify-center gap-4 rounded-lg border bg-white p-8 text-center transition-all duration-300 motion-reduce:transition-none ${
+              flipped
+                ? "pointer-events-auto translate-y-0 opacity-100"
+                : "pointer-events-none -translate-y-1 opacity-0"
             }`}
           >
-            <p className={cardTextClass}>{current.backText}</p>
+            <p className={cardTextClass}>
+              {renderHighlightedText(current.backText, resolveStudyWord(current))}
+            </p>
+            <div className="max-w-3xl rounded border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm">
+              <span className="mr-2 font-semibold">Context example:</span>
+              {renderHighlightedText(buildBackContextExample(current), resolveStudyWord(current))}
+            </div>
           </div>
-        </button>
+        </div>
         {!flipped ? (
-          <p className="mt-4 text-sm text-slate-500">Нажми на карточку, чтобы перевернуть</p>
+          <div className="mt-4 space-y-3">
+            <p className="text-sm text-slate-500">Tap card to see answer, or rate now</p>
+            <div className="grid grid-cols-3 gap-2">
+              {ratingControls.map((control) => (
+                <button
+                  key={`front-${control.label}`}
+                  type="button"
+                  disabled={submitting}
+                  onClick={() => rate(control.rating)}
+                  className={`rounded border px-4 py-3 text-left disabled:opacity-50 ${control.className}`}
+                >
+                  <div className="text-sm font-semibold">{control.label}</div>
+                  <div className="text-xs text-slate-600">{control.hint}</div>
+                </button>
+              ))}
+            </div>
+          </div>
         ) : (
           <div className="mt-6 space-y-4 border-t pt-4">
+            <div className="grid grid-cols-3 gap-2">
+              {ratingControls.map((control) => (
+                <button
+                  key={control.label}
+                  type="button"
+                  disabled={submitting || isAgainHelpOpenForCurrent}
+                  onClick={() => rate(control.rating)}
+                  className={`rounded border px-4 py-3 text-left disabled:opacity-50 ${control.className}`}
+                >
+                  <div className="text-sm font-semibold">{control.label}</div>
+                  <div className="text-xs text-slate-600">{control.hint}</div>
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-slate-500">
+              Cards marked as <span className="font-medium">Didn&apos;t remember</span> are saved for a later session
+              and are not repeated immediately.
+            </p>
+
             {current.imageUrl ? (
               <img
                 src={current.imageUrl}
@@ -269,20 +456,6 @@ export default function ReviewClient({
                 className="max-h-60 w-full rounded border object-cover"
               />
             ) : null}
-
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {(["Again", "Hard", "Good", "Easy"] as Rating[]).map((rating) => (
-                <button
-                  key={rating}
-                  type="button"
-                  disabled={submitting || isAgainHelpOpenForCurrent}
-                  onClick={() => rate(rating)}
-                  className="rounded border px-4 py-3 text-base font-semibold hover:bg-slate-50 disabled:opacity-50"
-                >
-                  {rating}
-                </button>
-              ))}
-            </div>
 
             {againHelp && againHelp.card.id === current.id ? (
               <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
@@ -429,6 +602,34 @@ function PronunciationBar({
   );
 }
 
+function resolveStudyWord(card: QueueCard): string {
+  return (card.targetWord?.trim() || guessStudyWord(card)).toLowerCase();
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function renderHighlightedText(text: string, word: string) {
+  const normalized = word.trim();
+  if (!normalized) return text;
+
+  const regex = new RegExp(`\\b(${escapeRegExp(normalized)})\\b`, "gi");
+  const parts = text.split(regex);
+  if (parts.length === 1) return text;
+
+  return parts.map((part, index) => {
+    if (part.toLowerCase() === normalized.toLowerCase()) {
+      return (
+        <span key={`hl-${index}`} className="font-extrabold text-green-600">
+          {part}
+        </span>
+      );
+    }
+    return <span key={`tx-${index}`}>{part}</span>;
+  });
+}
+
 function guessStudyWord(card: QueueCard): string {
   const tagWord = card.tags
     ?.split(",")
@@ -476,6 +677,37 @@ function buildAgainHelp(card: QueueCard): AgainHelpState {
     definitionIndex: 0,
     imageIndex: 0
   };
+}
+
+function buildFrontHintExamples(card: QueueCard): string[] {
+  const word = resolveStudyWord(card);
+  const source = card.frontText.trim().toLowerCase();
+  const base = [
+    `I saw ${word} in a real conversation yesterday.`,
+    `Try using ${word} in one sentence about your day.`,
+    `When you hear ${word}, think of one simple situation.`,
+    `${word} often appears in everyday spoken English.`
+  ];
+  return Array.from(
+    new Set(
+      base
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0)
+        .filter((line) => line.toLowerCase() !== source)
+    )
+  );
+}
+
+function buildBackContextExample(card: QueueCard): string {
+  const word = resolveStudyWord(card);
+  const source = card.frontText.trim().toLowerCase();
+  const variants = [
+    `People often use ${word} in everyday conversations.`,
+    `You can hear ${word} in movies, podcasts, and daily speech.`,
+    `Try saying ${word} in your own sentence right now.`
+  ].filter((line) => line.trim().toLowerCase() !== source);
+
+  return variants[0] ?? `Use ${word} in a short sentence about your day.`;
 }
 
 function ResultList({

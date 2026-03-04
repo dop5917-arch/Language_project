@@ -55,21 +55,23 @@ export default async function ReviewAllPage({ params, searchParams }: Props) {
       </div>
 
       <div className="flex flex-wrap gap-2 text-sm">
-        {(["all", "Difficult", "Learned"] as const).map((value) => (
+        {(["Difficult", "Learned"] as const).map((value) => (
           <Link
             key={value}
-            href={
-              value === "all"
-                ? `/decks/${deck.id}/review-all`
-                : `/decks/${deck.id}/review-all?rating=${value}`
-            }
+            href={`/decks/${deck.id}/review-all?rating=${value}`}
             className={`rounded border px-3 py-2 ${
               ratingFilter === value ? "border-blue-600 bg-blue-50 text-blue-700" : ""
             }`}
           >
-            {value === "all" ? "All cards" : value}
+            {value}
           </Link>
         ))}
+        <Link
+          href={`/decks/${deck.id}/review-all`}
+          className={`rounded border px-3 py-2 ${ratingFilter === "all" ? "border-blue-600 bg-blue-50 text-blue-700" : ""}`}
+        >
+          Anytime (all cards)
+        </Link>
       </div>
 
       {serializedQueue.length === 0 ? (

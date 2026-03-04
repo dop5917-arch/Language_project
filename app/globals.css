@@ -96,13 +96,3 @@ body {
   background: #fff;
   transform: rotateY(180deg);
 }
-
-/* Force common text utility colors to black for a uniform look */
-[class*="text-slate-"],
-[class*="text-blue-"],
-[class*="text-emerald-"],
-[class*="text-red-"],
-[class*="text-green-"],
-[class*="text-amber-"] {
-  color: #000 !important;
-}
