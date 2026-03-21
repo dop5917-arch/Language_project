@@ -46,6 +46,22 @@ type Props = {
   initialQueue: QueueCard[];
   returnHref?: string;
   returnLabel?: string;
+  sessionKey?: string;
+  enableResume?: boolean;
+};
+
+type WordMeaningItem = {
+  partOfSpeech: string;
+  definitionEn: string;
+  exampleEn?: string;
+};
+
+type WordMeaningResponse = {
+  word: string;
+  phonetic?: string;
+  ruVariants?: string[];
+  ruDictionary?: Array<{ partOfSpeech: string; terms: string[] }>;
+  meanings: WordMeaningItem[];
 };
 
 const ratingControls: Array<{ label: string; hint: string; rating: Rating; className: string }> = [
@@ -73,7 +89,9 @@ export default function ReviewClient({
   deckId,
   initialQueue,
   returnHref,
-  returnLabel
+  returnLabel,
+  sessionKey,
+  enableResume = false
 }: Props) {
   const cardTextClass = "font-card text-5xl font-semibold leading-tight sm:text-6xl";
   const [queue, setQueue] = useState(initialQueue);
@@ -85,6 +103,11 @@ export default function ReviewClient({
   const [sessionResults, setSessionResults] = useState<SessionResultItem[]>([]);
   const [againHelp, setAgainHelp] = useState<AgainHelpState | null>(null);
   const [frontHint, setFrontHint] = useState<FrontHintState | null>(null);
+  const [meaningModalOpen, setMeaningModalOpen] = useState(false);
+  const [meaningLoading, setMeaningLoading] = useState(false);
+  const [meaningError, setMeaningError] = useState<string | null>(null);
+  const [meaningData, setMeaningData] = useState<WordMeaningResponse | null>(null);
+  const [meaningCache, setMeaningCache] = useState<Record<string, WordMeaningResponse>>({});
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -103,6 +126,7 @@ export default function ReviewClient({
         setFlipped(false);
         setAgainHelp(null);
         setFrontHint(null);
+        setMeaningModalOpen(false);
         setIndex((value) => Math.max(0, value - 1));
       }
 
@@ -111,6 +135,7 @@ export default function ReviewClient({
         setFlipped(false);
         setAgainHelp(null);
         setFrontHint(null);
+        setMeaningModalOpen(false);
         setIndex((value) => Math.min(queue.length, value + 1));
       }
     }
@@ -120,11 +145,60 @@ export default function ReviewClient({
   }, [queue.length, submitting]);
 
   const current = queue[index] ?? null;
+  const backDetails = useMemo(
+    () => (current ? parseCardBackDetails(current) : null),
+    [current]
+  );
+  const frontDetails = useMemo(
+    () => (current ? parseCardFrontDetails(current) : null),
+    [current]
+  );
   const remaining = useMemo(() => Math.max(0, queue.length - index), [queue.length, index]);
   const position = Math.min(index + 1, queue.length);
   const finalHref = returnHref ?? `/decks/${deckId}/today`;
   const finalLabel = returnLabel ?? "Back to Today";
   const isAgainHelpOpenForCurrent = Boolean(againHelp && current && againHelp.card.id === current.id);
+  const progressStorageKey = `review-progress:${sessionKey ?? deckId}`;
+
+  useEffect(() => {
+    if (!enableResume || !mounted) return;
+    if (queue.length === 0) return;
+    try {
+      const raw = window.localStorage.getItem(progressStorageKey);
+      if (!raw) return;
+      const saved = JSON.parse(raw) as { index?: number; queueIds?: string[] };
+      if (!Array.isArray(saved.queueIds)) return;
+      const currentIds = queue.map((item) => item.id);
+      if (saved.queueIds.join("|") !== currentIds.join("|")) return;
+      const savedIndex = typeof saved.index === "number" ? saved.index : 0;
+      if (savedIndex > 0 && savedIndex < queue.length) {
+        setIndex(savedIndex);
+      }
+    } catch {
+      // ignore restore errors
+    }
+    // restore only once on mount/queue load
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enableResume, mounted, queue.length, progressStorageKey]);
+
+  useEffect(() => {
+    if (!enableResume || !mounted) return;
+    try {
+      if (index >= queue.length) {
+        window.localStorage.removeItem(progressStorageKey);
+        return;
+      }
+      window.localStorage.setItem(
+        progressStorageKey,
+        JSON.stringify({
+          index,
+          queueIds: queue.map((item) => item.id)
+        })
+      );
+    } catch {
+      // ignore persist errors
+    }
+  }, [enableResume, mounted, index, queue, progressStorageKey]);
 
   if (!mounted) {
     return <div className="rounded-lg border bg-white p-6 text-sm">Loading review...</div>;
@@ -178,6 +252,7 @@ export default function ReviewClient({
     setFlipped(false);
     setAgainHelp(null);
     setFrontHint(null);
+    setMeaningModalOpen(false);
     setIndex((value) => Math.max(0, value - 1));
   }
 
@@ -185,6 +260,7 @@ export default function ReviewClient({
     setFlipped(false);
     setAgainHelp(null);
     setFrontHint(null);
+    setMeaningModalOpen(false);
     setIndex((value) => Math.min(queue.length, value + 1));
   }
 
@@ -197,6 +273,35 @@ export default function ReviewClient({
       }
       return { cardId: current.id, examples, index: 0 };
     });
+  }
+
+  async function openWordMeaning() {
+    if (!current) return;
+    const word = resolveStudyWord(current);
+    if (!word) return;
+
+    setMeaningModalOpen(true);
+    setMeaningError(null);
+
+    if (meaningCache[word]) {
+      setMeaningData(meaningCache[word]);
+      return;
+    }
+
+    setMeaningLoading(true);
+    try {
+      const res = await fetch(`/api/word-meaning?word=${encodeURIComponent(word)}`);
+      const data = (await res.json()) as WordMeaningResponse & { error?: string };
+      if (!res.ok || !data.meanings) {
+        throw new Error(data.error ?? "Failed to load word meanings");
+      }
+      setMeaningCache((prev) => ({ ...prev, [word]: data }));
+      setMeaningData(data);
+    } catch (err) {
+      setMeaningError(err instanceof Error ? err.message : "Failed to load word meanings");
+    } finally {
+      setMeaningLoading(false);
+    }
   }
 
   if (!current) {
@@ -386,7 +491,11 @@ export default function ReviewClient({
             >
               💡
             </button>
-            <p className={cardTextClass}>{renderHighlightedText(current.frontText, resolveStudyWord(current))}</p>
+            <div className="space-y-3">
+              <p className={cardTextClass}>
+                {renderHighlightedText(frontDetails?.sentence || current.frontText, resolveStudyWord(current))}
+              </p>
+            </div>
             {frontHint && frontHint.cardId === current.id ? (
               <div className="absolute inset-x-4 bottom-4 rounded border border-emerald-200 bg-emerald-50 p-3 text-sm">
                 {renderHighlightedText(frontHint.examples[frontHint.index], resolveStudyWord(current))}
@@ -401,12 +510,26 @@ export default function ReviewClient({
                 : "pointer-events-none -translate-y-1 opacity-0"
             }`}
           >
-            <p className={cardTextClass}>
-              {renderHighlightedText(current.backText, resolveStudyWord(current))}
-            </p>
-            <div className="max-w-3xl rounded border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm">
-              <span className="mr-2 font-semibold">Context example:</span>
-              {renderHighlightedText(buildBackContextExample(current), resolveStudyWord(current))}
+            <div className="w-full max-w-4xl space-y-5">
+              <p className={cardTextClass}>
+                {renderHighlightedText(
+                  `${backDetails?.word || resolveStudyWord(current)} — ${
+                    backDetails?.definitionEn || "common everyday meaning"
+                  }`,
+                  resolveStudyWord(current),
+                  {
+                    interactive: true,
+                    onWordClick: openWordMeaning
+                  }
+                )}
+              </p>
+              <p className="text-2xl leading-relaxed sm:text-3xl">
+                Example:{" "}
+                {renderHighlightedText(
+                  backDetails?.example || buildBackContextExample(current),
+                  resolveStudyWord(current)
+                )}
+              </p>
             </div>
           </div>
         </div>
@@ -563,6 +686,61 @@ export default function ReviewClient({
       </div>
 
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
+
+      {meaningModalOpen ? (
+        <>
+          <button
+            type="button"
+            aria-label="Close dictionary"
+            onClick={() => setMeaningModalOpen(false)}
+            className="fixed inset-0 z-[300] bg-black/30"
+          />
+          <div className="fixed left-1/2 top-1/2 z-[310] w-[92vw] max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-xl border bg-white p-5 shadow-2xl">
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-semibold">
+                  {meaningData?.word ?? resolveStudyWord(current)}
+                  {meaningData?.phonetic ? <span className="ml-2 text-sm text-slate-600">{meaningData.phonetic}</span> : null}
+                </h3>
+                <p className="text-xs text-slate-500">Russian meanings and examples</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMeaningModalOpen(false)}
+                className="rounded border px-3 py-1 text-sm"
+              >
+                Close
+              </button>
+            </div>
+
+            {meaningLoading ? <p className="text-sm text-slate-600">Loading...</p> : null}
+            {meaningError ? <p className="text-sm text-red-600">{meaningError}</p> : null}
+            {!meaningLoading && !meaningError && meaningData ? (
+              <div className="max-h-[56vh] space-y-3 overflow-auto pr-1">
+                <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+                  <div className="text-xs uppercase tracking-wide text-slate-500">Russian meanings</div>
+                  <div className="mt-1 flex flex-wrap gap-2">
+                    {getRuMeaningsList(meaningData).length > 0 ? (
+                      getRuMeaningsList(meaningData).map((term) => (
+                        <span key={term} className="rounded border bg-white px-2 py-1 text-sm text-slate-900">
+                          {term}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-sm text-slate-900">перевод временно недоступен</span>
+                    )}
+                  </div>
+                </div>
+                {getRuMeaningsList(meaningData).length === 0 ? (
+                  <div className="rounded-lg border bg-slate-50 p-3 text-sm text-slate-600">
+                    Русские варианты перевода пока не найдены для этого слова.
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        </>
+      ) : null}
     </div>
   );
 }
@@ -610,7 +788,11 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-function renderHighlightedText(text: string, word: string) {
+function renderHighlightedText(
+  text: string,
+  word: string,
+  options?: { interactive?: boolean; onWordClick?: () => void }
+) {
   const normalized = word.trim();
   if (!normalized) return text;
 
@@ -620,6 +802,22 @@ function renderHighlightedText(text: string, word: string) {
 
   return parts.map((part, index) => {
     if (part.toLowerCase() === normalized.toLowerCase()) {
+      if (options?.interactive && options.onWordClick) {
+        return (
+          <button
+            key={`hl-btn-${index}`}
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              options.onWordClick?.();
+            }}
+            className="font-extrabold text-green-600 underline decoration-dotted underline-offset-4"
+          >
+            {part}
+          </button>
+        );
+      }
       return (
         <span key={`hl-${index}`} className="font-extrabold text-green-600">
           {part}
@@ -640,6 +838,55 @@ function guessStudyWord(card: QueueCard): string {
   const words = card.frontText.match(/[A-Za-z']+/g) ?? [];
   const filtered = words.filter((w) => w.length > 3);
   return (filtered[0] ?? words[0] ?? "word").toLowerCase();
+}
+
+function parseCardBackDetails(card: QueueCard): {
+  word: string;
+  definitionEn?: string;
+  example?: string;
+  whyThisWordHere?: string;
+} {
+  const lines = card.backText
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const findValue = (prefix: string): string | undefined =>
+    lines.find((line) => line.toLowerCase().startsWith(prefix.toLowerCase()))?.slice(prefix.length).trim();
+
+  const word = findValue("Word:") || resolveStudyWord(card);
+  const definitionEn = findValue("Definition (EN):");
+  const example = findValue("Example:");
+  const whyThisWordHere = findValue("Why this word here:");
+
+  return {
+    word,
+    definitionEn,
+    example,
+    whyThisWordHere
+  };
+}
+
+function parseCardFrontDetails(card: QueueCard): {
+  sentence: string;
+  hint?: string;
+} {
+  const raw = card.frontText ?? "";
+  const parts = raw.split(/\n\s*\n/);
+  const sentence = parts[0]?.trim() || raw.trim();
+  const hintLine = parts.slice(1).join(" ").trim();
+  const hint = hintLine.replace(/^hint:\s*/i, "").trim();
+  return {
+    sentence,
+    hint: hint || undefined
+  };
+}
+
+function getRuMeaningsList(data: WordMeaningResponse): string[] {
+  const fromDictionary =
+    data.ruDictionary?.flatMap((entry) => entry.terms ?? []).map((term) => term.trim()) ?? [];
+  const fromVariants = data.ruVariants?.map((term) => term.trim()) ?? [];
+  return Array.from(new Set([...fromDictionary, ...fromVariants].filter((term) => term.length > 0))).slice(0, 8);
 }
 
 function buildAgainHelp(card: QueueCard): AgainHelpState {
@@ -681,12 +928,22 @@ function buildAgainHelp(card: QueueCard): AgainHelpState {
 
 function buildFrontHintExamples(card: QueueCard): string[] {
   const word = resolveStudyWord(card);
-  const source = card.frontText.trim().toLowerCase();
+  const back = parseCardBackDetails(card);
+  const front = parseCardFrontDetails(card);
+  const definition = (back.definitionEn ?? "")
+    .replace(/^[a-z]+:\s*/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  const shortDefinition = definition.split(" ").slice(0, 10).join(" ");
+  const source = front.sentence.trim().toLowerCase();
   const base = [
-    `I saw ${word} in a real conversation yesterday.`,
-    `Try using ${word} in one sentence about your day.`,
-    `When you hear ${word}, think of one simple situation.`,
-    `${word} often appears in everyday spoken English.`
+    front.hint ?? "",
+    shortDefinition
+      ? `In this sentence, "${word}" means: ${shortDefinition}.`
+      : `Focus on what "${word}" is doing in this situation.`,
+    `Think about the situation first, then infer "${word}" from context.`,
+    `Use nearby words in the sentence to guess "${word}" naturally.`,
+    `Imagine this exact scene and match "${word}" to the action or idea.`
   ];
   return Array.from(
     new Set(

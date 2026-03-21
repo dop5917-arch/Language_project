@@ -6,7 +6,7 @@ import { filterQueueByLatestRating, getFullDeckQueue, type RatingFilter } from "
 
 type Props = {
   params: { deckId: string };
-  searchParams?: { rating?: string };
+  searchParams?: { rating?: string; resume?: string };
 };
 
 export const dynamic = "force-dynamic";
@@ -41,6 +41,7 @@ export default async function ReviewAllPage({ params, searchParams }: Props) {
     level: item.card.level,
     isNew: item.isNew
   }));
+  const resume = searchParams?.resume === "1";
 
   return (
     <div className="space-y-4">
@@ -84,6 +85,8 @@ export default async function ReviewAllPage({ params, searchParams }: Props) {
         <ReviewClient
           deckId={deck.id}
           initialQueue={serializedQueue}
+          enableResume={resume}
+          sessionKey={`deck:${deck.id}:review-all:${ratingFilter}`}
           returnHref={
             ratingFilter === "all"
               ? `/decks/${deck.id}/review-all`

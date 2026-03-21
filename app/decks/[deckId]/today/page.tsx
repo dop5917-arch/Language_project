@@ -47,7 +47,7 @@ export default async function TodayPage({ params, searchParams }: Props) {
         <div>
           <h1 className="text-2xl font-semibold">{deck.name} - Повторение по расписанию</h1>
           <p className="text-sm text-slate-600">
-            Здесь показываются карточки, которым пора повторяться сегодня, плюс новые карточки.
+            По расписанию = только Due. Новые карточки запускаются отдельно.
           </p>
         </div>
         <Link href={`/decks/${deck.id}`} className="text-sm whitespace-nowrap">
@@ -72,12 +72,20 @@ export default async function TodayPage({ params, searchParams }: Props) {
       </div>
 
       {todayTotal > 0 ? (
-        <Link
-          href={`/decks/${deck.id}/review?newLimit=${newLimit}`}
-          className="inline-block rounded bg-blue-600 px-5 py-3 font-medium text-white"
-        >
-          Start (По расписанию)
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href={`/decks/${deck.id}/review`}
+            className="inline-block rounded bg-blue-600 px-5 py-3 font-medium text-white"
+          >
+            Start (По расписанию: Due)
+          </Link>
+          <Link
+            href={`/decks/${deck.id}/review?includeNew=1&newLimit=${newLimit}`}
+            className="inline-block rounded border border-blue-300 bg-white px-5 py-3 font-medium text-blue-700"
+          >
+            Start (Due + New)
+          </Link>
+        </div>
       ) : (
         <div className="rounded-lg border bg-white p-4">
           <p className="text-sm text-slate-700">На сегодня карточек по расписанию нет.</p>

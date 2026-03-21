@@ -3,6 +3,7 @@ import ReviewClient from "@/components/ReviewClient";
 import { prisma } from "@/lib/prisma";
 import {
   filterQueueByLatestRating,
+  getGlobalDueQueue,
   getGlobalFullQueue,
   getGlobalTodayQueue,
   type RatingFilter,
@@ -11,7 +12,7 @@ import {
 import { startOfLocalDay } from "@/lib/date";
 
 type Props = {
-  searchParams?: { newLimit?: string; preset?: string };
+  searchParams?: { newLimit?: string; preset?: string; include?: string };
 };
 
 export const dynamic = "force-dynamic";
@@ -19,12 +20,29 @@ export const dynamic = "force-dynamic";
 export default async function GlobalReviewPage({ searchParams }: Props) {
   const newLimit = Math.max(1, Math.min(100, Number(searchParams?.newLimit ?? 20) || 20));
   const presetRaw = searchParams?.preset;
+  const includeRaw = searchParams?.include ?? "";
+  const includeSet =
+    includeRaw.trim().length > 0
+      ? new Set(
+          includeRaw
+            .split(",")
+            .map((id) => id.trim())
+            .filter(Boolean)
+        )
+      : null;
   const preset =
-    presetRaw === "daily" || presetRaw === "difficult" || presetRaw === "full" ? presetRaw : null;
+    presetRaw === "due" ||
+    presetRaw === "daily" ||
+    presetRaw === "unpassed" ||
+    presetRaw === "difficult" ||
+    presetRaw === "easy" ||
+    presetRaw === "full"
+      ? presetRaw
+      : null;
 
   const today = startOfLocalDay(new Date());
 
-  const [decks, dueCount, newCount, allCards] = await Promise.all([
+  const [decks, dueCount, newCount, allCards, latestLogs] = await Promise.all([
     prisma.deck.findMany({ select: { id: true, name: true } }),
     prisma.reviewState.count({
       where: {
@@ -36,8 +54,23 @@ export default async function GlobalReviewPage({ searchParams }: Props) {
         reviewState: { is: null }
       }
     }),
-    prisma.card.count()
+    prisma.card.count(),
+    prisma.reviewLog.findMany({
+      orderBy: { reviewedAt: "desc" },
+      select: { cardId: true, rating: true }
+    })
   ]);
+
+  const latestByCard = new Map<string, string>();
+  for (const log of latestLogs) {
+    if (!latestByCard.has(log.cardId)) {
+      latestByCard.set(log.cardId, log.rating);
+    }
+  }
+  const latestRatings = Array.from(latestByCard.values());
+  const difficultCount = latestRatings.filter((r) => r === "Again" || r === "Hard").length;
+  const easyCount = latestRatings.filter((r) => r === "Easy").length;
+  const unpassedCount = Math.max(0, allCards - latestRatings.length);
 
   if (!preset) {
     return (
@@ -49,24 +82,42 @@ export default async function GlobalReviewPage({ searchParams }: Props) {
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <ModeCard
+            title="All Cards"
+            subtitle={`${allCards} cards`}
+            description="Repeat all cards from all decks."
+            href="/review/all?preset=full"
+          />
+          <ModeCard
+            title="Not Passed"
+            subtitle={`${unpassedCount} cards`}
+            description="Cards you have not reviewed yet."
+            href="/review/all?preset=unpassed"
+          />
+          <ModeCard
+            title="Difficult"
+            subtitle={`${difficultCount} cards`}
+            description="Cards with last rating Again or Hard."
+            href="/review/all?preset=difficult"
+          />
+          <ModeCard
+            title="Easy"
+            subtitle={`${easyCount} cards`}
+            description="Cards with last rating Easy."
+            href="/review/all?preset=easy"
+          />
+          <ModeCard
+            title="Due Now"
+            subtitle={`${dueCount} cards by schedule`}
+            description="Only cards that are due right now."
+            href="/review/all?preset=due"
+          />
           <ModeCard
             title="Quick Daily Review"
             subtitle={`Due ${dueCount} • New ${Math.min(newCount, newLimit)} (limit ${newLimit})`}
             description="Review cards that should be repeated today from all decks."
             href={`/review/all?preset=daily&newLimit=${newLimit}`}
-          />
-          <ModeCard
-            title="Forgotten Focus"
-            subtitle="Again + Hard cards"
-            description="Focus only on difficult cards that were not remembered confidently."
-            href="/review/all?preset=difficult"
-          />
-          <ModeCard
-            title="Full Sweep"
-            subtitle={`${allCards} cards total`}
-            description="Go through all cards from all decks in one mixed session."
-            href="/review/all?preset=full"
           />
         </div>
       </div>
@@ -78,6 +129,15 @@ export default async function GlobalReviewPage({ searchParams }: Props) {
   let modeTitle = "Global Review";
   let modeDescription = "";
 
+  if (preset === "due") {
+    baseQueue = await getGlobalDueQueue(new Date());
+    if (includeSet && includeSet.size > 0) {
+      baseQueue = baseQueue.filter((item) => includeSet.has(item.card.id));
+    }
+    ratingFilter = "all";
+    modeTitle = "Due Now";
+    modeDescription = "Only cards that are due by schedule (no new cards).";
+  }
   if (preset === "daily") {
     baseQueue = await getGlobalTodayQueue(new Date(), newLimit);
     ratingFilter = "all";
@@ -87,8 +147,20 @@ export default async function GlobalReviewPage({ searchParams }: Props) {
   if (preset === "difficult") {
     baseQueue = await getGlobalFullQueue();
     ratingFilter = "Difficult";
-    modeTitle = "Forgotten Focus";
+    modeTitle = "Difficult";
     modeDescription = "Only difficult cards (last rating: Again or Hard).";
+  }
+  if (preset === "unpassed") {
+    baseQueue = await getGlobalFullQueue();
+    ratingFilter = "Unpassed";
+    modeTitle = "Not Passed";
+    modeDescription = "Cards that have not been reviewed yet.";
+  }
+  if (preset === "easy") {
+    baseQueue = await getGlobalFullQueue();
+    ratingFilter = "Learned";
+    modeTitle = "Easy";
+    modeDescription = "Cards with confident recall (last rating: Easy).";
   }
   if (preset === "full") {
     baseQueue = await getGlobalFullQueue();
@@ -159,7 +231,10 @@ function ModeCard({
       <h2 className="text-lg font-semibold">{title}</h2>
       <p className="mt-1 text-xs uppercase tracking-wide text-slate-500">{subtitle}</p>
       <p className="mt-2 text-sm text-slate-700">{description}</p>
-      <Link href={href} className="mt-4 inline-block rounded bg-emerald-700 px-4 py-2 text-sm font-semibold text-white">
+      <Link
+        href={href}
+        className="mt-4 inline-block rounded bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
+      >
         Start
       </Link>
     </article>

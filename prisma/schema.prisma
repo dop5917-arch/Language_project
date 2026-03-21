@@ -17,36 +17,36 @@ model Deck {
 
 model Card {
   id          String       @id @default(cuid())
-  deckId       String
-  targetWord   String?
-  phonetic     String?
-  audioUrl     String?
-  frontText    String
-  backText     String
-  imageUrl     String?
-  tags         String?
-  level        Int?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  deck         Deck         @relation(fields: [deckId], references: [id], onDelete: Cascade)
-  reviewState  ReviewState?
-  reviewLogs   ReviewLog[]
+  deckId      String
+  targetWord  String?
+  phonetic    String?
+  audioUrl    String?
+  frontText   String
+  backText    String
+  imageUrl    String?
+  tags        String?
+  level       Int?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  deck        Deck         @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  reviewLogs  ReviewLog[]
+  reviewState ReviewState?
 
   @@index([deckId, createdAt])
 }
 
 model ReviewState {
-  id             String   @id @default(cuid())
-  cardId         String   @unique
-  ease           Float    @default(2.5)
-  intervalDays   Int      @default(0)
+  id             String    @id @default(cuid())
+  cardId         String    @unique
+  ease           Float     @default(2.5)
+  intervalDays   Int       @default(0)
   dueDate        DateTime
-  reps           Int      @default(0)
-  lapses         Int      @default(0)
+  reps           Int       @default(0)
+  lapses         Int       @default(0)
   lastReviewedAt DateTime?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  card           Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  card           Card      @relation(fields: [cardId], references: [id], onDelete: Cascade)
 
   @@index([dueDate])
 }

@@ -22,6 +22,11 @@ export default async function DeckDetailPage({ params }: Props) {
 
   if (!deck) notFound();
 
+  await prisma.deck.update({
+    where: { id: params.deckId },
+    data: { updatedAt: new Date() }
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">

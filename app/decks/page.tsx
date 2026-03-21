@@ -1,5 +1,8 @@
 import Link from "next/link";
+import CreateDeckInline from "@/components/CreateDeckInline";
 import DeckCard from "@/components/DeckCard";
+import DueNowPanel from "@/components/DueNowPanel";
+import StudyTimerControls from "@/components/StudyTimerControls";
 import { createDeckAction } from "@/lib/actions";
 import { startOfLocalDay } from "@/lib/date";
 import { prisma } from "@/lib/prisma";
@@ -10,37 +13,64 @@ export default async function DecksPage() {
   const today = startOfLocalDay(new Date());
   const weekStart = new Date(today);
   weekStart.setDate(weekStart.getDate() - 6);
-  const [decks, totalCards, reviewedCards, dueToday, logs] = await Promise.all([
-    prisma.deck.findMany({
-      include: {
-        _count: {
-          select: { cards: true }
-        },
-        cards: {
-          select: {
-            id: true,
-            reviewLogs: {
-              orderBy: { reviewedAt: "desc" },
-              take: 1,
-              select: { rating: true }
+  let decks: any[] = [];
+  let totalCards = 0;
+  let reviewedCards = 0;
+  let dueToday = 0;
+  let logs: Array<{ cardId: string; rating: string; reviewedAt: Date }> = [];
+  let logsWithDeck: Array<{ rating: string; reviewedAt: Date; card: { deckId: string } }> = [];
+  let dbError: string | null = null;
+
+  try {
+    [decks, totalCards, reviewedCards, dueToday, logs, logsWithDeck] = await Promise.all([
+      prisma.deck.findMany({
+        include: {
+          _count: {
+            select: { cards: true }
+          },
+          cards: {
+            select: {
+              id: true,
+              targetWord: true,
+              frontText: true,
+              reviewState: {
+                select: { dueDate: true }
+              },
+              reviewLogs: {
+                orderBy: { reviewedAt: "desc" },
+                take: 1,
+                select: { rating: true }
+              }
             }
           }
+        },
+        orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }]
+      }),
+      prisma.card.count(),
+      prisma.reviewState.count(),
+      prisma.reviewState.count({
+        where: {
+          dueDate: { lte: today }
         }
-      },
-      orderBy: { createdAt: "asc" }
-    }),
-    prisma.card.count(),
-    prisma.reviewState.count(),
-    prisma.reviewState.count({
-      where: {
-        dueDate: { lte: today }
-      }
-    }),
-    prisma.reviewLog.findMany({
-      orderBy: { reviewedAt: "desc" },
-      select: { cardId: true, rating: true, reviewedAt: true }
-    })
-  ]);
+      }),
+      prisma.reviewLog.findMany({
+        orderBy: { reviewedAt: "desc" },
+        select: { cardId: true, rating: true, reviewedAt: true }
+      }),
+      prisma.reviewLog.findMany({
+        orderBy: { reviewedAt: "desc" },
+        select: {
+          rating: true,
+          reviewedAt: true,
+          card: {
+            select: { deckId: true }
+          }
+        }
+      })
+    ]);
+  } catch (error) {
+    dbError = error instanceof Error ? error.message : "Database is unavailable";
+  }
 
   const latestByCard = new Map<string, string>();
   for (const log of logs) {
@@ -69,23 +99,63 @@ export default async function DecksPage() {
     cursor.setDate(cursor.getDate() - 1);
   }
 
+  const monthStart = new Date(today);
+  monthStart.setDate(monthStart.getDate() - 30);
+  const deckLastActivity = new Map<string, Date>();
+  const deckAccuracy = new Map<string, { success: number; total: number }>();
+  for (const log of logsWithDeck) {
+    const deckId = log.card.deckId;
+    if (!deckLastActivity.has(deckId)) {
+      deckLastActivity.set(deckId, log.reviewedAt);
+    }
+    if (log.reviewedAt < monthStart) continue;
+    const current = deckAccuracy.get(deckId) ?? { success: 0, total: 0 };
+    current.total += 1;
+    if (log.rating === "Good" || log.rating === "Easy") current.success += 1;
+    deckAccuracy.set(deckId, current);
+  }
+
+  const dueDecks = decks
+    .map((deck) => ({
+      deckId: deck.id,
+      deckName: deck.name,
+      cards: deck.cards
+        .filter((card: any) => card.reviewState?.dueDate && card.reviewState.dueDate <= today)
+        .map((card: any) => ({
+          id: card.id,
+          targetWord: card.targetWord,
+          frontText: card.frontText
+        }))
+    }))
+    .filter((deck) => deck.cards.length > 0);
+
   return (
     <div className="space-y-6">
-      <section className="rounded-xl border border-emerald-300 bg-emerald-50 p-5 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="max-w-2xl">
-            <h2 className="text-lg font-semibold">Global Review</h2>
-            <p className="mt-1 text-sm text-slate-700">
-              Repeat cards from all decks in one session. This mode is for full mixed practice across your entire
-              vocabulary.
-            </p>
+      {dbError ? (
+        <section className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          База данных временно недоступна. Проверь подключение к интернету и `DATABASE_URL` (Neon), затем обнови страницу.
+        </section>
+      ) : null}
+      <section className="flex flex-wrap items-stretch gap-3">
+        {!dbError ? (
+          <div className="w-full max-w-[260px]">
+            <DueNowPanel dueToday={dueToday} dueDecks={dueDecks} />
           </div>
-          <Link
-            href="/review/all"
-            className="rounded bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
-          >
-            Start Global Review
-          </Link>
+        ) : null}
+        <div className="w-full max-w-[260px] rounded-xl border bg-white p-3 shadow-sm min-h-[182px]">
+          <div className="space-y-2">
+            <h2 className="text-sm font-semibold">Общее повторение</h2>
+            <p className="text-xs text-slate-600">Карточки из всех колод</p>
+            <Link
+              href="/review/all"
+              className="inline-flex rounded bg-emerald-700 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-800"
+            >
+              Открыть
+            </Link>
+          </div>
+        </div>
+        <div className="w-full max-w-[260px]">
+          <StudyTimerControls />
         </div>
       </section>
 
@@ -93,27 +163,19 @@ export default async function DecksPage() {
         <div className="space-y-4">
           <section className="rounded-lg border bg-white p-4">
             <h1 className="text-xl font-semibold">Decks</h1>
-            <form action={createDeckAction} className="mt-4 flex flex-col gap-2 sm:flex-row">
-              <input
-                type="text"
-                name="name"
-                placeholder="New deck name"
-                className="flex-1 rounded border px-3 py-2"
-                required
-              />
-              <button type="submit" className="rounded bg-emerald-700 px-4 py-2 text-white hover:bg-emerald-800">
-                Create Deck
-              </button>
-            </form>
+            <CreateDeckInline action={createDeckAction} />
           </section>
 
-          <section className="space-y-3">
+          <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-2">
             {decks.length === 0 ? (
               <p className="text-sm text-slate-600">No decks yet.</p>
             ) : (
               decks.map((deck) => {
-                const rememberedCount = deck.cards.filter((card) => card.reviewLogs[0]?.rating === "Easy").length;
-                const remainingCount = Math.max(0, deck._count.cards - rememberedCount);
+                const rememberedCount = deck.cards.filter((card: any) => card.reviewLogs[0]?.rating === "Easy").length;
+                const passedCount = deck.cards.filter((card: any) => card.reviewLogs.length > 0).length;
+                const dueCount = deck.cards.filter(
+                  (card: any) => card.reviewState?.dueDate && card.reviewState.dueDate <= today
+                ).length;
                 const progressPercent =
                   deck._count.cards > 0 ? Math.round((rememberedCount / deck._count.cards) * 100) : 0;
 
@@ -122,9 +184,21 @@ export default async function DecksPage() {
                     key={deck.id}
                     deckId={deck.id}
                     initialName={deck.name}
+                    createdAt={deck.createdAt.toISOString()}
+                    lastActivityAt={deckLastActivity.get(deck.id)?.toISOString() ?? null}
+                    accuracyPercent={
+                      (deckAccuracy.get(deck.id)?.total ?? 0) > 0
+                        ? Math.round(
+                            ((deckAccuracy.get(deck.id)?.success ?? 0) /
+                              (deckAccuracy.get(deck.id)?.total ?? 1)) *
+                              100
+                          )
+                        : null
+                    }
                     cardsCount={deck._count.cards}
+                    passedCount={passedCount}
                     rememberedCount={rememberedCount}
-                    remainingCount={remainingCount}
+                    dueCount={dueCount}
                     progressPercent={progressPercent}
                   />
                 );

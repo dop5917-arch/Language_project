@@ -107,6 +107,36 @@ export const wordHelperSchema = z.object({
     .regex(/^[a-zA-Z][a-zA-Z' -]*$/, "Use English letters only")
 });
 
+export const sentenceOptionsSchema = z.object({
+  word: wordHelperSchema.shape.word,
+  exclude: z.array(z.string().trim().min(1).max(300)).max(200).optional(),
+  translationHint: z.string().trim().min(1).max(200).optional()
+});
+
+export const buildCardFromSentenceSchema = z.object({
+  word: wordHelperSchema.shape.word,
+  frontSentence: z.string().trim().min(6, "Front sentence is too short").max(300)
+});
+
+export const sentenceTranslateSchema = z.object({
+  text: z.string().trim().min(1, "Text is required").max(500),
+  sourceLang: z.string().trim().min(2).max(10).optional().default("en"),
+  targetLang: z.string().trim().min(2).max(10).optional().default("ru")
+});
+
+export const definitionOptionsSchema = z.object({
+  word: wordHelperSchema.shape.word,
+  exclude: z.array(z.string().trim().min(1).max(300)).max(200).optional(),
+  translationHint: z.string().trim().min(1).max(200).optional()
+});
+
+export const whyThisWordSchema = z.object({
+  word: wordHelperSchema.shape.word,
+  sentence: z.string().trim().min(6).max(300),
+  ruMeaning: z.string().trim().min(1).max(240).optional(),
+  definitionEn: z.string().trim().min(3).max(240).optional()
+});
+
 export const reviewQueueQuerySchema = z.object({
   newLimit: z.coerce.number().int().min(1).max(100).default(20)
 });

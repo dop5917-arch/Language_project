@@ -25,6 +25,56 @@ type SmartDraftResponse = {
 
 type SmartDraft = NonNullable<SmartDraftResponse["draft"]>;
 
+type DictionaryApiEntry = {
+  meanings?: Array<{
+    partOfSpeech?: string;
+    definitions?: Array<{
+      definition?: string;
+      example?: string;
+    }>;
+  }>;
+};
+
+function buildSentenceFallback(word: string, partOfSpeech?: string) {
+  const pos = (partOfSpeech ?? "").toLowerCase();
+  const isAbstractNoun =
+    pos === "noun" &&
+    /(tion|sion|ment|ness|ity|ism|ship|ance|ence|hood|acy|ure)$/i.test(word);
+  if (pos === "noun" && isAbstractNoun) {
+    return {
+      front: `People online criticized the ad for ${word}.`,
+      back: `The manager called it ${word} and ended the discussion.`
+    };
+  }
+  if (pos === "verb") {
+    return {
+      front: `I had to ${word} the plan before the meeting.`,
+      back: `She will ${word} him as soon as she gets home.`
+    };
+  }
+  if (pos === "adjective") {
+    return {
+      front: `The room felt ${word} after everyone left.`,
+      back: `His message sounded ${word} during the call.`
+    };
+  }
+  if (pos === "adverb") {
+    return {
+      front: `She answered ${word} when the manager asked.`,
+      back: `He spoke ${word} so everyone could follow him.`
+    };
+  }
+  return {
+    front: `People discussed ${word} during lunch at the office.`,
+    back: `She brought up ${word} in a call with her friend.`
+  };
+}
+
+function buildFallbackWhy(sentence: string): string {
+  const short = sentence.trim().replace(/\s+/g, " ").split(" ").slice(0, 6).join(" ");
+  return `because this context uses it as ${short.toLowerCase()}`;
+}
+
 function normalizeWord(value: string) {
   return value
     .trim()
@@ -122,6 +172,7 @@ function extractWordsFromDetectedColumn(rows: string[][], columnIndex: number) {
 
 async function fetchSmartDraft(req: NextRequest, word: string): Promise<SmartDraft> {
   const url = new URL("/api/word-helper", req.url);
+  url.searchParams.set("mode", "import");
   const res = await fetch(url.toString(), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -135,6 +186,64 @@ async function fetchSmartDraft(req: NextRequest, word: string): Promise<SmartDra
   }
 
   return data.draft;
+}
+
+async function fetchDictionaryFallbackDraft(word: string): Promise<SmartDraft | null> {
+  try {
+    const res = await fetch(
+      `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`,
+      {
+        method: "GET",
+        headers: { Accept: "application/json" },
+        cache: "no-store"
+      }
+    );
+    if (!res.ok) return null;
+
+    const data = (await res.json()) as unknown;
+    if (!Array.isArray(data) || data.length === 0) return null;
+    const entries = data as DictionaryApiEntry[];
+
+    const examples: string[] = [];
+    let definition: string | undefined;
+    let partOfSpeech: string | undefined;
+
+    for (const entry of entries) {
+      for (const meaning of entry.meanings ?? []) {
+        for (const def of meaning.definitions ?? []) {
+          if (!definition && def.definition?.trim()) {
+            definition = def.definition.trim();
+            partOfSpeech = meaning.partOfSpeech?.trim();
+          }
+          if (def.example?.trim()) examples.push(def.example.trim());
+          if (examples.length >= 2 && definition) break;
+        }
+        if (examples.length >= 2 && definition) break;
+      }
+      if (examples.length >= 2 && definition) break;
+    }
+
+    const fallback = buildSentenceFallback(word, partOfSpeech);
+    const frontText = examples[0] ?? fallback.front;
+    const backSentence = examples[1] ?? fallback.back;
+    const backText = [
+      `Word: ${word}`,
+      ...(definition ? [`Definition (EN): ${definition}`] : []),
+      `Example: ${backSentence}`,
+      `Why this word here: ${buildFallbackWhy(backSentence)}`
+    ].join("\n");
+
+    return {
+      word,
+      targetWord: word,
+      frontText,
+      backText,
+      tags: `smart-add,vocab,${word}`,
+      level: 1
+    };
+  } catch {
+    return null;
+  }
 }
 
 export async function POST(req: NextRequest, { params }: Context) {
@@ -199,10 +308,13 @@ export async function POST(req: NextRequest, { params }: Context) {
       }
 
       try {
-        const draft = await fetchSmartDraft(req, word);
-        if (!draft) {
-          throw new Error(`Empty draft for "${word}"`);
+        let draft: SmartDraft | null = null;
+        try {
+          draft = await fetchSmartDraft(req, word);
+        } catch {
+          draft = await fetchDictionaryFallbackDraft(word);
         }
+        if (!draft) throw new Error(`Empty draft for "${word}"`);
         await prisma.card.create({
           data: {
             deckId: params.deckId,

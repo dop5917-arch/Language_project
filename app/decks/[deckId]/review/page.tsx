@@ -2,11 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import ReviewClient from "@/components/ReviewClient";
 import { prisma } from "@/lib/prisma";
-import { getTodayQueue } from "@/lib/srs";
+import { getDueOnlyQueue, getTodayQueue } from "@/lib/srs";
 
 type Props = {
   params: { deckId: string };
-  searchParams?: { newLimit?: string };
+  searchParams?: { newLimit?: string; resume?: string; includeNew?: string };
 };
 
 export const dynamic = "force-dynamic";
@@ -16,7 +16,10 @@ export default async function ReviewPage({ params, searchParams }: Props) {
   if (!deck) notFound();
 
   const newLimit = Math.max(1, Math.min(100, Number(searchParams?.newLimit ?? 20) || 20));
-  const queue = await getTodayQueue(deck.id, new Date(), newLimit);
+  const includeNew = searchParams?.includeNew === "1";
+  const queue = includeNew
+    ? await getTodayQueue(deck.id, new Date(), newLimit)
+    : await getDueOnlyQueue(deck.id, new Date());
 
   const serializedQueue = queue.map((item) => ({
     id: item.card.id,
@@ -31,16 +34,24 @@ export default async function ReviewPage({ params, searchParams }: Props) {
     level: item.card.level,
     isNew: item.isNew
   }));
+  const resume = searchParams?.resume === "1";
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Review: {deck.name}</h1>
+        <h1 className="text-xl font-semibold">
+          {includeNew ? "Review (Due + New)" : "Review (Due Only)"}: {deck.name}
+        </h1>
         <Link href={`/decks/${deck.id}/today`} className="text-sm">
           Back to Today
         </Link>
       </div>
-      <ReviewClient deckId={deck.id} initialQueue={serializedQueue} />
+      <ReviewClient
+        deckId={deck.id}
+        initialQueue={serializedQueue}
+        enableResume={resume}
+        sessionKey={`deck:${deck.id}:review-today:${newLimit}`}
+      />
     </div>
   );
 }

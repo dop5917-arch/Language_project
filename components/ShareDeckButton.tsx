@@ -4,9 +4,17 @@ import { useState } from "react";
 
 type Props = {
   deckId: string;
+  className?: string;
+  label?: string;
+  copiedLabel?: string;
 };
 
-export default function ShareDeckButton({ deckId }: Props) {
+export default function ShareDeckButton({
+  deckId,
+  className,
+  label = "Поделиться",
+  copiedLabel = "Скопировано"
+}: Props) {
   const [copied, setCopied] = useState(false);
 
   async function onShare() {
@@ -22,8 +30,12 @@ export default function ShareDeckButton({ deckId }: Props) {
   }
 
   return (
-    <button type="button" onClick={onShare} className="w-full rounded border px-3 py-2 text-sm">
-      {copied ? "Copied" : "Share"}
+    <button
+      type="button"
+      onClick={onShare}
+      className={className ?? "w-full rounded border px-3 py-2 text-sm"}
+    >
+      {copied ? copiedLabel : label}
     </button>
   );
 }

@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { addDaysLocal, startOfLocalDay } from "@/lib/date";
 
 export type Rating = "Again" | "Hard" | "Good" | "Easy";
-export type RatingFilter = Rating | "Difficult" | "Learned" | "all";
+export type RatingFilter = Rating | "Difficult" | "Learned" | "Unpassed" | "all";
 const FIXED_INTERVAL_STEPS_DAYS = [1, 3, 7, 30] as const;
 
 export type QueueItem = {
@@ -113,6 +113,53 @@ export async function getTodayQueue(deckId: string, date: Date, newLimit: number
   ];
 }
 
+export async function getDueOnlyQueue(deckId: string, date: Date): Promise<QueueItem[]> {
+  const today = startOfLocalDay(date);
+
+  const dueCards = await prisma.card.findMany({
+    where: {
+      deckId,
+      reviewState: {
+        is: {
+          dueDate: {
+            lte: today
+          }
+        }
+      }
+    },
+    include: {
+      reviewState: true
+    },
+    orderBy: [{ reviewState: { dueDate: "asc" } }, { createdAt: "asc" }]
+  });
+
+  return dueCards.map((card) => ({
+    card: {
+      id: card.id,
+      deckId: card.deckId,
+      targetWord: card.targetWord,
+      phonetic: card.phonetic,
+      audioUrl: card.audioUrl,
+      frontText: card.frontText,
+      backText: card.backText,
+      imageUrl: card.imageUrl,
+      tags: card.tags,
+      level: card.level
+    },
+    reviewState: card.reviewState
+      ? {
+          ease: card.reviewState.ease,
+          intervalDays: card.reviewState.intervalDays,
+          dueDate: card.reviewState.dueDate,
+          reps: card.reviewState.reps,
+          lapses: card.reviewState.lapses,
+          lastReviewedAt: card.reviewState.lastReviewedAt
+        }
+      : null,
+    isNew: false
+  }));
+}
+
 export async function getFullDeckQueue(deckId: string): Promise<QueueItem[]> {
   const cards = await prisma.card.findMany({
     where: { deckId },
@@ -219,6 +266,52 @@ export async function getGlobalTodayQueue(date: Date, newLimit: number): Promise
   ];
 }
 
+export async function getGlobalDueQueue(date: Date): Promise<QueueItem[]> {
+  const today = startOfLocalDay(date);
+
+  const dueCards = await prisma.card.findMany({
+    where: {
+      reviewState: {
+        is: {
+          dueDate: {
+            lte: today
+          }
+        }
+      }
+    },
+    include: {
+      reviewState: true
+    },
+    orderBy: [{ reviewState: { dueDate: "asc" } }, { createdAt: "asc" }]
+  });
+
+  return dueCards.map((card) => ({
+    card: {
+      id: card.id,
+      deckId: card.deckId,
+      targetWord: card.targetWord,
+      phonetic: card.phonetic,
+      audioUrl: card.audioUrl,
+      frontText: card.frontText,
+      backText: card.backText,
+      imageUrl: card.imageUrl,
+      tags: card.tags,
+      level: card.level
+    },
+    reviewState: card.reviewState
+      ? {
+          ease: card.reviewState.ease,
+          intervalDays: card.reviewState.intervalDays,
+          dueDate: card.reviewState.dueDate,
+          reps: card.reviewState.reps,
+          lapses: card.reviewState.lapses,
+          lastReviewedAt: card.reviewState.lastReviewedAt
+        }
+      : null,
+    isNew: false
+  }));
+}
+
 export async function getGlobalFullQueue(): Promise<QueueItem[]> {
   const cards = await prisma.card.findMany({
     include: { reviewState: true },
@@ -277,6 +370,9 @@ export async function filterQueueByLatestRating(
 
   return queue.filter((item) => {
     const lastRating = latestByCard.get(item.card.id);
+    if (ratingFilter === "Unpassed") {
+      return !lastRating;
+    }
     if (ratingFilter === "Difficult") {
       return lastRating === "Again" || lastRating === "Hard";
     }

@@ -71,7 +71,7 @@ export async function createCardAction(deckId: string, formData: FormData) {
     throw new Error(parsed.error.issues[0]?.message ?? "Invalid card");
   }
 
-  await prisma.card.create({
+  const card = await prisma.card.create({
     data: {
       deckId,
       targetWord: parsed.data.targetWord,
@@ -87,7 +87,7 @@ export async function createCardAction(deckId: string, formData: FormData) {
 
   revalidatePath(`/decks/${deckId}`);
   revalidatePath(`/decks/${deckId}/today`);
-  redirect(`/decks/${deckId}`);
+  redirect(`/decks/${deckId}/cards/${card.id}/edit`);
 }
 
 export async function updateCardAction(deckId: string, cardId: string, formData: FormData) {

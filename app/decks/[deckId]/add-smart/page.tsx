@@ -16,7 +16,9 @@ export default async function SmartAddPage({ params }: Props) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold">Smart Add: {deck.name}</h1>
-          <p className="text-sm text-slate-600">Введи одно слово, приложение предложит карточку.</p>
+          <p className="text-sm text-slate-600">
+            Выбери слово, затем выбери лучший контекст из 5 примеров и создай карточку.
+          </p>
         </div>
         <Link href={`/decks/${deck.id}`} className="text-sm">
           Back to deck
