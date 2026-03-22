@@ -84,10 +84,12 @@ export default function DueNowPanel({
   }
 
   return (
-    <section className="h-full min-h-[182px] rounded-xl border bg-white p-3 shadow-sm">
-      <div className="space-y-2">
-        <h2 className="text-sm font-semibold">Пора повторять</h2>
-        <p className="text-xs text-slate-600">
+    <section className="h-full min-h-[182px] rounded-xl border bg-white p-4 shadow-sm">
+      <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
+        <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+          По расписанию
+        </span>
+        <p className="max-w-[220px] truncate text-sm font-medium text-slate-800">
           {dueToday > 0 ? (
             <>
               По расписанию: <span className="font-semibold">{dueCountFromData}</span>
@@ -100,7 +102,7 @@ export default function DueNowPanel({
           <button
             type="button"
             onClick={() => setPickerOpen(true)}
-            className="inline-flex rounded bg-amber-600 px-3 py-2 text-xs font-semibold text-white hover:bg-amber-700"
+            className="inline-flex rounded-lg bg-amber-600 px-3 py-2 text-sm font-medium text-white hover:bg-amber-700"
           >
             Открыть
           </button>
@@ -108,7 +110,7 @@ export default function DueNowPanel({
           <button
             type="button"
             onClick={() => router.push("/review/all?preset=due")}
-            className="inline-flex rounded bg-emerald-700 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-800"
+            className="inline-flex rounded-lg bg-emerald-700 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-800"
           >
             Перейти
           </button>
@@ -132,9 +134,11 @@ export default function DueNowPanel({
               <button
                 type="button"
                 onClick={() => setPickerOpen(false)}
-                className="rounded border px-3 py-1 text-sm"
+                aria-label="Закрыть"
+                title="Закрыть"
+                className="inline-flex h-7 w-7 items-center justify-center rounded border border-red-300 bg-red-50 text-sm font-semibold leading-none text-red-700 hover:bg-red-100"
               >
-                Закрыть
+                ✕
               </button>
             </div>
 
@@ -180,9 +184,11 @@ export default function DueNowPanel({
                           <button
                             type="button"
                             onClick={() => toggleDeckExpanded(deck.deckId)}
-                            className="rounded border px-2 py-1 text-xs"
+                            className="rounded border px-2 py-1 text-sm leading-none"
+                            aria-label={isDeckExpanded ? "Скрыть карточки колоды" : "Показать карточки колоды"}
+                            title={isDeckExpanded ? "Скрыть карточки" : "Показать карточки"}
                           >
-                            {isDeckExpanded ? "Скрыть" : "Раскрыть"}
+                            {isDeckExpanded ? "▴" : "▾"}
                           </button>
                         </div>
 

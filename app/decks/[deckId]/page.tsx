@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import DeckAddMenu from "@/components/DeckAddMenu";
+import { startOfLocalDay } from "@/lib/date";
 import { prisma } from "@/lib/prisma";
 
 type Props = {
@@ -10,6 +10,7 @@ type Props = {
 export const dynamic = "force-dynamic";
 
 export default async function DeckDetailPage({ params }: Props) {
+  const today = startOfLocalDay(new Date());
   const deck = await prisma.deck.findUnique({
     where: { id: params.deckId },
     include: {
@@ -34,60 +35,115 @@ export default async function DeckDetailPage({ params }: Props) {
           <h1 className="text-2xl font-semibold">{deck.name}</h1>
           <p className="text-sm text-slate-600">{deck.cards.length} cards</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {deck.cards.length > 0 ? (
+            <Link
+              href={`/decks/${deck.id}/review-all?resume=1`}
+              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700"
+            >
+              Начать практиковать
+            </Link>
+          ) : (
+            <Link
+              href={`/decks/${deck.id}/add`}
+              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700"
+            >
+              Сначала создать карточку
+            </Link>
+          )}
           <Link href={`/decks/${deck.id}/today`} className="rounded border px-3 py-2 text-sm">
-            Today
+            Сегодня
           </Link>
           <Link href={`/decks/${deck.id}/review-all`} className="rounded border px-3 py-2 text-sm">
-            Anytime (All)
+            Повторить всё
+          </Link>
+          <Link href={`/decks/${deck.id}/add`} className="rounded border px-3 py-2 text-sm">
+            Создать карточку
           </Link>
           <Link
-            href={`/decks/${deck.id}/review-all?rating=Difficult`}
-            className="rounded border px-3 py-2 text-sm"
+            href={`/decks/${deck.id}/add-smart`}
+            className="rounded border border-slate-300 px-3 py-2 text-sm font-semibold text-emerald-700 shadow-[inset_0_-2px_0_0_rgba(16,185,129,0.35)] hover:border-emerald-300 hover:text-emerald-800"
           >
-            Difficult
+            Создать с AI
           </Link>
-          <Link
-            href={`/decks/${deck.id}/review-all?rating=Learned`}
-            className="rounded border px-3 py-2 text-sm"
-          >
-            Learned
-          </Link>
-          <DeckAddMenu deckId={deck.id} />
         </div>
       </div>
 
       <div className="overflow-x-auto rounded-lg border bg-white">
-        <table className="min-w-full text-sm">
-          <thead className="bg-slate-50 text-left">
-            <tr>
-              <th className="px-3 py-2">Front</th>
-              <th className="px-3 py-2">Back</th>
-              <th className="px-3 py-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {deck.cards.map((card) => (
-              <tr key={card.id} className="border-t align-top">
-                <td className="px-3 py-2">{card.frontText}</td>
-                <td className="px-3 py-2 text-slate-700">{card.backText}</td>
-                <td className="px-3 py-2">
-                  <Link href={`/decks/${deck.id}/cards/${card.id}/edit`} className="rounded border px-2 py-1 text-xs">
-                    Edit
-                  </Link>
-                </td>
-              </tr>
-            ))}
-            {deck.cards.length === 0 ? (
-              <tr>
-                <td className="px-3 py-4 text-slate-600" colSpan={3}>
-                  No cards yet.
-                </td>
-              </tr>
-            ) : null}
-          </tbody>
-        </table>
+        <div className="space-y-3 p-3">
+          {deck.cards.map((card) => {
+            const word = (card.targetWord ?? "").trim();
+            const status = !card.reviewState
+              ? "Новая"
+              : card.reviewState.dueDate <= today
+                ? "К повтору"
+                : "Изучается";
+            return (
+              <article key={card.id} className="rounded-xl border bg-white p-3">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <div className="text-xs uppercase tracking-wide text-slate-500">Изучаемое слово</div>
+                    <div className="text-2xl font-semibold text-emerald-700">
+                      {word || "—"}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="rounded border bg-slate-50 px-2 py-1 text-xs text-slate-700">{status}</span>
+                    <Link
+                      href={`/decks/${deck.id}/cards/${card.id}/edit`}
+                      className="rounded border px-2 py-1 text-xs hover:bg-slate-50"
+                    >
+                      Редактировать
+                    </Link>
+                  </div>
+                </div>
+
+                <div className="mt-3 space-y-2 text-sm">
+                  <div>
+                    <div className="mb-1 text-[11px] uppercase tracking-wide text-slate-500">Контекст (front)</div>
+                    <p className="rounded-lg bg-slate-50 px-3 py-2 text-slate-800">
+                      {highlightWord(shortText(card.frontText, 180), word)}
+                    </p>
+                  </div>
+                  <div>
+                    <div className="mb-1 text-[11px] uppercase tracking-wide text-slate-500">Определение (back)</div>
+                    <p className="rounded-lg bg-slate-50 px-3 py-2 text-slate-700">
+                      {highlightWord(shortText(card.backText, 180), word)}
+                    </p>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+          {deck.cards.length === 0 ? (
+            <div className="rounded-xl border bg-slate-50 px-3 py-4 text-sm text-slate-600">
+              Пока нет карточек.
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
+  );
+}
+
+function shortText(value: string, maxLen: number): string {
+  if (value.length <= maxLen) return value;
+  return `${value.slice(0, maxLen - 1).trimEnd()}…`;
+}
+
+function highlightWord(text: string, word: string) {
+  if (!word) return text;
+  const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const re = new RegExp(`(${escaped})`, "gi");
+  const parts = text.split(re);
+
+  return parts.map((part, index) =>
+    part.toLowerCase() === word.toLowerCase() ? (
+      <span key={`${part}-${index}`} className="font-semibold text-emerald-700">
+        {part}
+      </span>
+    ) : (
+      <span key={`${part}-${index}`}>{part}</span>
+    )
   );
 }

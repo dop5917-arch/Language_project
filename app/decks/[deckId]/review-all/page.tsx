@@ -47,11 +47,11 @@ export default async function ReviewAllPage({ params, searchParams }: Props) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold">Review All: {deck.name}</h1>
+          <h1 className="text-xl font-semibold">Повторение: {deck.name}</h1>
           <p className="text-sm text-slate-600">Повторение всех карточек в колоде подряд</p>
         </div>
         <Link href={`/decks/${deck.id}`} className="text-sm">
-          Back to deck
+          Назад в колоду
         </Link>
       </div>
 
@@ -64,14 +64,14 @@ export default async function ReviewAllPage({ params, searchParams }: Props) {
               ratingFilter === value ? "border-blue-600 bg-blue-50 text-blue-700" : ""
             }`}
           >
-            {value}
+            {value === "Difficult" ? "Трудные" : "Выученные"}
           </Link>
         ))}
         <Link
           href={`/decks/${deck.id}/review-all`}
           className={`rounded border px-3 py-2 ${ratingFilter === "all" ? "border-blue-600 bg-blue-50 text-blue-700" : ""}`}
         >
-          Anytime (all cards)
+          Все карточки
         </Link>
       </div>
 
@@ -92,7 +92,7 @@ export default async function ReviewAllPage({ params, searchParams }: Props) {
               ? `/decks/${deck.id}/review-all`
               : `/decks/${deck.id}/review-all?rating=${ratingFilter}`
           }
-          returnLabel="Back to Review All"
+          returnLabel="Назад к режимам"
         />
       )}
     </div>

@@ -282,6 +282,25 @@ export default function ReviewClient({
 
     setMeaningModalOpen(true);
     setMeaningError(null);
+    const fromCard = parseCardBackDetails(current);
+    if (fromCard.ruMeanings.length > 0) {
+      const fromAiCard: WordMeaningResponse = {
+        word: fromCard.word || word,
+        ruVariants: fromCard.ruMeanings,
+        ruDictionary: [{ partOfSpeech: "from-card", terms: fromCard.ruMeanings }],
+        meanings: fromCard.definitionEn
+          ? [
+              {
+                partOfSpeech: "meaning",
+                definitionEn: fromCard.definitionEn
+              }
+            ]
+          : []
+      };
+      setMeaningData(fromAiCard);
+      setMeaningCache((prev) => ({ ...prev, [word]: fromAiCard }));
+      return;
+    }
 
     if (meaningCache[word]) {
       setMeaningData(meaningCache[word]);
@@ -305,6 +324,20 @@ export default function ReviewClient({
   }
 
   if (!current) {
+    if (queue.length === 0 && done === 0) {
+      return (
+        <div className="space-y-4 rounded-lg border bg-white p-6">
+          <h2 className="text-xl font-semibold">Пока нечего повторять</h2>
+          <p className="text-sm text-slate-600">
+            В этой сессии сейчас нет карточек. Добавь карточки или выбери другой режим повторения.
+          </p>
+          <a href={finalHref} className="inline-block rounded bg-emerald-700 px-4 py-2 text-white hover:bg-emerald-800">
+            {finalLabel}
+          </a>
+        </div>
+      );
+    }
+
     const uniqueLatestResults = Array.from(
       new Map(sessionResults.map((item) => [item.cardId, item])).values()
     );
@@ -845,6 +878,7 @@ function parseCardBackDetails(card: QueueCard): {
   definitionEn?: string;
   example?: string;
   whyThisWordHere?: string;
+  ruMeanings: string[];
 } {
   const lines = card.backText
     .split("\n")
@@ -856,14 +890,24 @@ function parseCardBackDetails(card: QueueCard): {
 
   const word = findValue("Word:") || resolveStudyWord(card);
   const definitionEn = findValue("Definition (EN):");
+  const ruLine = findValue("RU meanings:") || findValue("RU:");
   const example = findValue("Example:");
   const whyThisWordHere = findValue("Why this word here:");
+  const ruMeanings = Array.from(
+    new Set(
+      (ruLine ?? "")
+        .split(/[|;,]/g)
+        .map((term) => term.trim())
+        .filter((term) => term.length > 0)
+    )
+  ).slice(0, 8);
 
   return {
     word,
     definitionEn,
     example,
-    whyThisWordHere
+    whyThisWordHere,
+    ruMeanings
   };
 }
 

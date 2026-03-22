@@ -71,8 +71,14 @@ export default function ReviewReminderPopup() {
               По расписанию сейчас: <span className="font-semibold">{data.dueTotal}</span>
             </p>
           </div>
-          <button type="button" onClick={close} className="rounded border px-3 py-1 text-sm">
-            Закрыть
+          <button
+            type="button"
+            onClick={close}
+            aria-label="Закрыть"
+            title="Закрыть"
+            className="inline-flex h-7 w-7 items-center justify-center rounded border border-red-300 bg-red-50 text-sm font-semibold leading-none text-red-700 hover:bg-red-100"
+          >
+            ✕
           </button>
         </div>
 

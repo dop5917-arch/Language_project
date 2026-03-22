@@ -24,7 +24,7 @@ export default async function ImportWordsPage({ params, searchParams }: Props) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold">Import CSV from Google Sheets</h1>
+          <h1 className="text-xl font-semibold">Импорт слов из CSV</h1>
           <p className="text-sm text-slate-600">
             Загрузи CSV как есть. Система автоматически найдет колонку с английскими словами (обычно C) и создаст карточки через Smart Add.
           </p>

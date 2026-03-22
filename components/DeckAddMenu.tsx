@@ -52,13 +52,6 @@ export default function DeckAddMenu({ deckId }: Props) {
           >
             Smart Add
           </Link>
-          <Link
-            href={`/decks/${deckId}/import-words`}
-            onClick={() => setOpen(false)}
-            className="block rounded border px-3 py-2 text-sm"
-          >
-            Import CSV from Google Sheets
-          </Link>
         </div>
       ) : null}
     </div>
