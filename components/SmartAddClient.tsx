@@ -83,6 +83,13 @@ type AiCardPayload = {
 
 type AiCardsResponse = {
   cards?: AiCardPayload[];
+  report?: {
+    input_count?: number;
+    output_count?: number;
+    missing_words?: string[];
+    corrections?: Array<{ source: string; normalized: string; confidence?: string }>;
+    skipped?: Array<{ source: string; reason: string }>;
+  };
 };
 
 const AI_MODEL_LINKS = [
@@ -92,9 +99,54 @@ const AI_MODEL_LINKS = [
   { label: "DeepSeek", href: "https://chat.deepseek.com/" }
 ];
 
-function buildExternalAiPrompt(words: string[]): string {
+type StudyLevel = "beginner" | "intermediate" | "advanced";
+
+function getLevelPromptConfig(level: StudyLevel): {
+  labelRu: string;
+  cefr: string;
+  sentenceStyle: string;
+  definitionStyle: string;
+} {
+  if (level === "beginner") {
+    return {
+      labelRu: "Начальный",
+      cefr: "A1-A2",
+      sentenceStyle: "Use very simple, everyday sentences with high-frequency words and clear context clues.",
+      definitionStyle: "Definitions must be very short and simple (easy learner English)."
+    };
+  }
+  if (level === "advanced") {
+    return {
+      labelRu: "Продвинутый",
+      cefr: "C1-C2",
+      sentenceStyle: "Use natural, nuanced real-world contexts with richer wording, but still fluent and idiomatic.",
+      definitionStyle: "Definitions should be precise and nuanced, still learner-friendly."
+    };
+  }
+  return {
+    labelRu: "Средний",
+    cefr: "B1-B2",
+    sentenceStyle: "Use practical, natural everyday sentences with moderate complexity and clear context.",
+    definitionStyle: "Definitions should be concise and clear for intermediate learners."
+  };
+}
+
+function mapStudyLevelToCardLevel(level: StudyLevel): number {
+  if (level === "beginner") return 1;
+  if (level === "advanced") return 3;
+  return 2;
+}
+
+function buildExternalAiPrompt(words: string[], level: StudyLevel): string {
   const wordsList = words.join(", ");
+  const wordsBlock = words.map((word, index) => `${index + 1}. ${word}`).join("\n");
+  const levelConfig = getLevelPromptConfig(level);
   return `You are creating production-ready English vocabulary flashcards for a learner app.
+
+Target learner level:
+- Level: ${levelConfig.labelRu} (${levelConfig.cefr})
+- ${levelConfig.sentenceStyle}
+- ${levelConfig.definitionStyle}
 
 Critical requirement:
 - You MUST return exactly one card for each input item.
@@ -103,6 +155,9 @@ Critical requirement:
 - If confidence is high, normalize to the corrected common form in "word".
 - If confidence is medium/low, still produce the best guess and continue.
 - Never output fewer cards than input words.
+- If a word has a typo, autocorrect it and continue.
+- If autocorrection confidence is low, still return the best probable correction and continue.
+- You are NOT allowed to return fewer cards silently.
 
 Task for each target word/item:
 1) Pick ONE best front sentence (natural, common, recognizable, real-life).
@@ -135,6 +190,10 @@ Quality rules:
 - "why_this_word_here" must be short (6-12 words), contextual, not dictionary-like
 - if source has typo, still generate full card from best inferred word
 
+Input words count: ${words.length}
+Input words list:
+${wordsBlock || "(no words provided)"}
+
 Return strict JSON only in this shape:
 {
   "cards": [
@@ -147,7 +206,18 @@ Return strict JSON only in this shape:
       "back_sentence": "She whispered the address while they stood near the door.",
       "why_this_word_here": "because he speaks quietly to avoid being overheard"
     }
-  ]
+  ],
+  "report": {
+    "input_count": ${words.length},
+    "output_count": ${words.length},
+    "missing_words": [],
+    "corrections": [
+      { "source": "wisper", "normalized": "whisper", "confidence": "high" }
+    ],
+    "skipped": [
+      { "source": "x", "reason": "unknown word, no reliable correction" }
+    ]
+  }
 }`;
 }
 
@@ -225,6 +295,25 @@ function parseAiJson(input: string): unknown {
   }
 }
 
+type ParseAiCardsResult = {
+  cards: AiCardPayload[];
+  report?: AiCardsResponse["report"];
+};
+
+type DuplicateItem = {
+  id: string;
+  deckId: string;
+  deckName: string;
+  targetWord: string;
+  createdAt: string;
+  isCreatedNow: boolean;
+};
+
+type DuplicateGroup = {
+  word: string;
+  items: DuplicateItem[];
+};
+
 function ensureArray(value: string | string[] | undefined): string[] {
   if (Array.isArray(value)) return value;
   if (typeof value === "string" && value.trim()) return [value];
@@ -244,10 +333,30 @@ function normalizeText(value: string): string {
 }
 
 function parseWords(text: string): string[] {
-  const raw = text
-    .split(/[\n,;]+/g)
-    .map((item) => normalizeWord(item))
-    .filter(Boolean);
+  const latinPhraseRe = /[A-Za-z]+(?:'[A-Za-z]+)?(?:[ -][A-Za-z]+(?:'[A-Za-z]+)?){0,4}/g;
+  const raw: string[] = [];
+
+  const lines = text.split(/\r?\n/g);
+  for (const line of lines) {
+    const trimmedLine = line.trim();
+    if (!trimmedLine) continue;
+
+    // Typical bilingual formats:
+    // "manipulation — манипуляция", "манипуляция - manipulation", "word: перевод"
+    const segments = trimmedLine
+      .split(/\t+|\s[—–-]\s|:\s+|\s\|\s/g)
+      .map((part) => part.trim())
+      .filter(Boolean);
+    const source = segments.length > 0 ? segments : [trimmedLine];
+
+    for (const segment of source) {
+      const matches = segment.match(latinPhraseRe) ?? [];
+      for (const match of matches) {
+        const normalized = normalizeWord(match);
+        if (normalized) raw.push(normalized);
+      }
+    }
+  }
 
   const unique: string[] = [];
   const seen = new Set<string>();
@@ -411,11 +520,15 @@ export default function SmartAddClient({ deckId }: Props) {
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [globalSuccess, setGlobalSuccess] = useState<string | null>(null);
   const [copiedPrompt, setCopiedPrompt] = useState(false);
+  const [studyLevel, setStudyLevel] = useState<StudyLevel>("intermediate");
   const [aiJsonInput, setAiJsonInput] = useState("");
   const [creatingFromAiJson, setCreatingFromAiJson] = useState(false);
+  const [duplicateGroups, setDuplicateGroups] = useState<DuplicateGroup[]>([]);
+  const [selectedDuplicateIds, setSelectedDuplicateIds] = useState<string[]>([]);
+  const [deletingDuplicates, setDeletingDuplicates] = useState(false);
 
   const aiWords = useMemo(() => cards.map((card) => card.word), [cards]);
-  const aiPrompt = useMemo(() => buildExternalAiPrompt(aiWords), [aiWords]);
+  const aiPrompt = useMemo(() => buildExternalAiPrompt(aiWords, studyLevel), [aiWords, studyLevel]);
 
   function updateCard(word: string, updater: (prev: WordCard) => WordCard) {
     setCards((prev) => prev.map((item) => (item.word === word ? updater(item) : item)));
@@ -428,11 +541,13 @@ export default function SmartAddClient({ deckId }: Props) {
       return;
     }
     setCards(words.map((word) => createWordCard(word)));
+    setDuplicateGroups([]);
+    setSelectedDuplicateIds([]);
     setGlobalError(null);
     setGlobalSuccess(`Prepared ${words.length} words`);
   }
 
-  function parseAiCardsFromInput(input: string): AiCardPayload[] {
+  function parseAiCardsFromInput(input: string): ParseAiCardsResult {
     const parsedUnknown = parseAiJson(input);
     const parsed = parsedUnknown as AiCardsResponse & { data?: AiCardsResponse };
     const cardsRaw = Array.isArray(parsedUnknown)
@@ -485,7 +600,10 @@ export default function SmartAddClient({ deckId }: Props) {
     if (cleaned.length === 0) {
       throw new Error("No valid cards in JSON");
     }
-    return cleaned.slice(0, 100);
+    return {
+      cards: cleaned.slice(0, 100),
+      report: parsed.report ?? parsed.data?.report
+    };
   }
 
   async function createCardsFromAiJson() {
@@ -493,10 +611,11 @@ export default function SmartAddClient({ deckId }: Props) {
     setGlobalError(null);
     setGlobalSuccess(null);
     try {
-      const aiCards: AiCardPayload[] = parseAiCardsFromInput(aiJsonInput);
+      const { cards: aiCards, report } = parseAiCardsFromInput(aiJsonInput);
       let created = 0;
       let errors = 0;
       const errorSamples: string[] = [];
+      const createdCardIds: string[] = [];
 
       for (const item of aiCards) {
         const definition = uniqueStrings([
@@ -534,20 +653,21 @@ export default function SmartAddClient({ deckId }: Props) {
         const res = await fetch(`/api/decks/${deckId}/smart-add`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            frontText: front,
-            backText,
-            targetWord: item.word,
-            phonetic: "",
-            audioUrl: "",
-            imageUrl: "",
-            tags: `smart-add,vocab,${item.word}`,
-            level: 1
-          })
-        });
+            body: JSON.stringify({
+              frontText: front,
+              backText,
+              targetWord: item.word,
+              phonetic: "",
+              audioUrl: "",
+              imageUrl: "",
+              tags: `smart-add,vocab,${item.word}`,
+              level: mapStudyLevelToCardLevel(studyLevel)
+            })
+          });
         const data = (await res.json()) as { cardId?: string; error?: string };
         if (res.ok) {
           created += 1;
+          if (data.cardId) createdCardIds.push(data.cardId);
         } else {
           errors += 1;
           if (errorSamples.length < 8) {
@@ -563,10 +683,52 @@ export default function SmartAddClient({ deckId }: Props) {
       }
       setWordInput("");
       setAiJsonInput("");
+      const reportSummary =
+        report && typeof report.input_count === "number"
+          ? ` • AI report: input ${report.input_count}, output ${report.output_count ?? aiCards.length}${
+              (report.missing_words?.length ?? 0) > 0
+                ? `, missing: ${report.missing_words?.join(", ")}`
+                : ""
+            }${
+              (report.skipped?.length ?? 0) > 0
+                ? `, reasons: ${report.skipped
+                    ?.slice(0, 5)
+                    .map((x) => `${x.source}: ${x.reason}`)
+                    .join(" | ")}`
+                : ""
+            }`
+          : "";
       setGlobalSuccess(
-        `Created ${created} cards${errors > 0 ? `, errors: ${errors}${errorSamples.length > 0 ? ` • ${errorSamples.join(" | ")}` : ""}` : ""}`
+        `Created ${created} cards${errors > 0 ? `, errors: ${errors}${errorSamples.length > 0 ? ` • ${errorSamples.join(" | ")}` : ""}` : ""}${reportSummary}`
       );
+      setDuplicateGroups([]);
+      setSelectedDuplicateIds([]);
+      if (createdCardIds.length > 0) {
+        try {
+          const previewRes = await fetch("/api/cards/duplicates/preview", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ createdCardIds })
+          });
+          const previewData = (await previewRes.json()) as {
+            groups?: DuplicateGroup[];
+            recommendedDeleteIds?: string[];
+            error?: string;
+          };
+          if (previewRes.ok && (previewData.groups?.length ?? 0) > 0) {
+            setDuplicateGroups(previewData.groups ?? []);
+            setSelectedDuplicateIds(previewData.recommendedDeleteIds ?? []);
+            setGlobalSuccess(
+              `Created ${created} cards. Найдены повторы: ${previewData.groups?.length ?? 0}. Выбери, что удалить ниже.`
+            );
+            return;
+          }
+        } catch {
+          // ignore duplicates preview errors and continue to deck
+        }
+      }
       router.push(`/decks/${deckId}`);
+      router.refresh();
     } catch (err) {
       setGlobalError(err instanceof Error ? err.message : "Could not create cards from AI JSON");
     } finally {
@@ -598,9 +760,43 @@ export default function SmartAddClient({ deckId }: Props) {
       }
       setWordInput(words.join("\n"));
       setCards(words.map((word) => createWordCard(word)));
+      setDuplicateGroups([]);
+      setSelectedDuplicateIds([]);
       setGlobalSuccess(`Loaded ${words.length} words`);
     } catch (err) {
       setGlobalError(err instanceof Error ? err.message : "File import failed");
+    }
+  }
+
+  function toggleDuplicateSelection(cardId: string) {
+    setSelectedDuplicateIds((prev) =>
+      prev.includes(cardId) ? prev.filter((id) => id !== cardId) : [...prev, cardId]
+    );
+  }
+
+  async function deleteSelectedDuplicates() {
+    if (selectedDuplicateIds.length === 0 || deletingDuplicates) return;
+    setDeletingDuplicates(true);
+    setGlobalError(null);
+    try {
+      const res = await fetch("/api/cards/duplicates/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cardIds: selectedDuplicateIds })
+      });
+      const data = (await res.json()) as { deleted?: number; error?: string };
+      if (!res.ok) {
+        throw new Error(data.error ?? "Не удалось удалить повторы");
+      }
+      setGlobalSuccess(`Удалено повторов: ${data.deleted ?? selectedDuplicateIds.length}`);
+      setDuplicateGroups([]);
+      setSelectedDuplicateIds([]);
+      router.push(`/decks/${deckId}`);
+      router.refresh();
+    } catch (err) {
+      setGlobalError(err instanceof Error ? err.message : "Не удалось удалить повторы");
+    } finally {
+      setDeletingDuplicates(false);
     }
   }
 
@@ -657,9 +853,36 @@ export default function SmartAddClient({ deckId }: Props) {
             </div>
           </div>
 
+          <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+            <p className="mb-2 text-base font-semibold text-slate-900">Шаг 2. Выбери уровень карточек</p>
+            <p className="mb-3 text-sm text-slate-700">
+              Выбранный уровень влияет на сложность предложений и определений в промпте.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { id: "beginner" as const, label: "Начальный (A1-A2)" },
+                { id: "intermediate" as const, label: "Средний (B1-B2)" },
+                { id: "advanced" as const, label: "Продвинутый (C1-C2)" }
+              ].map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => setStudyLevel(option.id)}
+                  className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
+                    studyLevel === option.id
+                      ? "bg-slate-900 text-white"
+                      : "border border-slate-300 bg-white text-slate-800 hover:bg-slate-50"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="mt-3 rounded-xl border border-blue-200 bg-blue-50/40 p-4">
             <div className="mb-2 flex items-center justify-between gap-2">
-              <p className="text-base font-semibold text-blue-900">Шаг 2. Скопируй промпт</p>
+              <p className="text-base font-semibold text-blue-900">Шаг 3. Скопируй промпт</p>
             </div>
             <textarea
               readOnly
@@ -679,7 +902,7 @@ export default function SmartAddClient({ deckId }: Props) {
           </div>
 
           <div className="mt-3 rounded-xl border border-violet-200 bg-violet-50/40 p-4">
-            <p className="mb-2 text-base font-semibold text-violet-900">Шаг 3. Выбери AI и получи ответ</p>
+            <p className="mb-2 text-base font-semibold text-violet-900">Шаг 4. Выбери AI и получи ответ</p>
             <p className="mb-3 text-sm text-slate-700">Открой любую модель, которой ты пользуешься, вставь промпт и получи данные.</p>
             <div className="flex flex-wrap gap-2">
             {AI_MODEL_LINKS.map((model) => (
@@ -697,7 +920,7 @@ export default function SmartAddClient({ deckId }: Props) {
           </div>
 
           <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50/40 p-4">
-            <p className="text-base font-semibold text-emerald-900">Шаг 4. Вставь ответ AI и создай карточки</p>
+            <p className="text-base font-semibold text-emerald-900">Шаг 5. Вставь ответ AI и создай карточки</p>
             <p className="mt-1 text-sm text-slate-700">Вставь ответ AI в поле ниже и нажми «Создать карточки».</p>
             <textarea
               value={aiJsonInput}
@@ -723,6 +946,64 @@ export default function SmartAddClient({ deckId }: Props) {
       {globalError ? <p className="rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">{globalError}</p> : null}
       {globalSuccess ? (
         <p className="rounded border border-green-200 bg-green-50 p-3 text-sm text-green-700">{globalSuccess}</p>
+      ) : null}
+      {duplicateGroups.length > 0 ? (
+        <section className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <h3 className="text-base font-semibold text-amber-900">Найдены повторяющиеся карточки</h3>
+          <p className="mt-1 text-sm text-amber-800">
+            Выбери повторы, которые нужно удалить. Можно удалять и в других колодах.
+          </p>
+          <div className="mt-3 space-y-3">
+            {duplicateGroups.map((group) => (
+              <div key={group.word} className="rounded-lg border bg-white p-3">
+                <div className="text-sm font-semibold text-slate-900">{group.word}</div>
+                <div className="mt-2 space-y-2">
+                  {group.items.map((item) => (
+                    <label key={item.id} className="flex items-start gap-2 rounded border p-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={selectedDuplicateIds.includes(item.id)}
+                        onChange={() => toggleDuplicateSelection(item.id)}
+                        className="mt-1"
+                      />
+                      <span>
+                        <span className="font-medium">{item.targetWord}</span>{" "}
+                        <span className="text-slate-600">— {item.deckName}</span>{" "}
+                        {item.isCreatedNow ? (
+                          <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[11px] text-emerald-800">
+                            создано сейчас
+                          </span>
+                        ) : null}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => void deleteSelectedDuplicates()}
+              disabled={selectedDuplicateIds.length === 0 || deletingDuplicates}
+              className="rounded bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+            >
+              {deletingDuplicates ? "Удаляем..." : `Удалить выбранные (${selectedDuplicateIds.length})`}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setDuplicateGroups([]);
+                setSelectedDuplicateIds([]);
+                router.push(`/decks/${deckId}`);
+                router.refresh();
+              }}
+              className="rounded border px-3 py-2 text-sm"
+            >
+              Пропустить и открыть колоду
+            </button>
+          </div>
+        </section>
       ) : null}
 
     </div>

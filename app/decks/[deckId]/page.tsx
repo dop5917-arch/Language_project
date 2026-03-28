@@ -28,6 +28,10 @@ export default async function DeckDetailPage({ params }: Props) {
     data: { updatedAt: new Date() }
   });
 
+  const dueTodayCount = deck.cards.filter(
+    (card) => card.reviewState && card.reviewState.dueDate <= today
+  ).length;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -51,12 +55,18 @@ export default async function DeckDetailPage({ params }: Props) {
               Сначала создать карточку
             </Link>
           )}
-          <Link href={`/decks/${deck.id}/today`} className="rounded border px-3 py-2 text-sm">
-            Сегодня
-          </Link>
-          <Link href={`/decks/${deck.id}/review-all`} className="rounded border px-3 py-2 text-sm">
-            Повторить всё
-          </Link>
+          {dueTodayCount > 0 ? (
+            <Link
+              href={`/decks/${deck.id}/review`}
+              className="rounded border px-3 py-2 text-sm"
+            >
+              Карточки на сегодня ({dueTodayCount})
+            </Link>
+          ) : (
+            <span className="rounded border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500">
+              Карточки на сегодня (0)
+            </span>
+          )}
           <Link href={`/decks/${deck.id}/add`} className="rounded border px-3 py-2 text-sm">
             Создать карточку
           </Link>

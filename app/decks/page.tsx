@@ -1,8 +1,6 @@
-import Link from "next/link";
 import DecksHeaderCreateButton from "@/components/DecksHeaderCreateButton";
 import DeckCard from "@/components/DeckCard";
-import DueNowPanel from "@/components/DueNowPanel";
-import StudyTimerControls from "@/components/StudyTimerControls";
+import HomeActionPanel from "@/components/HomeActionPanel";
 import { startOfLocalDay } from "@/lib/date";
 import { prisma } from "@/lib/prisma";
 
@@ -76,63 +74,31 @@ export default async function DecksPage() {
     deckAccuracy.set(deckId, current);
   }
 
-  const dueDecks = decks
-    .map((deck) => ({
-      deckId: deck.id,
-      deckName: deck.name,
-      cards: deck.cards
-        .filter((card: any) => card.reviewState?.dueDate && card.reviewState.dueDate <= today)
-        .map((card: any) => ({
-          id: card.id,
-          targetWord: card.targetWord,
-          frontText: card.frontText
-        }))
-    }))
-    .filter((deck) => deck.cards.length > 0);
-
   return (
-    <div className="space-y-6">
+    <div className="mx-auto w-full max-w-5xl space-y-5">
       {dbError ? (
-        <section className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <section className="rounded-xl border border-[#E5E7EB] bg-[#FEF2F2] p-4 text-sm text-[#EF4444]">
           База данных временно недоступна. Проверь подключение к интернету и `DATABASE_URL` (Neon), затем обнови страницу.
         </section>
       ) : null}
-      <section className="flex flex-wrap items-stretch justify-center gap-3">
-        {!dbError ? (
-          <div className="w-full max-w-[260px]">
-            <DueNowPanel dueToday={dueToday} dueDecks={dueDecks} />
-          </div>
-        ) : null}
-        <div className="w-full max-w-[260px] min-h-[182px] rounded-xl border bg-white p-4 shadow-sm">
-          <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
-            <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
-              Global
-            </span>
-            <p className="max-w-[220px] truncate text-sm font-medium text-slate-800">Повторение из всех колод</p>
-            <Link
-              href="/review/all"
-              className="inline-flex rounded-lg bg-emerald-700 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-800"
-            >
-              Открыть
-            </Link>
-          </div>
-        </div>
-        <div className="w-full max-w-[260px]">
-          <StudyTimerControls />
-        </div>
-      </section>
+      {!dbError ? (
+        <HomeActionPanel
+          dueToday={dueToday}
+          aiDeckOptions={decks.map((deck) => ({ id: deck.id, name: deck.name }))}
+        />
+      ) : null}
 
       <div className="space-y-4">
         <section className="px-1">
           <div className="flex items-center gap-2">
-            <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
+            <span className="rounded-lg border border-[#E5E7EB] bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-[#111111]">
               Колоды
             </span>
             <DecksHeaderCreateButton />
           </div>
         </section>
 
-        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-2">
+        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {decks.length === 0 ? (
             <p className="text-sm text-slate-600">No decks yet.</p>
           ) : (

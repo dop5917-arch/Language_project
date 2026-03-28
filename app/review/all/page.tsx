@@ -76,8 +76,8 @@ export default async function GlobalReviewPage({ searchParams }: Props) {
     return (
       <div className="space-y-5">
         <div>
-          <h1 className="text-2xl font-semibold">Общее повторение</h1>
-          <p className="mt-1 text-sm text-slate-700">
+          <h1 className="text-3xl font-semibold text-[#0F172A]">Общее повторение</h1>
+          <p className="mt-1 text-sm text-[#64748B]">
             Одна сессия для карточек из всех колод. Выбери режим повторения.
           </p>
         </div>
@@ -189,23 +189,25 @@ export default async function GlobalReviewPage({ searchParams }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-white p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#E5E7EB]">
         <div>
-          <h1 className="text-xl font-semibold">{modeTitle}</h1>
-          <p className="text-sm text-slate-600">{modeDescription}</p>
+          <h1 className="text-2xl font-semibold text-[#0F172A]">{modeTitle}</h1>
+          <p className="text-sm text-[#64748B]">{modeDescription}</p>
         </div>
-        <Link href="/review/all" className="rounded border px-3 py-2 text-sm">
+        <Link href="/review/all" className="rounded-xl bg-white px-3 py-2 text-sm text-[#0F172A] ring-1 ring-[#E5E7EB]">
           Сменить режим
         </Link>
       </div>
 
       {serializedQueue.length === 0 ? (
-        <div className="rounded-lg border bg-white p-6 text-sm text-slate-600">
+        <div className="rounded-2xl bg-white p-6 text-sm text-[#64748B] shadow-sm ring-1 ring-[#E5E7EB]">
           Сейчас нет карточек для этого режима.
         </div>
       ) : (
         <ReviewClient
           deckId=""
+          deckName="Global Review"
+          modeLabel={modeTitle}
           initialQueue={serializedQueue}
           returnHref="/review/all"
           returnLabel="Назад к режимам"
@@ -227,13 +229,13 @@ function ModeCard({
   href: string;
 }) {
   return (
-    <article className="rounded-xl border bg-white p-4 shadow-sm">
-      <h2 className="text-lg font-semibold">{title}</h2>
-      <p className="mt-1 text-xs uppercase tracking-wide text-slate-500">{subtitle}</p>
-      <p className="mt-2 text-sm text-slate-700">{description}</p>
+    <article className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#E5E7EB]">
+      <h2 className="text-lg font-semibold text-[#0F172A]">{title}</h2>
+      <p className="mt-1 text-xs uppercase tracking-wide text-[#64748B]">{subtitle}</p>
+      <p className="mt-2 text-sm text-[#64748B]">{description}</p>
       <Link
         href={href}
-        className="mt-4 inline-block rounded bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
+        className="mt-4 inline-block rounded-xl bg-[#059669] px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#047857]"
       >
         Начать
       </Link>

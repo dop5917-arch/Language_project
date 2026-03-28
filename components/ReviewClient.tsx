@@ -48,6 +48,8 @@ type Props = {
   returnLabel?: string;
   sessionKey?: string;
   enableResume?: boolean;
+  deckName?: string;
+  modeLabel?: string;
 };
 
 type WordMeaningItem = {
@@ -66,22 +68,16 @@ type WordMeaningResponse = {
 
 const ratingControls: Array<{ label: string; hint: string; rating: Rating; className: string }> = [
   {
-    label: "Didn't remember",
-    hint: "Show more often",
+    label: "Don't know",
+    hint: "Repeat sooner",
     rating: "Again",
-    className: "border-red-300 bg-red-50 hover:bg-red-100"
+    className: "bg-[#FFFFFF] text-[#111111] ring-1 ring-[#E5E7EB] hover:bg-[#F5F5F5]"
   },
   {
-    label: "Hard to recall",
-    hint: "Repeat soon",
-    rating: "Hard",
-    className: "border-amber-300 bg-amber-50 hover:bg-amber-100"
-  },
-  {
-    label: "Easy recall",
-    hint: "Repeat later",
+    label: "Know it",
+    hint: "Move forward",
     rating: "Easy",
-    className: "border-blue-300 bg-blue-50 hover:bg-blue-100"
+    className: "bg-[#111111] text-white hover:opacity-90"
   }
 ];
 
@@ -91,9 +87,11 @@ export default function ReviewClient({
   returnHref,
   returnLabel,
   sessionKey,
-  enableResume = false
+  enableResume = false,
+  deckName,
+  modeLabel
 }: Props) {
-  const cardTextClass = "font-card text-5xl font-semibold leading-tight sm:text-6xl";
+  const cardTextClass = "font-card text-[28px] font-semibold leading-snug sm:text-[30px]";
   const [queue, setQueue] = useState(initialQueue);
   const [index, setIndex] = useState(0);
   const [done, setDone] = useState(0);
@@ -326,12 +324,15 @@ export default function ReviewClient({
   if (!current) {
     if (queue.length === 0 && done === 0) {
       return (
-        <div className="space-y-4 rounded-lg border bg-white p-6">
-          <h2 className="text-xl font-semibold">Пока нечего повторять</h2>
-          <p className="text-sm text-slate-600">
+        <div className="space-y-4 rounded-2xl bg-white p-8 shadow-sm ring-1 ring-[#E5E7EB]">
+          <h2 className="text-2xl font-semibold text-[#0F172A]">No cards for now</h2>
+          <p className="text-[15px] text-[#64748B]">
             В этой сессии сейчас нет карточек. Добавь карточки или выбери другой режим повторения.
           </p>
-          <a href={finalHref} className="inline-block rounded bg-emerald-700 px-4 py-2 text-white hover:bg-emerald-800">
+          <a
+            href={finalHref}
+            className="inline-flex rounded-xl bg-[#059669] px-5 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#047857]"
+          >
             {finalLabel}
           </a>
         </div>
@@ -381,30 +382,30 @@ export default function ReviewClient({
     }
 
     return (
-      <div className="space-y-4 rounded-lg border bg-white p-6">
+      <div className="space-y-5 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-[#E5E7EB]">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-xl font-semibold">Результат сессии</h2>
-            <p className="text-sm text-slate-600">Пройдено карточек: {done}</p>
+            <h2 className="text-2xl font-semibold text-[#0F172A]">Session result</h2>
+            <p className="text-sm text-[#64748B]">Reviewed cards: {done}</p>
           </div>
-          <div className="rounded-lg border bg-slate-50 px-4 py-3 text-center">
-            <div className="text-xs uppercase tracking-wide text-slate-500">Процент запоминания</div>
-            <div className="text-2xl font-semibold">{percent}%</div>
+          <div className="rounded-xl bg-[#F1F5F9] px-4 py-3 text-center ring-1 ring-[#E5E7EB]">
+            <div className="text-xs uppercase tracking-wide text-[#64748B]">Retention</div>
+            <div className="text-2xl font-semibold text-[#0F172A]">{percent}%</div>
           </div>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded border border-red-200 bg-red-50 p-3">
-            <div className="text-sm font-semibold text-red-700">Не вспомнил</div>
-            <div className="text-2xl font-semibold text-red-800">{notRemembered.length}</div>
+          <div className="rounded-xl bg-[#FEE2E2] p-3">
+            <div className="text-sm font-semibold text-[#991B1B]">Не вспомнил</div>
+            <div className="text-2xl font-semibold text-[#7F1D1D]">{notRemembered.length}</div>
           </div>
-          <div className="rounded border border-amber-200 bg-amber-50 p-3">
-            <div className="text-sm font-semibold text-amber-700">Трудно</div>
-            <div className="text-2xl font-semibold text-amber-800">{hardRemembered.length}</div>
+          <div className="rounded-xl bg-[#FEF3C7] p-3">
+            <div className="text-sm font-semibold text-[#92400E]">Трудно</div>
+            <div className="text-2xl font-semibold text-[#78350F]">{hardRemembered.length}</div>
           </div>
-          <div className="rounded border border-green-200 bg-green-50 p-3">
-            <div className="text-sm font-semibold text-green-700">Вспомнил</div>
-            <div className="text-2xl font-semibold text-green-800">{remembered.length}</div>
+          <div className="rounded-xl bg-[#ECFDF5] p-3">
+            <div className="text-sm font-semibold text-[#065F46]">Вспомнил</div>
+            <div className="text-2xl font-semibold text-[#14532D]">{remembered.length}</div>
           </div>
         </div>
 
@@ -419,7 +420,7 @@ export default function ReviewClient({
             type="button"
             onClick={startRetryAllSession}
             disabled={uniqueLatestResults.length === 0}
-            className="rounded border px-4 py-2 disabled:opacity-50"
+            className="rounded-xl bg-[#059669] px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#047857] disabled:opacity-50"
           >
             Repeat all
           </button>
@@ -427,7 +428,7 @@ export default function ReviewClient({
             type="button"
             onClick={() => startRetrySession("Again")}
             disabled={notRemembered.length === 0}
-            className="rounded border px-4 py-2 disabled:opacity-50"
+            className="rounded-xl bg-white px-4 py-2 text-sm font-medium text-[#0F172A] ring-1 ring-[#E5E7EB] transition-colors duration-200 hover:bg-[#F8FAFC] disabled:opacity-50"
           >
             Повторить только "Не вспомнил"
           </button>
@@ -435,13 +436,16 @@ export default function ReviewClient({
             type="button"
             onClick={() => startRetrySession("Hard")}
             disabled={hardRemembered.length === 0}
-            className="rounded border px-4 py-2 disabled:opacity-50"
+            className="rounded-xl bg-white px-4 py-2 text-sm font-medium text-[#0F172A] ring-1 ring-[#E5E7EB] transition-colors duration-200 hover:bg-[#F8FAFC] disabled:opacity-50"
           >
             Повторить "Трудно"
           </button>
         </div>
 
-        <a href={finalHref} className="inline-block rounded bg-emerald-700 px-4 py-2 text-white hover:bg-emerald-800">
+        <a
+          href={finalHref}
+          className="inline-flex rounded-xl bg-[#059669] px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#047857]"
+        >
           {finalLabel}
         </a>
       </div>
@@ -449,276 +453,242 @@ export default function ReviewClient({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-slate-600">
-        <span>Done: {done}</span>
-        <span>Remaining: {remaining}</span>
-        <span>
-          Card {position}/{queue.length}
-        </span>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={goPrev}
-            disabled={index <= 0 || submitting}
-            className="rounded border px-3 py-1.5 disabled:opacity-50"
-          >
-            ← Prev
-          </button>
-          <button
-            type="button"
-            onClick={goNext}
-            disabled={submitting}
-            className="rounded border px-3 py-1.5 disabled:opacity-50"
-          >
-            Next →
-          </button>
-        </div>
-      </div>
+    <div className="space-y-0 rounded-2xl bg-[#FAFAFA] md:p-0">
+      <div className="grid gap-0 lg:grid-cols-[240px_minmax(0,720px)_280px]">
+        <aside className="hidden min-h-[calc(100vh-140px)] border-r border-[#E5E7EB] bg-[#FAFAFA] px-4 py-6 lg:block">
+          <div className="mb-7 text-sm font-semibold text-[#111111]">English SRS</div>
+          <nav className="space-y-1 text-[15px] text-[#6B7280]">
+            {[
+              { label: "Dashboard", href: "/decks" },
+              { label: "Flashcards", href: deckId ? `/decks/${deckId}/review-all` : "/review/all" },
+              { label: "Progress", href: "/decks" },
+              { label: "Settings", href: "/decks" }
+            ].map((item, idx) => (
+              <a key={item.label} href={item.href} className="group relative block rounded-lg px-3 py-2.5 transition-colors duration-150 hover:bg-white">
+                <span
+                  className={`absolute left-0 top-2.5 h-6 w-[2px] rounded-full bg-[#111111] ${
+                    idx === 1 ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                  }`}
+                />
+                <span className={idx === 1 ? "pl-2 font-semibold text-[#111111]" : "pl-2"}>
+                  {item.label}
+                </span>
+              </a>
+            ))}
+          </nav>
+        </aside>
 
-      <div className="rounded-xl border bg-white p-7 shadow-sm">
-        <div className="mb-2 text-xs uppercase tracking-wide text-slate-500">
-          {current.isNew ? "New" : "Review"}
-          {current.level ? ` • Level ${current.level}` : ""}
-          {current.deckName ? ` • ${current.deckName}` : ""}
-        </div>
-        {(current.targetWord || current.phonetic || current.audioUrl) ? (
-          <PronunciationBar
-            targetWord={current.targetWord ?? undefined}
-            phonetic={current.phonetic ?? undefined}
-            audioUrl={current.audioUrl ?? undefined}
-          />
-        ) : null}
-        <div className="mt-3 text-center text-xs uppercase tracking-wide text-slate-500">
-          {flipped ? "Answer" : "Question"}
-        </div>
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() => setFlipped((prev) => !prev)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              setFlipped((prev) => !prev);
-            }
-          }}
-          className="relative mt-3 min-h-[340px] w-full cursor-pointer text-left"
-        >
-          <div
-            aria-hidden={flipped}
-            className={`absolute inset-0 flex items-center justify-center rounded-lg border bg-white p-8 text-center transition-all duration-300 motion-reduce:transition-none ${
-              flipped
-                ? "pointer-events-none translate-y-1 opacity-0"
-                : "pointer-events-auto translate-y-0 opacity-100"
-            }`}
-          >
-            <button
-              type="button"
-              aria-label="Hint"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                openFrontHint();
-              }}
-              className="absolute right-3 top-3 z-20 rounded-full border-2 border-emerald-400 bg-emerald-100 px-3 py-2 text-xl shadow-md hover:bg-emerald-200"
-            >
-              💡
-            </button>
-            <div className="space-y-3">
-              <p className={cardTextClass}>
-                {renderHighlightedText(frontDetails?.sentence || current.frontText, resolveStudyWord(current))}
+        <section className="mx-auto w-full px-4 py-12 lg:px-8">
+          <div className="space-y-8">
+            <header className="space-y-2">
+              <h1 className="text-[30px] font-semibold leading-tight text-[#111111]">
+                {deckName || current.deckName || "Flashcards"}
+              </h1>
+              <p className="text-[14px] text-[#6B7280]">
+                {modeLabel || "Study session"}
               </p>
-            </div>
-            {frontHint && frontHint.cardId === current.id ? (
-              <div className="absolute inset-x-4 bottom-4 rounded border border-emerald-200 bg-emerald-50 p-3 text-sm">
-                {renderHighlightedText(frontHint.examples[frontHint.index], resolveStudyWord(current))}
-              </div>
-            ) : null}
-          </div>
-          <div
-            aria-hidden={!flipped}
-            className={`absolute inset-0 flex flex-col items-center justify-center gap-4 rounded-lg border bg-white p-8 text-center transition-all duration-300 motion-reduce:transition-none ${
-              flipped
-                ? "pointer-events-auto translate-y-0 opacity-100"
-                : "pointer-events-none -translate-y-1 opacity-0"
-            }`}
-          >
-            <div className="w-full max-w-4xl space-y-5">
-              <p className={cardTextClass}>
-                {renderHighlightedText(
-                  `${backDetails?.word || resolveStudyWord(current)} — ${
-                    backDetails?.definitionEn || "common everyday meaning"
-                  }`,
-                  resolveStudyWord(current),
-                  {
-                    interactive: true,
-                    onWordClick: openWordMeaning
-                  }
-                )}
+              <p className="text-[14px] text-[#6B7280]">
+                {position} / {queue.length}
               </p>
-              <p className="text-2xl leading-relaxed sm:text-3xl">
-                Example:{" "}
-                {renderHighlightedText(
-                  backDetails?.example || buildBackContextExample(current),
-                  resolveStudyWord(current)
-                )}
-              </p>
-            </div>
-          </div>
-        </div>
-        {!flipped ? (
-          <div className="mt-4 space-y-3">
-            <p className="text-sm text-slate-500">Tap card to see answer, or rate now</p>
-            <div className="grid grid-cols-3 gap-2">
-              {ratingControls.map((control) => (
-                <button
-                  key={`front-${control.label}`}
-                  type="button"
-                  disabled={submitting}
-                  onClick={() => rate(control.rating)}
-                  className={`rounded border px-4 py-3 text-left disabled:opacity-50 ${control.className}`}
-                >
-                  <div className="text-sm font-semibold">{control.label}</div>
-                  <div className="text-xs text-slate-600">{control.hint}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="mt-6 space-y-4 border-t pt-4">
-            <div className="grid grid-cols-3 gap-2">
-              {ratingControls.map((control) => (
-                <button
-                  key={control.label}
-                  type="button"
-                  disabled={submitting || isAgainHelpOpenForCurrent}
-                  onClick={() => rate(control.rating)}
-                  className={`rounded border px-4 py-3 text-left disabled:opacity-50 ${control.className}`}
-                >
-                  <div className="text-sm font-semibold">{control.label}</div>
-                  <div className="text-xs text-slate-600">{control.hint}</div>
-                </button>
-              ))}
-            </div>
-            <p className="text-xs text-slate-500">
-              Cards marked as <span className="font-medium">Didn&apos;t remember</span> are saved for a later session
-              and are not repeated immediately.
-            </p>
+            </header>
 
-            {current.imageUrl ? (
-              <img
-                src={current.imageUrl}
-                alt=""
-                className="max-h-60 w-full rounded border object-cover"
+            <div className="rounded-2xl border border-[#E5E7EB] bg-white p-8 shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
+            <div className="mb-3 text-xs uppercase tracking-wide text-[#64748B]">
+              {current.isNew ? "New card" : "Review card"}
+              {current.level ? ` • Level ${current.level}` : ""}
+            </div>
+
+            {(current.targetWord || current.phonetic || current.audioUrl) ? (
+              <PronunciationBar
+                targetWord={current.targetWord ?? undefined}
+                phonetic={current.phonetic ?? undefined}
+                audioUrl={current.audioUrl ?? undefined}
               />
             ) : null}
 
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => setFlipped((prev) => !prev)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setFlipped((prev) => !prev);
+                }
+              }}
+              className="relative mt-4 min-h-[300px] w-full cursor-pointer text-left"
+            >
+              <div
+                aria-hidden={flipped}
+                className={`absolute inset-0 flex items-center justify-center rounded-2xl border border-[#E5E7EB] bg-white p-8 text-center shadow-[0_4px_12px_rgba(0,0,0,0.04)] transition-all duration-150 ease-out hover:-translate-y-0.5 motion-reduce:transition-none ${
+                  flipped ? "pointer-events-none translate-y-1 opacity-0" : "pointer-events-auto translate-y-0 opacity-100"
+                }`}
+              >
+                <button
+                  type="button"
+                  aria-label="Hint"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openFrontHint();
+                  }}
+                  className="absolute right-4 top-4 z-20 rounded-xl bg-[#F5F5F5] px-3 py-2 text-sm font-medium text-[#111111] transition-colors duration-150 hover:bg-[#ECECEC]"
+                >
+                  Hint
+                </button>
+                <div className="space-y-4">
+                  <p className={cardTextClass}>
+                    {renderHighlightedText(frontDetails?.sentence || current.frontText, resolveStudyWord(current))}
+                  </p>
+                  <p className="text-[14px] text-[#9CA3AF]">Tap to reveal meaning</p>
+                </div>
+                {frontHint && frontHint.cardId === current.id ? (
+                  <div className="absolute inset-x-6 bottom-6 rounded-xl bg-[#F5F5F5] p-3 text-sm text-[#6B7280]">
+                    {renderHighlightedText(frontHint.examples[frontHint.index], resolveStudyWord(current))}
+                  </div>
+                ) : null}
+              </div>
+
+              <div
+                aria-hidden={!flipped}
+                className={`absolute inset-0 flex flex-col items-center justify-center gap-4 rounded-2xl border border-[#E5E7EB] bg-white p-8 text-center shadow-[0_4px_12px_rgba(0,0,0,0.04)] transition-all duration-150 ease-out hover:-translate-y-0.5 motion-reduce:transition-none ${
+                  flipped ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none -translate-y-1 opacity-0"
+                }`}
+              >
+                <div className="w-full max-w-4xl space-y-6">
+                  <p className={cardTextClass}>
+                    {renderHighlightedText(
+                      `${backDetails?.word || resolveStudyWord(current)} — ${
+                        backDetails?.definitionEn || "common everyday meaning"
+                      }`,
+                      resolveStudyWord(current),
+                      { interactive: true, onWordClick: openWordMeaning }
+                    )}
+                  </p>
+                  <p className="text-[18px] leading-relaxed text-[#6B7280]">
+                    {renderHighlightedText(backDetails?.example || buildBackContextExample(current), resolveStudyWord(current))}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 grid grid-cols-2 gap-4">
+              {ratingControls.map((control) => (
+                <button
+                  key={flipped ? control.label : `front-${control.label}`}
+                  type="button"
+                  disabled={submitting || (flipped && isAgainHelpOpenForCurrent)}
+                  onClick={() => rate(control.rating)}
+                  className={`rounded-xl px-4 py-3 text-left text-[15px] font-semibold transition-all duration-150 ease-out disabled:opacity-50 ${control.className}`}
+                >
+                  <div>{control.label}</div>
+                  <div className="text-[13px] font-normal opacity-80">{control.hint}</div>
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-6 h-[6px] overflow-hidden rounded-full bg-[#E5E7EB]">
+              <div
+                className="h-full bg-[#111111]"
+                style={{ width: `${Math.round((done / Math.max(1, queue.length)) * 100)}%` }}
+              />
+            </div>
+            </div>
+
+            {current.imageUrl && flipped ? (
+              <img src={current.imageUrl} alt="" className="mt-5 max-h-64 w-full rounded-xl object-cover ring-1 ring-[#E5E7EB]" />
+            ) : null}
+
             {againHelp && againHelp.card.id === current.id ? (
-              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-                <div className="mb-2 text-sm font-semibold text-blue-900">Помочь запомнить?</div>
-                <p className="mb-3 text-xs text-blue-800">
-                  Не страшно. Попробуем запомнить слово по-другому перед переходом дальше.
-                </p>
-
+              <div className="mt-5 rounded-2xl bg-[#F1F5F9] p-4 ring-1 ring-[#E5E7EB]">
+                <div className="mb-2 text-sm font-semibold text-[#0F172A]">Need another angle?</div>
                 <div className="space-y-3">
-                  <div className="rounded border bg-white p-3">
-                    <div className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500">
-                      Другой пример
-                    </div>
+                  <div className="rounded-xl bg-white p-3 ring-1 ring-[#E5E7EB]">
+                    <div className="mb-1 text-xs uppercase tracking-wide text-[#64748B]">Example</div>
                     <p className="text-sm">{againHelp.examples[againHelp.exampleIndex]}</p>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setAgainHelp((prev) =>
-                          prev
-                            ? {
-                                ...prev,
-                                exampleIndex: (prev.exampleIndex + 1) % prev.examples.length
-                              }
-                            : prev
-                        )
-                      }
-                      className="mt-2 rounded border px-3 py-1 text-xs"
-                    >
-                      Другой пример
-                    </button>
                   </div>
-
-                  <div className="rounded border bg-white p-3">
-                    <div className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500">
-                      Проще объяснение
-                    </div>
+                  <div className="rounded-xl bg-white p-3 ring-1 ring-[#E5E7EB]">
+                    <div className="mb-1 text-xs uppercase tracking-wide text-[#64748B]">Simple definition</div>
                     <p className="text-sm">{againHelp.definitions[againHelp.definitionIndex]}</p>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setAgainHelp((prev) =>
-                          prev
-                            ? {
-                                ...prev,
-                                definitionIndex:
-                                  (prev.definitionIndex + 1) % prev.definitions.length
-                              }
-                            : prev
-                        )
-                      }
-                      className="mt-2 rounded border px-3 py-1 text-xs"
-                    >
-                      Другой вариант объяснения
-                    </button>
-                  </div>
-
-                  <div className="rounded border bg-white p-3">
-                    <div className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500">
-                      Другая картинка
-                    </div>
-                    <img
-                      src={againHelp.imageOptions[againHelp.imageIndex]}
-                      alt=""
-                      className="h-36 w-full rounded border object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setAgainHelp((prev) =>
-                          prev
-                            ? {
-                                ...prev,
-                                imageIndex: (prev.imageIndex + 1) % prev.imageOptions.length
-                              }
-                            : prev
-                        )
-                      }
-                      className="mt-2 rounded border px-3 py-1 text-xs"
-                    >
-                      Показать другую картинку
-                    </button>
                   </div>
                 </div>
-
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button
                     type="button"
                     onClick={continueAfterAgainHelp}
-                    className="rounded bg-blue-600 px-4 py-2 text-sm text-white"
+                    className="rounded-xl bg-[#059669] px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#047857]"
                   >
-                    Продолжить
+                    Continue
                   </button>
                   <button
                     type="button"
                     onClick={continueAfterAgainHelp}
-                    className="rounded border px-4 py-2 text-sm"
+                    className="rounded-xl bg-white px-4 py-2 text-sm text-[#0F172A] ring-1 ring-[#E5E7EB] transition-colors duration-200 hover:bg-[#F8FAFC]"
                   >
-                    Скрыть блок
+                    Close
                   </button>
                 </div>
               </div>
             ) : null}
           </div>
-        )}
-      </div>
+          {error ? <p className="text-sm text-[#EF4444]">{error}</p> : null}
+        </section>
 
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+        <aside className="space-y-3 px-4 py-12 lg:px-6">
+          <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
+            <div className="text-sm font-semibold text-[#0F172A]">Daily progress</div>
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#F1F5F9]">
+              <div className="h-full bg-[#111111]" style={{ width: `${Math.round((done / Math.max(1, queue.length)) * 100)}%` }} />
+            </div>
+            <p className="mt-2 text-sm text-[#64748B]">
+              {done} done • {remaining} remaining
+            </p>
+          </div>
+          <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5">
+            <div className="text-sm font-semibold text-[#0F172A]">Session stats</div>
+            <dl className="mt-2 space-y-2 text-sm">
+              <div className="flex items-center justify-between">
+                <dt className="text-[#64748B]">Position</dt>
+                <dd className="font-medium text-[#0F172A]">
+                  {position}/{queue.length}
+                </dd>
+              </div>
+              <div className="flex items-center justify-between">
+                <dt className="text-[#64748B]">Mastery</dt>
+                <dd className="font-medium text-[#111111]">{Math.round((done / Math.max(1, queue.length)) * 100)}%</dd>
+              </div>
+              <div className="flex items-center justify-between">
+                <dt className="text-[#64748B]">Next review</dt>
+                <dd className="font-medium text-[#0F172A]">Later today</dd>
+              </div>
+            </dl>
+          </div>
+          <div className="rounded-2xl border border-[#E5E7EB] bg-[#F5F5F5] p-5">
+            <div className="text-sm font-semibold text-[#0F172A]">Tip</div>
+            <p className="mt-1 text-sm text-[#64748B]">
+              Use keyboard arrows for navigation, click card to flip, then rate your recall.
+            </p>
+            <div className="mt-3 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={goPrev}
+                disabled={index <= 0 || submitting}
+                className="rounded-xl bg-white px-3 py-1.5 text-sm text-[#0F172A] ring-1 ring-[#E5E7EB] disabled:opacity-50"
+              >
+                Prev
+              </button>
+              <button
+                type="button"
+                onClick={goNext}
+                disabled={submitting}
+                className="rounded-xl bg-white px-3 py-1.5 text-sm text-[#0F172A] ring-1 ring-[#E5E7EB] disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </aside>
+      </div>
 
       {meaningModalOpen ? (
         <>
@@ -728,19 +698,19 @@ export default function ReviewClient({
             onClick={() => setMeaningModalOpen(false)}
             className="fixed inset-0 z-[300] bg-black/30"
           />
-          <div className="fixed left-1/2 top-1/2 z-[310] w-[92vw] max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-xl border bg-white p-5 shadow-2xl">
+          <div className="fixed left-1/2 top-1/2 z-[310] w-[92vw] max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-5 shadow-2xl ring-1 ring-[#E5E7EB]">
             <div className="mb-3 flex items-start justify-between gap-3">
               <div>
-                <h3 className="text-lg font-semibold">
+                <h3 className="text-lg font-semibold text-[#0F172A]">
                   {meaningData?.word ?? resolveStudyWord(current)}
                   {meaningData?.phonetic ? <span className="ml-2 text-sm text-slate-600">{meaningData.phonetic}</span> : null}
                 </h3>
-                <p className="text-xs text-slate-500">Russian meanings and examples</p>
+                <p className="text-xs text-[#64748B]">Russian meanings</p>
               </div>
               <button
                 type="button"
                 onClick={() => setMeaningModalOpen(false)}
-                className="rounded border px-3 py-1 text-sm"
+                className="rounded-xl bg-white px-3 py-1 text-sm text-[#0F172A] ring-1 ring-[#E5E7EB]"
               >
                 Close
               </button>
@@ -750,12 +720,12 @@ export default function ReviewClient({
             {meaningError ? <p className="text-sm text-red-600">{meaningError}</p> : null}
             {!meaningLoading && !meaningError && meaningData ? (
               <div className="max-h-[56vh] space-y-3 overflow-auto pr-1">
-                <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
-                  <div className="text-xs uppercase tracking-wide text-slate-500">Russian meanings</div>
+                <div className="rounded-xl bg-[#F1F5F9] p-3">
+                  <div className="text-xs uppercase tracking-wide text-[#64748B]">Russian meanings</div>
                   <div className="mt-1 flex flex-wrap gap-2">
                     {getRuMeaningsList(meaningData).length > 0 ? (
                       getRuMeaningsList(meaningData).map((term) => (
-                        <span key={term} className="rounded border bg-white px-2 py-1 text-sm text-slate-900">
+                        <span key={term} className="rounded-lg bg-white px-2 py-1 text-sm text-slate-900 ring-1 ring-[#E5E7EB]">
                           {term}
                         </span>
                       ))
@@ -765,7 +735,7 @@ export default function ReviewClient({
                   </div>
                 </div>
                 {getRuMeaningsList(meaningData).length === 0 ? (
-                  <div className="rounded-lg border bg-slate-50 p-3 text-sm text-slate-600">
+                  <div className="rounded-xl bg-[#F1F5F9] p-3 text-sm text-[#64748B]">
                     Русские варианты перевода пока не найдены для этого слова.
                   </div>
                 ) : null}
@@ -797,14 +767,18 @@ function PronunciationBar({
   }
 
   return (
-    <div className="mb-3 flex flex-wrap items-center gap-2 rounded border bg-slate-50 px-3 py-2 text-sm">
+    <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl bg-[#F1F5F9] px-3 py-2 text-sm text-[#0F172A]">
       {targetWord ? <span className="font-medium">Word: {targetWord}</span> : null}
-      {phonetic ? <span className="text-slate-600">{phonetic}</span> : null}
+      {phonetic ? <span className="text-[#64748B]">{phonetic}</span> : null}
       {audioUrl ? (
         <audio controls preload="none" src={audioUrl} className="h-8" />
       ) : (
         targetWord ? (
-          <button type="button" onClick={speakFallback} className="rounded border px-2 py-1 text-xs">
+          <button
+            type="button"
+            onClick={speakFallback}
+            className="rounded-lg bg-white px-2 py-1 text-xs text-[#0F172A] ring-1 ring-[#E5E7EB]"
+          >
             ▶ Pronounce
           </button>
         ) : null
@@ -845,14 +819,14 @@ function renderHighlightedText(
               e.stopPropagation();
               options.onWordClick?.();
             }}
-            className="font-extrabold text-green-600 underline decoration-dotted underline-offset-4"
+            className="font-semibold text-[#059669] underline decoration-dotted underline-offset-4"
           >
             {part}
           </button>
         );
       }
       return (
-        <span key={`hl-${index}`} className="font-extrabold text-green-600">
+        <span key={`hl-${index}`} className="font-semibold text-[#059669]">
           {part}
         </span>
       );

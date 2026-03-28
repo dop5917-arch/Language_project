@@ -39,7 +39,7 @@ export default function TopNavLinks() {
         <button
           type="button"
           onClick={() => setCreateOpen(true)}
-          className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          className="rounded-xl bg-[#111111] px-3 py-2 text-sm font-medium text-white shadow-sm hover:opacity-90"
         >
           Создать колоду
         </button>
@@ -57,7 +57,7 @@ export default function TopNavLinks() {
               setStatsLoading(false);
             }
           }}
-          className="rounded-lg border px-3 py-2 text-sm font-medium hover:bg-slate-50"
+          className="rounded-xl bg-white px-3 py-2 text-sm font-medium text-[#111111] shadow-sm ring-1 ring-[#E5E7EB] hover:bg-[#F5F5F5]"
         >
           Статистика
         </button>
@@ -72,7 +72,7 @@ export default function TopNavLinks() {
                 className="fixed inset-0 z-[600] bg-black/30"
               />
               <div className="fixed inset-0 z-[610] flex items-center justify-center p-4">
-                <div className="w-[92vw] max-w-md rounded-xl border bg-white p-4 shadow-2xl">
+                <div className="w-[92vw] max-w-md rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
                   <div className="mb-3 flex items-center justify-between gap-3">
                     <h3 className="text-base font-semibold">Создать колоду</h3>
                     <button
@@ -80,7 +80,7 @@ export default function TopNavLinks() {
                       onClick={() => setCreateOpen(false)}
                       aria-label="Закрыть"
                       title="Закрыть"
-                      className="inline-flex h-7 w-7 items-center justify-center rounded border border-red-300 bg-red-50 text-sm font-semibold leading-none text-red-700 hover:bg-red-100"
+                      className="inline-flex h-7 w-7 items-center justify-center rounded bg-red-50 text-sm font-semibold leading-none text-red-700 hover:bg-red-100"
                     >
                       ✕
                     </button>
@@ -91,7 +91,7 @@ export default function TopNavLinks() {
                       placeholder="Название колоды"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full rounded border px-3 py-2 text-sm"
+                      className="w-full rounded-xl bg-[#F5F5F5] px-3 py-2 text-sm text-[#111111] outline-none ring-1 ring-[#E5E7EB] focus:ring-2 focus:ring-[#111111]"
                     />
                     <button
                       type="button"
@@ -120,7 +120,7 @@ export default function TopNavLinks() {
                           setCreating(false);
                         }
                       }}
-                      className="w-full rounded bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="w-full rounded-xl bg-[#111111] px-3 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {creating ? "Создаю..." : "Создать"}
                     </button>
@@ -141,7 +141,7 @@ export default function TopNavLinks() {
                 className="fixed inset-0 z-[600] bg-black/30"
               />
               <div className="fixed inset-0 z-[610] flex items-center justify-center p-4">
-                <div className="w-[92vw] max-w-md rounded-xl border bg-white p-4 shadow-2xl">
+                <div className="w-[92vw] max-w-md rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
                   <div className="mb-3 flex items-center justify-between gap-3">
                     <h3 className="text-base font-semibold">Статистика</h3>
                     <button
@@ -149,7 +149,7 @@ export default function TopNavLinks() {
                       onClick={() => setStatsOpen(false)}
                       aria-label="Закрыть"
                       title="Закрыть"
-                      className="inline-flex h-7 w-7 items-center justify-center rounded border border-red-300 bg-red-50 text-sm font-semibold leading-none text-red-700 hover:bg-red-100"
+                      className="inline-flex h-7 w-7 items-center justify-center rounded bg-red-50 text-sm font-semibold leading-none text-red-700 hover:bg-red-100"
                     >
                       ✕
                     </button>
@@ -179,9 +179,9 @@ export default function TopNavLinks() {
 
 function Tile({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-lg border bg-slate-50 p-2">
-      <div className="text-[11px] uppercase tracking-wide text-slate-500">{label}</div>
-      <div className="mt-0.5 text-base font-semibold">{value}</div>
+    <div className="rounded-xl border border-[#E5E7EB] bg-[#F5F5F5] p-2">
+      <div className="text-[11px] uppercase tracking-wide text-slate-600">{label}</div>
+      <div className="mt-0.5 text-base font-semibold text-[#0F172A]">{value}</div>
     </div>
   );
 }

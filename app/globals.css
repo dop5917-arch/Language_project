@@ -5,36 +5,40 @@
 @layer base {
   :root {
     --premium-bg: #f8fafc;
-    --premium-bg-soft: #f1f5f9;
+    --premium-bg-soft: #ffffff;
     --premium-surface: #ffffff;
-    --premium-text: #111827;
+    --premium-text: #0f172a;
     --premium-muted: #64748b;
-    --premium-border: #dbe3ea;
-    --premium-accent: #059669;
-    --premium-accent-strong: #047857;
+    --premium-border: #cbd5f5;
+    --premium-accent: #3b82f6;
+    --premium-accent-strong: #2563eb;
+    --premium-primary: #3b82f6;
+    --premium-on-dark: #ffffff;
+    --ui-correct: #059669;
+    --ui-wrong: #ef4444;
+    --ui-xp: #f59e0b;
+    --ui-neutral: #cbd5f5;
   }
 
   body {
     @apply min-h-screen;
-    background:
-      radial-gradient(circle at top, #eef6f4 0%, rgba(238, 246, 244, 0) 35%),
-      var(--premium-bg);
-    color: #000;
+    background: var(--premium-bg);
+    color: var(--premium-text);
     font-family: var(--font-lora), Georgia, Cambria, "Times New Roman", Times, serif;
   }
 
   a {
-    color: #000;
+    color: var(--premium-text);
   }
 
   a:hover {
-    color: #000;
+    color: var(--premium-text);
   }
 
   input,
   textarea,
   select {
-    border-color: var(--premium-border);
+    border-color: transparent;
   }
 
   input:focus,
@@ -89,10 +93,10 @@ body {
 }
 
 .flip-card-front {
-  background: #f8fafc;
+  background: var(--premium-surface);
 }
 
 .flip-card-back {
-  background: #fff;
+  background: var(--premium-surface);
   transform: rotateY(180deg);
 }

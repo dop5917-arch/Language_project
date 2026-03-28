@@ -119,7 +119,7 @@ export default function DeckCard({
 
   return (
     <div
-      className="group relative min-h-[148px] cursor-pointer rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-emerald-300 hover:shadow"
+      className="group relative min-h-[132px] cursor-pointer rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-[0_4px_12px_rgba(0,0,0,0.04)] transition duration-150 ease-out hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(0,0,0,0.06)]"
       onClick={(e) => {
         if (isInteractiveTarget(e.target)) return;
         openDeck();
@@ -135,15 +135,15 @@ export default function DeckCard({
       aria-label={`Открыть колоду ${nameCommitted}`}
     >
 
-      <div className="relative z-10 space-y-4">
+      <div className="relative z-10 space-y-3">
         <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0 break-words text-xl font-semibold leading-tight text-slate-900 sm:text-2xl">
+          <div className="min-w-0 break-words text-lg font-semibold leading-tight text-[#111111] sm:text-xl">
             {nameCommitted}
           </div>
           <button
             type="button"
             onClick={() => setDetailsOpen(true)}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 bg-white text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F5F5] text-sm font-semibold text-[#059669] ring-1 ring-[#E5E7EB] transition hover:bg-white hover:ring-[#A7F3D0]"
             aria-label="Открыть детали колоды"
           >
             i
@@ -154,20 +154,22 @@ export default function DeckCard({
           <Link
             href={`/decks/${deckId}/review-all?resume=1`}
             onClick={touchDeck}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-sky-700 hover:bg-slate-50"
+            className="rounded-xl bg-[#111111] px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:opacity-90"
+            aria-label="Продолжить повторение"
+            title="Продолжить повторение"
           >
             Продолжить
           </Link>
-          <div className="text-sm font-medium text-emerald-700">
+          <div className="text-sm font-medium text-[#6B7280]">
             Выучено {learnedPercent === null ? "—" : `${learnedPercent}%`}
           </div>
         </div>
 
         <div className="space-y-2">
-          <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
-            <div className="h-full bg-emerald-600/85" style={{ width: `${learnedPercent ?? 0}%` }} />
+          <div className="h-2 w-full overflow-hidden rounded-full bg-[#E5E7EB]">
+            <div className="h-full bg-[#059669]" style={{ width: `${learnedPercent ?? 0}%` }} />
           </div>
-          <div className="text-[11px] text-slate-500">
+          <div className="text-[11px] text-slate-600">
             Карточек: {cardsCount} • Пройдено: {passedCount} • Выучено: {rememberedCount}
           </div>
         </div>
@@ -186,11 +188,11 @@ export default function DeckCard({
                 }}
                 className="fixed inset-0 z-[9998] bg-black/35"
               />
-              <div className="fixed left-1/2 top-1/2 z-[9999] w-[94vw] max-w-xl -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
-                <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-5 py-4">
+              <div className="fixed left-1/2 top-1/2 z-[9999] w-[94vw] max-w-xl -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white shadow-[0_10px_24px_rgba(0,0,0,0.08)]">
+                <div className="flex items-center justify-between gap-3 bg-[#F5F5F5] px-5 py-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900">{nameCommitted}</h3>
-                    <p className="text-xs text-slate-600">Свойства колоды</p>
+                    <h3 className="text-lg font-semibold text-[#111111]">{nameCommitted}</h3>
+                    <p className="text-xs text-[#6B7280]">Свойства колоды</p>
                   </div>
                   <button
                     type="button"
@@ -201,7 +203,7 @@ export default function DeckCard({
                     }}
                     aria-label="Закрыть"
                     title="Закрыть"
-                    className="inline-flex h-7 w-7 items-center justify-center rounded border border-red-300 bg-red-50 text-sm font-semibold leading-none text-red-700 hover:bg-red-100"
+                      className="inline-flex h-7 w-7 items-center justify-center rounded bg-red-50 text-sm font-semibold leading-none text-red-700 hover:bg-red-100"
                   >
                     ✕
                   </button>
@@ -226,8 +228,8 @@ export default function DeckCard({
                   </div>
 
                   {renameOpen ? (
-                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                      <div className="mb-2 text-xs font-medium text-slate-600">Новое название</div>
+                    <div className="rounded-xl border border-[#E5E7EB] bg-[#F5F5F5] p-3">
+                      <div className="mb-2 text-xs font-medium text-[#6B7280]">Новое название</div>
                       <input
                         value={nameDraft}
                         onChange={(e) => setNameDraft(e.target.value)}
@@ -241,14 +243,14 @@ export default function DeckCard({
                             setNameDraft(nameCommitted);
                           }
                         }}
-                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                        className="w-full rounded-xl bg-white px-3 py-2 text-sm text-[#111111] outline-none ring-1 ring-[#E5E7EB] focus:ring-2 focus:ring-[#111111]"
                         disabled={isPending}
                       />
                       <div className="mt-2 flex gap-2">
                         <button
                           type="button"
                           onClick={() => void saveRename()}
-                          className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
+                          className="rounded-xl bg-[#111111] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90"
                         >
                           Сохранить
                         </button>
@@ -258,7 +260,7 @@ export default function DeckCard({
                             setRenameOpen(false);
                             setNameDraft(nameCommitted);
                           }}
-                          className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs text-slate-700 hover:bg-white"
+                          className="rounded-xl border border-[#E5E7EB] bg-white px-3 py-1.5 text-xs text-[#111111] hover:bg-[#F5F5F5]"
                         >
                           Отмена
                         </button>
@@ -269,21 +271,21 @@ export default function DeckCard({
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                     <ShareDeckButton
                       deckId={deckId}
-                      className="rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-medium text-slate-800 transition hover:bg-slate-50"
+                      className="rounded-xl bg-[#111111] px-3 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
                       label="Поделиться"
                       copiedLabel="Скопировано"
                     />
                     <button
                       type="button"
                       onClick={() => setRenameOpen((v) => !v)}
-                      className="rounded-xl border border-blue-300 bg-blue-50 px-3 py-2.5 text-sm font-medium text-blue-700 transition hover:bg-blue-100"
+                      className="rounded-xl border border-[#E5E7EB] bg-white px-3 py-2.5 text-sm font-medium text-[#111111] transition hover:bg-[#F5F5F5]"
                     >
                       Переименовать
                     </button>
                     <button
                       type="button"
                       onClick={deleteDeck}
-                      className="rounded-xl border border-red-300 bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700 transition hover:bg-red-100"
+                      className="rounded-md bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700 transition hover:bg-red-100"
                     >
                       Удалить
                     </button>
@@ -309,16 +311,16 @@ function MetricCell({
 }) {
   const toneClass =
     tone === "amber"
-      ? "border-amber-200 bg-amber-50"
+      ? "bg-[#F5F5F5] border border-[#E5E7EB]"
       : tone === "blue"
-        ? "border-blue-200 bg-blue-50"
+        ? "bg-[#F5F5F5] border border-[#E5E7EB]"
         : tone === "emerald"
-          ? "border-emerald-200 bg-emerald-50"
-          : "border-slate-200 bg-slate-50";
+          ? "bg-[#F5F5F5] border border-[#E5E7EB]"
+          : "bg-[#F5F5F5] border border-[#E5E7EB]";
   return (
-    <div className={`rounded-xl border px-3 py-2 ${toneClass}`}>
-      <div className="text-[11px] uppercase tracking-wide text-slate-500">{label}</div>
-      <div className="mt-1 text-sm font-semibold text-slate-900">{value}</div>
+    <div className={`rounded-xl px-3 py-2 ${toneClass}`}>
+      <div className="text-[11px] uppercase tracking-wide text-[#6B7280]">{label}</div>
+      <div className="mt-1 text-sm font-semibold text-[#111111]">{value}</div>
     </div>
   );
 }

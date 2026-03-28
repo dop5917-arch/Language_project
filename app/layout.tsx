@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
-  themeColor: "#0f172a"
+  themeColor: "#FAFAFA"
 };
 
 export default function RootLayout({
@@ -37,9 +37,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={lora.variable}>
         <PWARegister />
-        <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/85 backdrop-blur">
+        <header className="sticky top-0 z-20 border-b border-[#E5E7EB] bg-white/95 backdrop-blur">
           <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-            <Link href="/decks" className="text-lg font-semibold text-slate-900">
+            <Link href="/decks" className="text-lg font-semibold text-[#111111]">
               English SRS
             </Link>
             <TopNavLinks />

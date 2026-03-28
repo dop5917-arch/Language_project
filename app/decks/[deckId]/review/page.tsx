@@ -38,16 +38,18 @@ export default async function ReviewPage({ params, searchParams }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">
-          {includeNew ? "Review (Due + New)" : "Review (Due Only)"}: {deck.name}
+      <div className="flex items-center justify-between rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#E5E7EB]">
+        <h1 className="text-2xl font-semibold text-[#0F172A]">
+          {includeNew ? "Review (Due + New)" : "Review (Due Only)"}
         </h1>
-        <Link href={`/decks/${deck.id}/today`} className="text-sm">
+        <Link href={`/decks/${deck.id}/today`} className="text-sm text-[#059669] hover:text-[#047857]">
           Back to Today
         </Link>
       </div>
       <ReviewClient
         deckId={deck.id}
+        deckName={deck.name}
+        modeLabel={includeNew ? "Due + New" : "Due only"}
         initialQueue={serializedQueue}
         enableResume={resume}
         sessionKey={`deck:${deck.id}:review-today:${newLimit}`}
