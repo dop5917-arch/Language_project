@@ -5,8 +5,8 @@ const optionalUrl = z
   .trim()
   .optional()
   .transform((value) => (value && value.length > 0 ? value : undefined))
-  .refine((value) => !value || /^https?:\/\//i.test(value), {
-    message: "image_url must be a valid http(s) URL"
+  .refine((value) => !value || /^https?:\/\//i.test(value) || /^data:image\/[a-zA-Z0-9.+-]+;base64,/i.test(value), {
+    message: "image_url must be a valid http(s) URL or image file"
   });
 
 export const deckSchema = z.object({
@@ -72,8 +72,8 @@ export const cardFormSchema = z.object({
     .trim()
     .optional()
     .transform((value) => (value && value.length > 0 ? value : undefined))
-    .refine((value) => !value || /^https?:\/\//i.test(value), {
-      message: "image_url must be a valid http(s) URL"
+    .refine((value) => !value || /^https?:\/\//i.test(value) || /^data:image\/[a-zA-Z0-9.+-]+;base64,/i.test(value), {
+      message: "image_url must be a valid http(s) URL or image file"
     }),
   tags: z
     .string()

@@ -181,9 +181,15 @@ Quality rules:
 - Never mention: English, word, vocabulary, dictionary, translate, translation, learn, study, language, grammar
 - "front_hint" must be short (6-14 words), concrete, and context-based
 - "front_hint" should explain the role of the word in this exact sentence
+- "front_hint" must be a clue only, NOT a direct definition
+- "front_hint" must help guess the word from situation/context
+- Do not start with "means", "is", "to + verb definition", or dictionary phrasing
+- "front_hint" should NOT repeat the definition text
 - avoid vague hints like "common word", "real conversation", "everyday use"
 - bad hint example: "heard this in real conversation yesterday"
+- bad hint example: "to speak very quietly" (this is a definition)
 - good hint example: "he speaks quietly so other people cannot hear him"
+- good hint example: "very quiet voice so others nearby miss it"
 - "definition_en_main" should be the most common meaning for learners
 - "ru_meanings" must contain several meanings, ordered by relevance for this context
 - include only common and actually used Russian meanings (no rare/obsolete senses)
