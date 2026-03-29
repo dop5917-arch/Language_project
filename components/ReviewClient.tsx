@@ -480,84 +480,86 @@ export default function ReviewClient({
               />
             ) : null}
 
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => setFlipped((prev) => !prev)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  setFlipped((prev) => !prev);
-                }
-              }}
-              className="relative mt-4 min-h-[420px] w-full cursor-pointer text-left lg:min-h-[520px]"
-            >
+            <div className="mt-4 grid gap-2 md:grid-cols-[minmax(0,1fr)_150px] md:items-stretch">
               <div
-                aria-hidden={flipped}
-                className={`absolute inset-0 flex items-center justify-center overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white p-5 text-center shadow-[0_4px_12px_rgba(0,0,0,0.04)] transition-all duration-150 ease-out hover:-translate-y-0.5 motion-reduce:transition-none sm:p-8 ${
-                  flipped ? "pointer-events-none translate-y-1 opacity-0" : "pointer-events-auto translate-y-0 opacity-100"
-                }`}
-              >
-                <button
-                  type="button"
-                  aria-label="Hint"
-                  onClick={(e) => {
+                role="button"
+                tabIndex={0}
+                onClick={() => setFlipped((prev) => !prev)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
-                    e.stopPropagation();
-                    openFrontHint();
-                  }}
-                  className="absolute right-4 top-4 z-20 rounded-xl bg-[#F5F5F5] px-3 py-2 text-sm font-medium text-[#111111] transition-colors duration-150 hover:bg-[#ECECEC]"
-                >
-                  Hint
-                </button>
-                <div className="space-y-4">
-                  <p className={cardTextClass}>
-                    {renderHighlightedText(frontDetails?.sentence || current.frontText, resolveStudyWord(current))}
-                  </p>
-                </div>
-                {frontHint && frontHint.cardId === current.id ? (
-                  <div className="absolute inset-x-4 bottom-4 rounded-xl bg-[#F5F5F5] p-3 text-sm text-[#6B7280] sm:inset-x-6 sm:bottom-6">
-                    {renderHighlightedText(frontHint.examples[frontHint.index], resolveStudyWord(current))}
-                  </div>
-                ) : null}
-              </div>
-
-              <div
-                aria-hidden={!flipped}
-                className={`absolute inset-0 flex flex-col items-center justify-center gap-4 overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white p-5 text-center shadow-[0_4px_12px_rgba(0,0,0,0.04)] transition-all duration-150 ease-out hover:-translate-y-0.5 motion-reduce:transition-none sm:p-8 ${
-                  flipped ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none -translate-y-1 opacity-0"
-                }`}
+                    setFlipped((prev) => !prev);
+                  }
+                }}
+                className="relative min-h-[420px] w-full cursor-pointer text-left md:min-h-[520px]"
               >
-                <div className="w-full max-w-4xl space-y-6">
-                  <p className={cardTextClass}>
-                    {renderHighlightedText(
-                      `${backDetails?.word || resolveStudyWord(current)} — ${
-                        backDetails?.definitionEn || "common everyday meaning"
-                      }`,
-                      resolveStudyWord(current),
-                      { interactive: true, onWordClick: openWordMeaning }
-                    )}
-                  </p>
-                  <p className="text-[clamp(1rem,2vw,1.125rem)] leading-relaxed break-words text-[#6B7280]">
-                    {renderHighlightedText(backDetails?.example || buildBackContextExample(current), resolveStudyWord(current))}
-                  </p>
+                <div
+                  aria-hidden={flipped}
+                  className={`absolute inset-0 flex items-center justify-center overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white p-5 text-center shadow-[0_4px_12px_rgba(0,0,0,0.04)] transition-all duration-150 ease-out hover:-translate-y-0.5 motion-reduce:transition-none sm:p-8 ${
+                    flipped ? "pointer-events-none translate-y-1 opacity-0" : "pointer-events-auto translate-y-0 opacity-100"
+                  }`}
+                >
+                  <button
+                    type="button"
+                    aria-label="Hint"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      openFrontHint();
+                    }}
+                    className="absolute right-4 top-4 z-20 rounded-xl bg-[#F5F5F5] px-3 py-2 text-sm font-medium text-[#111111] transition-colors duration-150 hover:bg-[#ECECEC]"
+                  >
+                    Hint
+                  </button>
+                  <div className="space-y-4">
+                    <p className={cardTextClass}>
+                      {renderHighlightedText(frontDetails?.sentence || current.frontText, resolveStudyWord(current))}
+                    </p>
+                  </div>
+                  {frontHint && frontHint.cardId === current.id ? (
+                    <div className="absolute inset-x-4 bottom-4 rounded-xl bg-[#F5F5F5] p-3 text-sm text-[#6B7280] sm:inset-x-6 sm:bottom-6">
+                      {renderHighlightedText(frontHint.examples[frontHint.index], resolveStudyWord(current))}
+                    </div>
+                  ) : null}
+                </div>
+
+                <div
+                  aria-hidden={!flipped}
+                  className={`absolute inset-0 flex flex-col items-center justify-center gap-4 overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white p-5 text-center shadow-[0_4px_12px_rgba(0,0,0,0.04)] transition-all duration-150 ease-out hover:-translate-y-0.5 motion-reduce:transition-none sm:p-8 ${
+                    flipped ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none -translate-y-1 opacity-0"
+                  }`}
+                >
+                  <div className="w-full max-w-4xl space-y-6">
+                    <p className={cardTextClass}>
+                      {renderHighlightedText(
+                        `${backDetails?.word || resolveStudyWord(current)} — ${
+                          backDetails?.definitionEn || "common everyday meaning"
+                        }`,
+                        resolveStudyWord(current),
+                        { interactive: true, onWordClick: openWordMeaning }
+                      )}
+                    </p>
+                    <p className="text-[clamp(1rem,2vw,1.125rem)] leading-relaxed break-words text-[#6B7280]">
+                      {renderHighlightedText(backDetails?.example || buildBackContextExample(current), resolveStudyWord(current))}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-              {ratingControls.map((control) => (
-                <button
-                  key={flipped ? control.label : `front-${control.label}`}
-                  type="button"
-                  disabled={submitting || (flipped && isAgainHelpOpenForCurrent)}
-                  onClick={() => rate(control.rating)}
-                  className={`rounded-xl px-4 py-3 text-left text-[15px] font-semibold transition-all duration-150 ease-out disabled:opacity-50 ${control.className}`}
-                >
-                  <div>{control.label}</div>
-                  <div className="text-[13px] font-normal opacity-80">{control.hint}</div>
-                </button>
-              ))}
+              <div className="grid grid-cols-2 gap-2 md:grid-cols-1 md:gap-2 md:py-0.5">
+                {ratingControls.map((control) => (
+                  <button
+                    key={flipped ? control.label : `front-${control.label}`}
+                    type="button"
+                    disabled={submitting || (flipped && isAgainHelpOpenForCurrent)}
+                    onClick={() => rate(control.rating)}
+                    className={`h-full min-h-[48px] rounded-xl px-2.5 py-2 text-left text-[13px] font-semibold transition-all duration-150 ease-out disabled:opacity-50 ${control.className}`}
+                  >
+                    <div>{control.label}</div>
+                    <div className="text-[12px] font-normal opacity-80">{control.hint}</div>
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="mt-6 h-[6px] overflow-hidden rounded-full bg-[#E5E7EB]">
