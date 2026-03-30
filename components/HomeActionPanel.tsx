@@ -14,11 +14,12 @@ export default function HomeActionPanel({
   aiDeckOptions?: Array<{ id: string; name: string }>;
   className?: string;
 }) {
-  const [minutes, setMinutes] = useState(25);
+  const [minutesInput, setMinutesInput] = useState("25");
   const [aiModalOpen, setAiModalOpen] = useState(false);
 
   function startTimer() {
-    const durationMin = Math.max(1, Math.min(180, Number(minutes) || 25));
+    const parsed = Number.parseInt(minutesInput, 10);
+    const durationMin = Math.max(1, Math.min(180, Number.isFinite(parsed) ? parsed : 25));
     const now = Date.now();
     writeStudyTimerState({
       durationMin,
@@ -70,11 +71,16 @@ export default function HomeActionPanel({
             type="number"
             min={1}
             max={180}
-            value={minutes}
-            onChange={(e) => setMinutes(Number(e.target.value) || 25)}
+            value={minutesInput}
+            onChange={(e) => {
+              const next = e.target.value;
+              if (!/^\d{0,3}$/.test(next)) return;
+              setMinutesInput(next);
+            }}
             className="w-16 rounded-lg bg-[#F5F5F5] px-2 py-1 text-sm text-[#111111] outline-none"
             aria-label="Минуты таймера"
             placeholder="мин"
+            inputMode="numeric"
           />
           <button
             type="button"

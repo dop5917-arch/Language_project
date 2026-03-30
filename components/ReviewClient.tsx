@@ -77,7 +77,7 @@ const ratingControls: Array<{ label: string; hint: string; rating: Rating; class
     label: "Know it",
     hint: "Move forward",
     rating: "Easy",
-    className: "bg-[#111111] text-white hover:opacity-90"
+    className: "bg-[#059669] text-white hover:bg-[#047857]"
   }
 ];
 
@@ -108,10 +108,50 @@ export default function ReviewClient({
   const [meaningData, setMeaningData] = useState<WordMeaningResponse | null>(null);
   const [meaningCache, setMeaningCache] = useState<Record<string, WordMeaningResponse>>({});
   const [mounted, setMounted] = useState(false);
+  const [autoPronounce, setAutoPronounce] = useState(true);
+
+  function pronounceCurrentWord(card: QueueCard) {
+    if (typeof window === "undefined") return;
+    const word = (card.targetWord ?? "").trim() || resolveStudyWord(card);
+    if (!word) return;
+
+    if (card.audioUrl) {
+      const audio = new Audio(card.audioUrl);
+      audio.play().catch(() => {
+        if (!("speechSynthesis" in window)) return;
+        const utterance = new SpeechSynthesisUtterance(word);
+        utterance.lang = "en-US";
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+      });
+      return;
+    }
+
+    if (!("speechSynthesis" in window)) return;
+    const utterance = new SpeechSynthesisUtterance(word);
+    utterance.lang = "en-US";
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  }
 
   useEffect(() => {
     setMounted(true);
+    try {
+      const saved = window.localStorage.getItem("review:auto-pronounce:v1");
+      if (saved === "0") setAutoPronounce(false);
+    } catch {
+      // ignore
+    }
   }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    try {
+      window.localStorage.setItem("review:auto-pronounce:v1", autoPronounce ? "1" : "0");
+    } catch {
+      // ignore
+    }
+  }, [autoPronounce, mounted]);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -158,6 +198,13 @@ export default function ReviewClient({
   const finalLabel = returnLabel ?? "Back to Today";
   const isAgainHelpOpenForCurrent = Boolean(againHelp && current && againHelp.card.id === current.id);
   const progressStorageKey = `review-progress:${sessionKey ?? deckId}`;
+
+  useEffect(() => {
+    if (!mounted || !autoPronounce || !current) return;
+    pronounceCurrentWord(current);
+    // pronounce only on card change / setting switch
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current?.id, autoPronounce, mounted]);
 
   useEffect(() => {
     if (!enableResume || !mounted) return;
@@ -396,6 +443,10 @@ export default function ReviewClient({
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-xl bg-[#ECFDF5] p-3">
+            <div className="text-sm font-semibold text-[#065F46]">Вспомнил</div>
+            <div className="text-2xl font-semibold text-[#14532D]">{remembered.length}</div>
+          </div>
           <div className="rounded-xl bg-[#FEE2E2] p-3">
             <div className="text-sm font-semibold text-[#991B1B]">Не вспомнил</div>
             <div className="text-2xl font-semibold text-[#7F1D1D]">{notRemembered.length}</div>
@@ -404,16 +455,12 @@ export default function ReviewClient({
             <div className="text-sm font-semibold text-[#92400E]">Трудно</div>
             <div className="text-2xl font-semibold text-[#78350F]">{hardRemembered.length}</div>
           </div>
-          <div className="rounded-xl bg-[#ECFDF5] p-3">
-            <div className="text-sm font-semibold text-[#065F46]">Вспомнил</div>
-            <div className="text-2xl font-semibold text-[#14532D]">{remembered.length}</div>
-          </div>
         </div>
 
         <div className="grid gap-4 lg:grid-cols-3">
+          <ResultList title="Вспомнил" items={remembered} />
           <ResultList title="Не вспомнил" items={notRemembered} />
           <ResultList title="Трудно" items={hardRemembered} />
-          <ResultList title="Вспомнил" items={remembered} />
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -477,6 +524,8 @@ export default function ReviewClient({
                 targetWord={current.targetWord ?? undefined}
                 phonetic={current.phonetic ?? undefined}
                 audioUrl={current.audioUrl ?? undefined}
+                autoPronounce={autoPronounce}
+                onToggleAutoPronounce={() => setAutoPronounce((v) => !v)}
               />
             ) : null}
 
@@ -529,22 +578,41 @@ export default function ReviewClient({
                     flipped ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none -translate-y-1 opacity-0"
                   }`}
                 >
-                  <div className="w-full max-w-4xl space-y-6">
-                    <p className={cardTextClass}>
-                      {renderHighlightedText(
-                        `${backDetails?.word || resolveStudyWord(current)} — ${
-                          backDetails?.definitionEn || "common everyday meaning"
+                <div className="w-full max-w-4xl space-y-6">
+                  <p className={cardTextClass}>
+                    {renderHighlightedText(
+                      `${backDetails?.word || resolveStudyWord(current)} — ${
+                        backDetails?.definitionEn || "common everyday meaning"
                         }`,
                         resolveStudyWord(current),
                         { interactive: true, onWordClick: openWordMeaning }
                       )}
                     </p>
-                    <p className="text-[clamp(1rem,2vw,1.125rem)] leading-relaxed break-words text-[#6B7280]">
-                      {renderHighlightedText(backDetails?.example || buildBackContextExample(current), resolveStudyWord(current))}
-                    </p>
-                  </div>
+                  <p className="text-[clamp(1rem,2vw,1.125rem)] leading-relaxed break-words text-[#6B7280]">
+                    {renderHighlightedText(backDetails?.example || buildBackContextExample(current), resolveStudyWord(current))}
+                  </p>
+                  {backDetails?.synonyms && backDetails.synonyms.length > 0 ? (
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                      <span className="text-xs font-medium uppercase tracking-wide text-[#9CA3AF]">Synonyms</span>
+                      {backDetails.synonyms.map((item) => (
+                        <span
+                          key={`syn-${item}`}
+                          className="rounded-lg border border-[#E5E7EB] bg-[#F5F5F5] px-2 py-1 text-sm text-[#111111]"
+                        >
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                  {backDetails?.emojiCue && backDetails.emojiCue.length > 0 ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-xs font-medium uppercase tracking-wide text-[#9CA3AF]">Emoji</span>
+                      <span className="text-2xl">{backDetails.emojiCue.join(" ")}</span>
+                    </div>
+                  ) : null}
                 </div>
               </div>
+            </div>
 
               <div className="grid grid-cols-2 gap-2 md:grid-cols-1 md:gap-2 md:py-0.5">
                 {ratingControls.map((control) => (
@@ -691,11 +759,15 @@ export default function ReviewClient({
 function PronunciationBar({
   targetWord,
   phonetic,
-  audioUrl
+  audioUrl,
+  autoPronounce,
+  onToggleAutoPronounce
 }: {
   targetWord?: string;
   phonetic?: string;
   audioUrl?: string;
+  autoPronounce: boolean;
+  onToggleAutoPronounce: () => void;
 }) {
   async function speakFallback() {
     if (typeof window === "undefined" || !targetWord) return;
@@ -710,6 +782,14 @@ function PronunciationBar({
     <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl bg-[#F1F5F9] px-3 py-2 text-sm text-[#0F172A]">
       {targetWord ? <span className="font-medium">Word: {targetWord}</span> : null}
       {phonetic ? <span className="text-[#64748B]">{phonetic}</span> : null}
+      <button
+        type="button"
+        onClick={onToggleAutoPronounce}
+        className="rounded-lg bg-white px-2 py-1 text-xs text-[#0F172A] ring-1 ring-[#E5E7EB]"
+        title="Автоматически произносить слово при переходе на новую карточку"
+      >
+        {autoPronounce ? "🔊 Авто" : "🔇 Авто"}
+      </button>
       {audioUrl ? (
         <audio controls preload="none" src={audioUrl} className="h-8" />
       ) : (
@@ -793,6 +873,8 @@ function parseCardBackDetails(card: QueueCard): {
   example?: string;
   whyThisWordHere?: string;
   ruMeanings: string[];
+  synonyms: string[];
+  emojiCue: string[];
 } {
   const lines = card.backText
     .split("\n")
@@ -807,6 +889,8 @@ function parseCardBackDetails(card: QueueCard): {
   const ruLine = findValue("RU meanings:") || findValue("RU:");
   const example = findValue("Example:");
   const whyThisWordHere = findValue("Why this word here:");
+  const synonymsLine = findValue("Synonyms:");
+  const emojiLine = findValue("Emoji cue:");
   const ruMeanings = Array.from(
     new Set(
       (ruLine ?? "")
@@ -815,13 +899,31 @@ function parseCardBackDetails(card: QueueCard): {
         .filter((term) => term.length > 0)
     )
   ).slice(0, 8);
+  const synonyms = Array.from(
+    new Set(
+      (synonymsLine ?? "")
+        .split(/[|,;]/g)
+        .map((term) => term.trim())
+        .filter((term) => term.length > 0)
+    )
+  ).slice(0, 6);
+  const emojiCue = Array.from(
+    new Set(
+      (emojiLine ?? "")
+        .split(/\s+/g)
+        .map((term) => term.trim())
+        .filter((term) => term.length > 0)
+    )
+  ).slice(0, 3);
 
   return {
     word,
     definitionEn,
     example,
     whyThisWordHere,
-    ruMeanings
+    ruMeanings,
+    synonyms,
+    emojiCue
   };
 }
 

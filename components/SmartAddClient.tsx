@@ -70,6 +70,8 @@ type AiCardPayload = {
   definition_en_main?: string;
   back_sentence?: string;
   why_this_word_here?: string;
+  synonyms?: string[] | string;
+  emoji_cue?: string[] | string;
   ru_meanings?: string[];
   ru_meaning?: string | string[];
   meanings_ru?: string[];
@@ -166,6 +168,12 @@ Task for each target word/item:
 4) Provide 4-7 common Russian meanings (popular + context-applicable, not one).
 5) Provide ONE second example sentence for back side (different scene from front).
 6) Add a short "why this word here" explanation. This should match the front hint logic.
+7) Add simple synonyms:
+   - field: "synonyms"
+   - 2-3 common and clear items only
+8) Add emoji cue:
+   - field: "emoji_cue"
+   - 1-2 emojis only
 
 Target words:
 ${wordsList || "(no words provided)"}
@@ -194,6 +202,8 @@ Quality rules:
 - "ru_meanings" must contain several meanings, ordered by relevance for this context
 - include only common and actually used Russian meanings (no rare/obsolete senses)
 - "why_this_word_here" must be short (6-12 words), contextual, not dictionary-like
+- "synonyms" must be 2-3 frequent words, easy to understand
+- "emoji_cue" must be 1-2 emojis, no text
 - if source has typo, still generate full card from best inferred word
 
 Input words count: ${words.length}
@@ -210,7 +220,9 @@ Return strict JSON only in this shape:
       "definition_en_main": "to speak very quietly so only nearby people hear",
       "ru_meanings": ["шептать", "прошептать", "говорить шепотом"],
       "back_sentence": "She whispered the address while they stood near the door.",
-      "why_this_word_here": "because he speaks quietly to avoid being overheard"
+      "why_this_word_here": "because he speaks quietly to avoid being overheard",
+      "synonyms": ["murmur", "speak softly"],
+      "emoji_cue": ["🤫", "👂"]
     }
   ],
   "report": {
@@ -581,6 +593,17 @@ export default function SmartAddClient({ deckId }: Props) {
         definition_en_main: normalizeText(item.definition_en_main ?? item.definition_en ?? ""),
         back_sentence: normalizeText(item.back_sentence ?? item.back ?? ""),
         why_this_word_here: normalizeText(item.why_this_word_here ?? item.front_hint ?? ""),
+        synonyms: uniqueStrings([
+          ...ensureArray(item.synonyms)
+            .flatMap((value) => value.split(/[|,;]/g))
+            .map((value) => value.trim())
+        ]),
+        emoji_cue: uniqueStrings([
+          ...ensureArray(item.emoji_cue)
+            .flatMap((value) => value.split(/\s+/g))
+            .map((value) => value.trim())
+            .filter(Boolean)
+        ]).slice(0, 2),
         ru_meanings: uniqueStrings([
           ...ensureArray(item.ru_meanings),
           ...ensureArray(item.ru_meaning),
@@ -654,6 +677,23 @@ export default function SmartAddClient({ deckId }: Props) {
           backLines.push(`RU meanings: ${ruMeanings.join(" | ")}`);
         }
         backLines.push(`Example: ${backExample}`);
+        const synonyms = uniqueStrings(
+          ensureArray(item.synonyms)
+            .flatMap((value) => value.split(/[|,;]/g))
+            .map((value) => value.trim())
+        ).slice(0, 3);
+        if (synonyms.length > 0) {
+          backLines.push(`Synonyms: ${synonyms.join(" | ")}`);
+        }
+        const emojiCue = uniqueStrings(
+          ensureArray(item.emoji_cue)
+            .flatMap((value) => value.split(/\s+/g))
+            .map((value) => value.trim())
+            .filter(Boolean)
+        ).slice(0, 2);
+        if (emojiCue.length > 0) {
+          backLines.push(`Emoji cue: ${emojiCue.join(" ")}`);
+        }
         const backText = backLines.join("\n");
 
         const res = await fetch(`/api/decks/${deckId}/smart-add`, {
@@ -933,7 +973,7 @@ export default function SmartAddClient({ deckId }: Props) {
               onChange={(e) => setAiJsonInput(e.target.value)}
               rows={12}
                 className="mt-2 w-full rounded-lg border px-3 py-2 font-mono text-xs"
-              placeholder='{"cards":[{"word":"whisper","front_sentence":"He whispered my name so nobody else could hear.","front_hint":"very quiet speech so others cannot hear","definition_en_main":"to speak very quietly so only nearby people hear","ru_meanings":["шептать","говорить шепотом"],"back_sentence":"She whispered the address while they stood near the door.","why_this_word_here":"because he speaks quietly to avoid being overheard"}]}'
+              placeholder='{"cards":[{"word":"whisper","front_sentence":"He whispered my name so nobody else could hear.","front_hint":"very quiet voice so others nearby miss it","definition_en_main":"to speak very quietly so only nearby people hear","ru_meanings":["шептать","говорить шепотом"],"back_sentence":"She whispered the address while they stood near the door.","why_this_word_here":"because he speaks quietly to avoid being overheard","synonyms":["murmur","speak softly"],"emoji_cue":["🤫","👂"]}]}'
             />
             <div className="mt-2 flex flex-wrap gap-2">
               <button

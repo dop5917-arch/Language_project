@@ -6,10 +6,12 @@ import { writeStudyTimerState } from "@/components/study-timer";
 const PRESETS = [15, 25, 45];
 
 export default function StudyTimerControls() {
-  const [minutes, setMinutes] = useState(25);
+  const [minutesInput, setMinutesInput] = useState("25");
+  const minutesValue = Number.parseInt(minutesInput, 10) || 25;
 
   function startTimer() {
-    const durationMin = Math.max(1, Math.min(180, Number(minutes) || 25));
+    const parsed = Number.parseInt(minutesInput, 10);
+    const durationMin = Math.max(1, Math.min(180, Number.isFinite(parsed) ? parsed : 25));
     const now = Date.now();
     writeStudyTimerState({
       durationMin,
@@ -30,9 +32,9 @@ export default function StudyTimerControls() {
           <button
             key={value}
             type="button"
-            onClick={() => setMinutes(value)}
+            onClick={() => setMinutesInput(String(value))}
             className={`rounded-lg border px-2.5 py-1.5 text-sm ${
-              minutes === value ? "border-emerald-600 bg-emerald-50 text-emerald-700" : ""
+              minutesValue === value ? "border-emerald-600 bg-emerald-50 text-emerald-700" : ""
             }`}
           >
             {value} мин
@@ -44,9 +46,14 @@ export default function StudyTimerControls() {
           type="number"
           min={1}
           max={180}
-          value={minutes}
-          onChange={(e) => setMinutes(Number(e.target.value) || 25)}
+          value={minutesInput}
+          onChange={(e) => {
+            const next = e.target.value;
+            if (!/^\d{0,3}$/.test(next)) return;
+            setMinutesInput(next);
+          }}
           className="w-20 rounded-lg border px-2 py-1.5 text-sm"
+          inputMode="numeric"
         />
         <button
           type="button"
