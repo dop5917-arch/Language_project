@@ -41,12 +41,20 @@ export default async function DeckDetailPage({ params }: Props) {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {deck.cards.length > 0 ? (
-            <Link
-              href={`/decks/${deck.id}/review-all?resume=1`}
-              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700"
-            >
-              Начать практиковать
-            </Link>
+            <>
+              <Link
+                href={`/decks/${deck.id}/review-all?resume=1`}
+                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700"
+              >
+                Продолжить
+              </Link>
+              <Link
+                href={`/decks/${deck.id}/review-all`}
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+              >
+                Начать с начала
+              </Link>
+            </>
           ) : (
             <Link
               href={`/decks/${deck.id}/add`}

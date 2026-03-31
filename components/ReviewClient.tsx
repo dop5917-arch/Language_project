@@ -457,10 +457,10 @@ export default function ReviewClient({
           </div>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-3">
-          <ResultList title="Вспомнил" items={remembered} />
-          <ResultList title="Не вспомнил" items={notRemembered} />
-          <ResultList title="Трудно" items={hardRemembered} />
+        <div className="grid gap-3 sm:grid-cols-3">
+          <CollapsibleResultList title="Вспомнил" items={remembered} />
+          <CollapsibleResultList title="Не вспомнил" items={notRemembered} />
+          <CollapsibleResultList title="Трудно" items={hardRemembered} />
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -1027,7 +1027,7 @@ function buildBackContextExample(card: QueueCard): string {
   return variants[0] ?? `Use ${word} in a short sentence about your day.`;
 }
 
-function ResultList({
+function CollapsibleResultList({
   title,
   items
 }: {
@@ -1035,22 +1035,24 @@ function ResultList({
   items: SessionResultItem[];
 }) {
   return (
-    <div className="rounded border p-3">
-      <h3 className="mb-2 text-sm font-semibold">{title}</h3>
+    <details className="rounded-xl border border-[#E5E7EB] bg-white p-3">
+      <summary className="cursor-pointer list-none text-sm font-semibold text-[#111111]">
+        {title} ({items.length})
+      </summary>
       {items.length === 0 ? (
-        <p className="text-xs text-slate-500">Пусто</p>
+        <p className="mt-2 text-xs text-[#9CA3AF]">Пусто</p>
       ) : (
-        <ul className="space-y-2 text-sm">
+        <ul className="mt-2 space-y-1 text-sm">
           {items.map((item) => (
-            <li key={item.cardId} className="rounded bg-slate-50 px-2 py-1">
-              <div className="font-medium">{item.card.frontText}</div>
-              {item.card.deckName ? (
-                <div className="text-xs text-slate-500">{item.card.deckName}</div>
-              ) : null}
+            <li
+              key={`${title}-${item.cardId}`}
+              className="rounded-lg bg-[#F5F5F5] px-2 py-1 text-[#374151]"
+            >
+              {item.card.targetWord || guessStudyWord(item.card)}
             </li>
           ))}
         </ul>
       )}
-    </div>
+    </details>
   );
 }
