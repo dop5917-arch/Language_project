@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { readDueLimitFromCookieString } from "@/lib/review-settings";
 
 type ReminderResponse = {
   dueTotal: number;
@@ -16,9 +17,11 @@ type ReminderResponse = {
 export default function ReviewReminderPopup() {
   const [open, setOpen] = useState(false);
   const [data, setData] = useState<ReminderResponse | null>(null);
+  const [dueLimit, setDueLimit] = useState(25);
   const dismissKey = useMemo(() => "review-reminder:dismissed:session", []);
 
   useEffect(() => {
+    setDueLimit(readDueLimitFromCookieString(document.cookie));
     try {
       if (window.sessionStorage.getItem(dismissKey) === "1") return;
     } catch {
@@ -70,6 +73,7 @@ export default function ReviewReminderPopup() {
             <p className="text-sm text-slate-600">
               По расписанию сейчас: <span className="font-semibold">{data.dueTotal}</span>
             </p>
+            <p className="text-xs text-slate-500">За один заход покажем не больше {dueLimit} карточек.</p>
           </div>
           <button
             type="button"
@@ -95,7 +99,7 @@ export default function ReviewReminderPopup() {
 
         <div className="mt-4 flex flex-wrap gap-2">
           <Link
-            href="/review/all?preset=due"
+            href={`/review/all?preset=due&dueLimit=${dueLimit}`}
             onClick={close}
             className="rounded bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
           >

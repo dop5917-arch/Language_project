@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import ReviewClient from "@/components/ReviewClient";
 import { prisma } from "@/lib/prisma";
 import {
@@ -10,15 +11,20 @@ import {
   type QueueItem
 } from "@/lib/srs";
 import { startOfLocalDay } from "@/lib/date";
+import { normalizeDueLimit, REVIEW_DUE_LIMIT_COOKIE } from "@/lib/review-settings";
 
 type Props = {
-  searchParams?: { newLimit?: string; preset?: string; include?: string };
+  searchParams?: { newLimit?: string; dueLimit?: string; preset?: string; include?: string };
 };
 
 export const dynamic = "force-dynamic";
 
 export default async function GlobalReviewPage({ searchParams }: Props) {
   const newLimit = Math.max(1, Math.min(100, Number(searchParams?.newLimit ?? 20) || 20));
+  const cookieStore = cookies();
+  const dueLimit = normalizeDueLimit(
+    searchParams?.dueLimit ?? cookieStore.get(REVIEW_DUE_LIMIT_COOKIE)?.value
+  );
   const presetRaw = searchParams?.preset;
   const includeRaw = searchParams?.include ?? "";
   const includeSet =
@@ -110,14 +116,14 @@ export default async function GlobalReviewPage({ searchParams }: Props) {
           <ModeCard
             title="По расписанию"
             subtitle={`${dueCount} шт. сейчас`}
-            description="Только карточки, которые пора повторить."
-            href="/review/all?preset=due"
+            description={`Только карточки, которые пора повторить. За сессию не больше ${dueLimit}.`}
+            href={`/review/all?preset=due&dueLimit=${dueLimit}`}
           />
           <ModeCard
             title="Быстрый день"
             subtitle={`К повтору ${dueCount} • Новые ${Math.min(newCount, newLimit)} (лимит ${newLimit})`}
-            description="Карточки на сегодня из всех колод."
-            href={`/review/all?preset=daily&newLimit=${newLimit}`}
+            description={`Карточки на сегодня из всех колод. Повторов не больше ${dueLimit}.`}
+            href={`/review/all?preset=daily&newLimit=${newLimit}&dueLimit=${dueLimit}`}
           />
         </div>
       </div>
@@ -130,19 +136,19 @@ export default async function GlobalReviewPage({ searchParams }: Props) {
   let modeDescription = "";
 
   if (preset === "due") {
-    baseQueue = await getGlobalDueQueue(new Date());
+    baseQueue = await getGlobalDueQueue(new Date(), dueLimit);
     if (includeSet && includeSet.size > 0) {
       baseQueue = baseQueue.filter((item) => includeSet.has(item.card.id));
     }
     ratingFilter = "all";
     modeTitle = "По расписанию";
-    modeDescription = "Только карточки по расписанию (без новых).";
+    modeDescription = `Только карточки по расписанию (без новых). Лимит на сессию: ${dueLimit}.`;
   }
   if (preset === "daily") {
-    baseQueue = await getGlobalTodayQueue(new Date(), newLimit);
+    baseQueue = await getGlobalTodayQueue(new Date(), newLimit, dueLimit);
     ratingFilter = "all";
     modeTitle = "Быстрый день";
-    modeDescription = "Карточки на сегодня + ограниченное число новых.";
+    modeDescription = `Карточки на сегодня + ограниченное число новых. Повторов: до ${dueLimit}.`;
   }
   if (preset === "difficult") {
     baseQueue = await getGlobalFullQueue();

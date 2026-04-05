@@ -1,12 +1,14 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import ReviewClient from "@/components/ReviewClient";
 import { prisma } from "@/lib/prisma";
 import { getDueOnlyQueue, getTodayQueue } from "@/lib/srs";
+import { normalizeDueLimit, REVIEW_DUE_LIMIT_COOKIE } from "@/lib/review-settings";
 
 type Props = {
   params: { deckId: string };
-  searchParams?: { newLimit?: string; resume?: string; includeNew?: string };
+  searchParams?: { newLimit?: string; dueLimit?: string; resume?: string; includeNew?: string };
 };
 
 export const dynamic = "force-dynamic";
@@ -16,10 +18,13 @@ export default async function ReviewPage({ params, searchParams }: Props) {
   if (!deck) notFound();
 
   const newLimit = Math.max(1, Math.min(100, Number(searchParams?.newLimit ?? 20) || 20));
+  const dueLimit = normalizeDueLimit(
+    searchParams?.dueLimit ?? cookies().get(REVIEW_DUE_LIMIT_COOKIE)?.value
+  );
   const includeNew = searchParams?.includeNew === "1";
   const queue = includeNew
-    ? await getTodayQueue(deck.id, new Date(), newLimit)
-    : await getDueOnlyQueue(deck.id, new Date());
+    ? await getTodayQueue(deck.id, new Date(), newLimit, dueLimit)
+    : await getDueOnlyQueue(deck.id, new Date(), dueLimit);
 
   const serializedQueue = queue.map((item) => ({
     id: item.card.id,

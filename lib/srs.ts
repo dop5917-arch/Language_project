@@ -39,7 +39,12 @@ function getFixedStepIndex(intervalDays: number): number {
   return Math.max(0, nextIndex - 1);
 }
 
-export async function getTodayQueue(deckId: string, date: Date, newLimit: number): Promise<QueueItem[]> {
+export async function getTodayQueue(
+  deckId: string,
+  date: Date,
+  newLimit: number,
+  dueLimit: number
+): Promise<QueueItem[]> {
   const today = startOfLocalDay(date);
 
   const dueCards = await prisma.card.findMany({
@@ -56,7 +61,8 @@ export async function getTodayQueue(deckId: string, date: Date, newLimit: number
     include: {
       reviewState: true
     },
-    orderBy: [{ reviewState: { dueDate: "asc" } }, { createdAt: "asc" }]
+    orderBy: [{ reviewState: { dueDate: "asc" } }, { createdAt: "asc" }],
+    take: dueLimit
   });
 
   const newCards = await prisma.card.findMany({
@@ -113,7 +119,7 @@ export async function getTodayQueue(deckId: string, date: Date, newLimit: number
   ];
 }
 
-export async function getDueOnlyQueue(deckId: string, date: Date): Promise<QueueItem[]> {
+export async function getDueOnlyQueue(deckId: string, date: Date, dueLimit: number): Promise<QueueItem[]> {
   const today = startOfLocalDay(date);
 
   const dueCards = await prisma.card.findMany({
@@ -130,7 +136,8 @@ export async function getDueOnlyQueue(deckId: string, date: Date): Promise<Queue
     include: {
       reviewState: true
     },
-    orderBy: [{ reviewState: { dueDate: "asc" } }, { createdAt: "asc" }]
+    orderBy: [{ reviewState: { dueDate: "asc" } }, { createdAt: "asc" }],
+    take: dueLimit
   });
 
   return dueCards.map((card) => ({
@@ -194,7 +201,7 @@ export async function getFullDeckQueue(deckId: string): Promise<QueueItem[]> {
   }));
 }
 
-export async function getGlobalTodayQueue(date: Date, newLimit: number): Promise<QueueItem[]> {
+export async function getGlobalTodayQueue(date: Date, newLimit: number, dueLimit: number): Promise<QueueItem[]> {
   const today = startOfLocalDay(date);
 
   const dueCards = await prisma.card.findMany({
@@ -210,7 +217,8 @@ export async function getGlobalTodayQueue(date: Date, newLimit: number): Promise
     include: {
       reviewState: true
     },
-    orderBy: [{ reviewState: { dueDate: "asc" } }, { createdAt: "asc" }]
+    orderBy: [{ reviewState: { dueDate: "asc" } }, { createdAt: "asc" }],
+    take: dueLimit
   });
 
   const newCards = await prisma.card.findMany({
@@ -266,7 +274,7 @@ export async function getGlobalTodayQueue(date: Date, newLimit: number): Promise
   ];
 }
 
-export async function getGlobalDueQueue(date: Date): Promise<QueueItem[]> {
+export async function getGlobalDueQueue(date: Date, dueLimit: number): Promise<QueueItem[]> {
   const today = startOfLocalDay(date);
 
   const dueCards = await prisma.card.findMany({
@@ -282,7 +290,8 @@ export async function getGlobalDueQueue(date: Date): Promise<QueueItem[]> {
     include: {
       reviewState: true
     },
-    orderBy: [{ reviewState: { dueDate: "asc" } }, { createdAt: "asc" }]
+    orderBy: [{ reviewState: { dueDate: "asc" } }, { createdAt: "asc" }],
+    take: dueLimit
   });
 
   return dueCards.map((card) => ({

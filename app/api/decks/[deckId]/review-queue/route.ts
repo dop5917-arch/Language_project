@@ -14,7 +14,12 @@ export async function GET(req: NextRequest, { params }: Context) {
       return NextResponse.json({ error: "Invalid query" }, { status: 400 });
     }
 
-    const queue = await getTodayQueue(params.deckId, new Date(), parsed.data.newLimit);
+    const queue = await getTodayQueue(
+      params.deckId,
+      new Date(),
+      parsed.data.newLimit,
+      parsed.data.dueLimit
+    );
     return NextResponse.json({
       queue: queue.map((item) => ({
         card: item.card,

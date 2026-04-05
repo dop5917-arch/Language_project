@@ -1,9 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { writeStudyTimerState } from "@/components/study-timer";
+import {
+  normalizeDueLimit,
+  REVIEW_DUE_LIMIT_COOKIE
+} from "@/lib/review-settings";
 
 export default function HomeActionPanel({
   dueToday,
@@ -15,7 +19,21 @@ export default function HomeActionPanel({
   className?: string;
 }) {
   const [minutesInput, setMinutesInput] = useState("25");
+  const [dueLimitInput, setDueLimitInput] = useState(String(Math.max(1, dueToday || 1)));
   const [aiModalOpen, setAiModalOpen] = useState(false);
+
+  useEffect(() => {
+    const nextLimit = String(Math.max(1, dueToday || 1));
+    setDueLimitInput(nextLimit);
+    document.cookie = `${REVIEW_DUE_LIMIT_COOKIE}=${nextLimit}; path=/; max-age=31536000; samesite=lax`;
+  }, [dueToday]);
+
+  function updateDueLimit(nextValue: string) {
+    if (!/^\d{0,3}$/.test(nextValue)) return;
+    setDueLimitInput(nextValue);
+    const normalized = Math.min(Math.max(1, dueToday || 1), normalizeDueLimit(nextValue));
+    document.cookie = `${REVIEW_DUE_LIMIT_COOKIE}=${normalized}; path=/; max-age=31536000; samesite=lax`;
+  }
 
   function startTimer() {
     const parsed = Number.parseInt(minutesInput, 10);
@@ -48,14 +66,32 @@ export default function HomeActionPanel({
   return (
     <section className={`bg-transparent px-0 py-0 ${className}`}>
       <div className="grid grid-cols-1 gap-2 md:grid-cols-4">
-        <Link
-          href="/review/all?preset=due"
-          className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#059669] px-3 py-2 text-center font-semibold text-white shadow-sm hover:bg-[#047857] md:min-h-[76px]"
-        >
-          <span className="text-sm">
-            Пора повторить (интервальное повторение){dueToday > 0 ? ` • ${dueToday}` : ""}
-          </span>
-        </Link>
+        <div className="flex min-h-11 flex-col justify-center gap-2 rounded-xl bg-[#059669] px-3 py-3 text-white shadow-sm md:min-h-[76px]">
+          <Link
+            href={`/review/all?preset=due&dueLimit=${Math.min(
+              Math.max(1, dueToday || 1),
+              normalizeDueLimit(dueLimitInput)
+            )}`}
+            className="text-center font-semibold hover:opacity-90"
+          >
+            <span className="text-sm">
+              Пора повторить (интервальное повторение){dueToday > 0 ? ` • ${dueToday}` : ""}
+            </span>
+          </Link>
+          <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
+            <span className="whitespace-nowrap text-white/85">Лимит в день</span>
+            <input
+              type="number"
+              min={1}
+              max={Math.max(1, dueToday || 1)}
+              value={dueLimitInput}
+              onChange={(e) => updateDueLimit(e.target.value)}
+              className="w-16 rounded-lg bg-white/15 px-2 py-1 text-center text-sm text-white outline-none placeholder:text-white/60"
+              aria-label="Лимит повторений в день"
+              inputMode="numeric"
+            />
+          </div>
+        </div>
         <button
           type="button"
           onClick={() => {

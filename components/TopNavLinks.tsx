@@ -14,16 +14,12 @@ export default function TopNavLinks() {
   const [creating, setCreating] = useState(false);
   const [stats, setStats] = useState<{
     totalCards: number;
+    studiedCards: number;
+    remainingToMaster: number;
     dueToday: number;
-    learnedCards: number;
-    difficultCards: number;
-    retentionPercent: number;
-    masteryPercent: number;
-    dailyProgressPercent: number;
     reviewsToday: number;
-    reviewsLast7: number;
-    dailyGoal: number;
-    streakDays: number;
+    studyDays: number;
+    lastActivityAt: string | null;
   } | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
 
@@ -156,15 +152,19 @@ export default function TopNavLinks() {
                   </div>
                   {statsLoading ? <p className="text-sm text-slate-600">Загрузка…</p> : null}
                   {!statsLoading && stats ? (
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <Tile label="Серия" value={`${stats.streakDays}д`} />
-                      <Tile label="7д повторов" value={stats.reviewsLast7} />
-                      <Tile label="Нужно сегодня" value={stats.dueToday} />
-                      <Tile label="Всего карт" value={stats.totalCards} />
-                      <Tile label="Выучено" value={stats.learnedCards} />
-                      <Tile label="Трудные" value={stats.difficultCards} />
-                      <Tile label="Освоение" value={`${stats.masteryPercent}%`} />
-                      <Tile label="Удержание" value={`${stats.retentionPercent}%`} />
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <Tile label="Карточек всего" value={stats.totalCards} />
+                        <Tile label="Изучено карточек" value={stats.studiedCards} />
+                        <Tile label="Осталось освоить" value={stats.remainingToMaster} />
+                        <Tile label="Дней с занятиями" value={stats.studyDays} />
+                        <Tile label="Повторов сегодня" value={stats.reviewsToday} />
+                        <Tile label="К повторению сегодня" value={stats.dueToday} />
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-2 text-sm">
+                        <WideTile label="Последняя активность" value={formatStatsDate(stats.lastActivityAt)} />
+                      </div>
                     </div>
                   ) : null}
                 </div>
@@ -184,4 +184,22 @@ function Tile({ label, value }: { label: string; value: string | number }) {
       <div className="mt-0.5 text-base font-semibold text-[#0F172A]">{value}</div>
     </div>
   );
+}
+
+function WideTile({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-[#E5E7EB] bg-[#F5F5F5] p-3">
+      <div className="text-[11px] uppercase tracking-wide text-slate-600">{label}</div>
+      <div className="mt-1 text-sm font-semibold text-[#0F172A]">{value}</div>
+    </div>
+  );
+}
+
+function formatStatsDate(value: string | null): string {
+  if (!value) return "—";
+  return new Intl.DateTimeFormat("ru-RU", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric"
+  }).format(new Date(value));
 }

@@ -610,6 +610,23 @@ export default function ReviewClient({
                       <span className="text-2xl">{backDetails.emojiCue.join(" ")}</span>
                     </div>
                   ) : null}
+                  {backDetails?.frequency || (backDetails?.usageDomain && backDetails.usageDomain.length > 0) ? (
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                      {backDetails?.frequency ? (
+                        <span className="rounded-lg border border-[#E5E7EB] bg-[#F5F5F5] px-2 py-1 text-sm text-[#111111]">
+                          Частотность: {backDetails.frequency}/5
+                        </span>
+                      ) : null}
+                      {backDetails?.usageDomain?.map((item) => (
+                        <span
+                          key={`domain-${item}`}
+                          className="rounded-lg border border-[#E5E7EB] bg-[#F5F5F5] px-2 py-1 text-sm text-[#111111]"
+                        >
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -875,6 +892,8 @@ function parseCardBackDetails(card: QueueCard): {
   ruMeanings: string[];
   synonyms: string[];
   emojiCue: string[];
+  frequency?: number;
+  usageDomain: string[];
 } {
   const lines = card.backText
     .split("\n")
@@ -891,6 +910,8 @@ function parseCardBackDetails(card: QueueCard): {
   const whyThisWordHere = findValue("Why this word here:");
   const synonymsLine = findValue("Synonyms:");
   const emojiLine = findValue("Emoji cue:");
+  const frequencyLine = findValue("Frequency:");
+  const usageDomainLine = findValue("Usage domain:");
   const ruMeanings = Array.from(
     new Set(
       (ruLine ?? "")
@@ -915,6 +936,16 @@ function parseCardBackDetails(card: QueueCard): {
         .filter((term) => term.length > 0)
     )
   ).slice(0, 3);
+  const usageDomain = Array.from(
+    new Set(
+      (usageDomainLine ?? "")
+        .split(/[|,;]/g)
+        .map((term) => term.trim())
+        .filter((term) => term.length > 0)
+    )
+  ).slice(0, 4);
+  const frequencyMatch = (frequencyLine ?? "").match(/[1-5]/);
+  const frequency = frequencyMatch ? Number.parseInt(frequencyMatch[0], 10) : undefined;
 
   return {
     word,
@@ -923,7 +954,9 @@ function parseCardBackDetails(card: QueueCard): {
     whyThisWordHere,
     ruMeanings,
     synonyms,
-    emojiCue
+    emojiCue,
+    frequency,
+    usageDomain
   };
 }
 

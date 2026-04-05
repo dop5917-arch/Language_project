@@ -72,6 +72,10 @@ type AiCardPayload = {
   why_this_word_here?: string;
   synonyms?: string[] | string;
   emoji_cue?: string[] | string;
+  frequency?: number | string;
+  frequency_score?: number | string;
+  usage_domain?: string | string[];
+  domain?: string | string[];
   ru_meanings?: string[];
   ru_meaning?: string | string[];
   meanings_ru?: string[];
@@ -174,6 +178,18 @@ Task for each target word/item:
 8) Add emoji cue:
    - field: "emoji_cue"
    - 1-2 emojis only
+9) Add word frequency:
+   - field: "frequency"
+   - integer from 1 to 5
+   - 5 = very frequent everyday word
+   - 4 = common
+   - 3 = useful but not very common
+   - 2 = less frequent / niche
+   - 1 = rare
+10) Add usage sphere:
+   - field: "usage_domain"
+   - one short label or 1-3 short labels
+   - examples: everyday, work, business, travel, emotions, relationships, psychology, home, news
 
 Target words:
 ${wordsList || "(no words provided)"}
@@ -204,6 +220,8 @@ Quality rules:
 - "why_this_word_here" must be short (6-12 words), contextual, not dictionary-like
 - "synonyms" must be 2-3 frequent words, easy to understand
 - "emoji_cue" must be 1-2 emojis, no text
+- "frequency" must be an integer 1..5
+- "usage_domain" must be short, practical, and learner-friendly
 - if source has typo, still generate full card from best inferred word
 
 Input words count: ${words.length}
@@ -222,7 +240,9 @@ Return strict JSON only in this shape:
       "back_sentence": "She whispered the address while they stood near the door.",
       "why_this_word_here": "because he speaks quietly to avoid being overheard",
       "synonyms": ["murmur", "speak softly"],
-      "emoji_cue": ["🤫", "👂"]
+      "emoji_cue": ["🤫", "👂"],
+      "frequency": 4,
+      "usage_domain": ["everyday", "conversation"]
     }
   ],
   "report": {
@@ -336,6 +356,19 @@ function ensureArray(value: string | string[] | undefined): string[] {
   if (Array.isArray(value)) return value;
   if (typeof value === "string" && value.trim()) return [value];
   return [];
+}
+
+function normalizeFrequency(value: number | string | undefined): number | undefined {
+  const parsed =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number.parseInt(value, 10)
+        : Number.NaN;
+  if (!Number.isFinite(parsed)) return undefined;
+  const normalized = Math.trunc(parsed);
+  if (normalized < 1 || normalized > 5) return undefined;
+  return normalized;
 }
 
 function normalizeWord(value: string): string {
@@ -604,6 +637,15 @@ export default function SmartAddClient({ deckId }: Props) {
             .map((value) => value.trim())
             .filter(Boolean)
         ]).slice(0, 2),
+        frequency: normalizeFrequency(item.frequency ?? item.frequency_score),
+        usage_domain: uniqueStrings([
+          ...ensureArray(item.usage_domain)
+            .flatMap((value) => value.split(/[|,;]/g))
+            .map((value) => value.trim()),
+          ...ensureArray(item.domain)
+            .flatMap((value) => value.split(/[|,;]/g))
+            .map((value) => value.trim())
+        ]).slice(0, 3),
         ru_meanings: uniqueStrings([
           ...ensureArray(item.ru_meanings),
           ...ensureArray(item.ru_meaning),
@@ -693,6 +735,21 @@ export default function SmartAddClient({ deckId }: Props) {
         ).slice(0, 2);
         if (emojiCue.length > 0) {
           backLines.push(`Emoji cue: ${emojiCue.join(" ")}`);
+        }
+        const frequency = normalizeFrequency(item.frequency ?? item.frequency_score);
+        if (frequency) {
+          backLines.push(`Frequency: ${frequency}/5`);
+        }
+        const usageDomain = uniqueStrings([
+          ...ensureArray(item.usage_domain)
+            .flatMap((value) => value.split(/[|,;]/g))
+            .map((value) => value.trim()),
+          ...ensureArray(item.domain)
+            .flatMap((value) => value.split(/[|,;]/g))
+            .map((value) => value.trim())
+        ]).slice(0, 3);
+        if (usageDomain.length > 0) {
+          backLines.push(`Usage domain: ${usageDomain.join(" | ")}`);
         }
         const backText = backLines.join("\n");
 
@@ -973,7 +1030,7 @@ export default function SmartAddClient({ deckId }: Props) {
               onChange={(e) => setAiJsonInput(e.target.value)}
               rows={12}
                 className="mt-2 w-full rounded-lg border px-3 py-2 font-mono text-xs"
-              placeholder='{"cards":[{"word":"whisper","front_sentence":"He whispered my name so nobody else could hear.","front_hint":"very quiet voice so others nearby miss it","definition_en_main":"to speak very quietly so only nearby people hear","ru_meanings":["шептать","говорить шепотом"],"back_sentence":"She whispered the address while they stood near the door.","why_this_word_here":"because he speaks quietly to avoid being overheard","synonyms":["murmur","speak softly"],"emoji_cue":["🤫","👂"]}]}'
+              placeholder='{"cards":[{"word":"whisper","front_sentence":"He whispered my name so nobody else could hear.","front_hint":"very quiet voice so others nearby miss it","definition_en_main":"to speak very quietly so only nearby people hear","ru_meanings":["шептать","говорить шепотом"],"back_sentence":"She whispered the address while they stood near the door.","why_this_word_here":"because he speaks quietly to avoid being overheard","synonyms":["murmur","speak softly"],"emoji_cue":["🤫","👂"],"frequency":4,"usage_domain":["everyday","conversation"]}]}'
             />
             <div className="mt-2 flex flex-wrap gap-2">
               <button

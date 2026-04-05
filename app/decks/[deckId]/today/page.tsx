@@ -1,11 +1,13 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatLocalDate, startOfLocalDay } from "@/lib/date";
+import { normalizeDueLimit, REVIEW_DUE_LIMIT_COOKIE } from "@/lib/review-settings";
 
 type Props = {
   params: { deckId: string };
-  searchParams?: { newLimit?: string };
+  searchParams?: { newLimit?: string; dueLimit?: string };
 };
 
 export const dynamic = "force-dynamic";
@@ -16,6 +18,9 @@ export default async function TodayPage({ params, searchParams }: Props) {
 
   const today = startOfLocalDay(new Date());
   const newLimit = Math.max(1, Math.min(100, Number(searchParams?.newLimit ?? 20) || 20));
+  const dueLimit = normalizeDueLimit(
+    searchParams?.dueLimit ?? cookies().get(REVIEW_DUE_LIMIT_COOKIE)?.value
+  );
 
   const [dueCount, newCount, nextDueReview] = await Promise.all([
     prisma.reviewState.count({
@@ -74,13 +79,13 @@ export default async function TodayPage({ params, searchParams }: Props) {
       {todayTotal > 0 ? (
         <div className="flex flex-wrap gap-2">
           <Link
-            href={`/decks/${deck.id}/review`}
+            href={`/decks/${deck.id}/review?dueLimit=${dueLimit}`}
             className="inline-block rounded bg-blue-600 px-5 py-3 font-medium text-white"
           >
             Start (По расписанию: Due)
           </Link>
           <Link
-            href={`/decks/${deck.id}/review?includeNew=1&newLimit=${newLimit}`}
+            href={`/decks/${deck.id}/review?includeNew=1&newLimit=${newLimit}&dueLimit=${dueLimit}`}
             className="inline-block rounded border border-blue-300 bg-white px-5 py-3 font-medium text-blue-700"
           >
             Start (Due + New)

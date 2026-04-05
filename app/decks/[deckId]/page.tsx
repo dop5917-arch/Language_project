@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { startOfLocalDay } from "@/lib/date";
 import { prisma } from "@/lib/prisma";
+import { normalizeDueLimit, REVIEW_DUE_LIMIT_COOKIE } from "@/lib/review-settings";
 
 type Props = {
   params: { deckId: string };
@@ -11,6 +13,7 @@ export const dynamic = "force-dynamic";
 
 export default async function DeckDetailPage({ params }: Props) {
   const today = startOfLocalDay(new Date());
+  const dueLimit = normalizeDueLimit(cookies().get(REVIEW_DUE_LIMIT_COOKIE)?.value);
   const deck = await prisma.deck.findUnique({
     where: { id: params.deckId },
     include: {
@@ -65,7 +68,7 @@ export default async function DeckDetailPage({ params }: Props) {
           )}
           {dueTodayCount > 0 ? (
             <Link
-              href={`/decks/${deck.id}/review`}
+              href={`/decks/${deck.id}/review?dueLimit=${dueLimit}`}
               className="rounded border px-3 py-2 text-sm"
             >
               Карточки на сегодня ({dueTodayCount})

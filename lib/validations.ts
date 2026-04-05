@@ -138,7 +138,8 @@ export const whyThisWordSchema = z.object({
 });
 
 export const reviewQueueQuerySchema = z.object({
-  newLimit: z.coerce.number().int().min(1).max(100).default(20)
+  newLimit: z.coerce.number().int().min(1).max(100).default(20),
+  dueLimit: z.coerce.number().int().min(1).max(200).default(25)
 });
 
 export const csvImportRowSchema = z.object({
