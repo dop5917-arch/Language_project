@@ -17,10 +17,8 @@ export default async function ReviewAllPage({ params, searchParams }: Props) {
   const requestedRating = searchParams?.rating;
   const ratingFilter: RatingFilter =
     requestedRating === "Again" ||
-    requestedRating === "Hard" ||
     requestedRating === "Good" ||
     requestedRating === "Easy" ||
-    requestedRating === "Difficult" ||
     requestedRating === "Learned"
       ? requestedRating
       : "all";
@@ -56,12 +54,8 @@ export default async function ReviewAllPage({ params, searchParams }: Props) {
           initialQueue={serializedQueue}
           enableResume={resume}
           sessionKey={`deck:${deck.id}:review-all:${ratingFilter}`}
-          returnHref={
-            ratingFilter === "all"
-              ? `/decks/${deck.id}/review-all`
-              : `/decks/${deck.id}/review-all?rating=${ratingFilter}`
-          }
-          returnLabel="Назад к режимам"
+          returnHref="/decks"
+          returnLabel="На главную страницу"
         />
       )}
     </div>

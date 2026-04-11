@@ -62,7 +62,7 @@ export default function ReviewReminderPopup() {
     <>
       <button
         type="button"
-        aria-label="Close reminder"
+        aria-label="Закрыть напоминание"
         onClick={close}
         className="fixed inset-0 z-[500] bg-black/30"
       />

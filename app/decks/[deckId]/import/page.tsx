@@ -14,14 +14,14 @@ export default async function ImportPage({ params, searchParams }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Import CSV: {deck.name}</h1>
+        <h1 className="text-xl font-semibold">Импорт CSV: {deck.name}</h1>
         <Link href={`/decks/${deck.id}`} className="text-sm">
-          Back to deck
+          Назад в колоду
         </Link>
       </div>
 
       <div className="rounded-lg border bg-white p-4 text-sm text-slate-700">
-        <p className="font-medium">CSV columns</p>
+        <p className="font-medium">Колонки CSV</p>
         <p className="mt-1">
           <code>front_text,back_text,image_url,tags,level</code>
         </p>
@@ -34,7 +34,7 @@ export default async function ImportPage({ params, searchParams }: Props) {
       ) : null}
       {searchParams?.imported ? (
         <p className="rounded border border-green-200 bg-green-50 p-3 text-sm text-green-700">
-          Imported {searchParams.imported} cards.
+          Импортировано карточек: {searchParams.imported}.
         </p>
       ) : null}
 
@@ -45,11 +45,11 @@ export default async function ImportPage({ params, searchParams }: Props) {
         className="space-y-4 rounded-lg border bg-white p-4"
       >
         <div>
-          <label className="mb-1 block text-sm font-medium">Upload CSV file</label>
+          <label className="mb-1 block text-sm font-medium">Загрузить CSV-файл</label>
           <input name="file" type="file" accept=".csv,text/csv" className="block w-full text-sm" />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium">Or paste CSV text</label>
+          <label className="mb-1 block text-sm font-medium">Или вставить текст CSV</label>
           <textarea
             name="csvText"
             rows={10}
@@ -58,7 +58,7 @@ export default async function ImportPage({ params, searchParams }: Props) {
           />
         </div>
         <button type="submit" className="rounded bg-slate-900 px-4 py-2 text-white">
-          Import
+          Импортировать
         </button>
       </form>
     </div>

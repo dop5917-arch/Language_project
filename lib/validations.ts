@@ -10,7 +10,7 @@ const optionalUrl = z
   });
 
 export const deckSchema = z.object({
-  name: z.string().trim().min(1, "Deck name is required").max(100)
+  name: z.string().trim().min(1, "Введите название колоды").max(100)
 });
 
 export const cardSchema = z.object({
@@ -33,7 +33,7 @@ export const cardSchema = z.object({
       message: "audioUrl must be a valid http(s) URL"
     }),
   frontText: z.string().trim().min(1, "Front phrase is required").max(500),
-  backText: z.string().trim().min(1, "Back definition is required").max(1000),
+  backText: z.string().trim().min(1, "Заполни обратную сторону карточки").max(1000),
   imageUrl: optionalUrl,
   tags: z
     .string()
@@ -53,7 +53,7 @@ export const cardFormSchema = z.object({
     .optional()
     .transform((value) => (value && value.length > 0 ? value : undefined)),
   frontText: z.string().trim().min(1, "Front phrase is required").max(500),
-  backText: z.string().trim().min(1, "Back definition is required").max(1000),
+  backText: z.string().trim().min(1, "Заполни обратную сторону карточки").max(1000),
   phonetic: z
     .string()
     .trim()
@@ -102,8 +102,8 @@ export const wordHelperSchema = z.object({
   word: z
     .string()
     .trim()
-    .min(1, "Word is required")
-    .max(100, "Word is too long")
+    .min(1, "Введи слово")
+    .max(100, "Слово слишком длинное")
     .regex(/^[a-zA-Z][a-zA-Z' -]*$/, "Use English letters only")
 });
 

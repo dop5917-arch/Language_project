@@ -1,0 +1,23 @@
+<svg width="980" height="380" viewBox="0 0 980 380" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="980" height="380" rx="28" fill="#F8FAFC"/>
+  <text x="72" y="52" fill="#64748B" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="600">
+    Вариант 2. Брендовый знак с колодой карточек
+  </text>
+
+  <g transform="translate(90 84)">
+    <rect x="34" y="32" width="104" height="136" rx="24" transform="rotate(-12 34 32)" fill="#E2E8F0"/>
+    <rect x="68" y="18" width="108" height="142" rx="24" transform="rotate(-4 68 18)" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="2"/>
+    <rect x="102" y="34" width="114" height="148" rx="26" fill="white" stroke="#D1D5DB" stroke-width="2"/>
+    <rect x="124" y="60" width="70" height="38" rx="19" fill="#111111"/>
+    <text x="159" y="85" text-anchor="middle" fill="white" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700" letter-spacing="-0.8">
+      AI
+    </text>
+
+    <text x="248" y="96" fill="#111111" font-family="Inter, Arial, sans-serif" font-size="74" font-weight="700" letter-spacing="-2.4">
+      Cards
+    </text>
+    <text x="248" y="132" fill="#64748B" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="500">
+      контекст, карточки, интервальное повторение
+    </text>
+  </g>
+</svg>

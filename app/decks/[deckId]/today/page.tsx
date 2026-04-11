@@ -56,13 +56,13 @@ export default async function TodayPage({ params, searchParams }: Props) {
           </p>
         </div>
         <Link href={`/decks/${deck.id}`} className="text-sm whitespace-nowrap">
-          Back to deck
+          Назад в колоду
         </Link>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-lg border bg-white p-4">
-          <div className="text-sm text-slate-500">По расписанию (Due)</div>
+          <div className="text-sm text-slate-500">По расписанию</div>
           <div className="text-2xl font-semibold">{dueCount}</div>
         </div>
         <div className="rounded-lg border bg-white p-4">
@@ -82,13 +82,13 @@ export default async function TodayPage({ params, searchParams }: Props) {
             href={`/decks/${deck.id}/review?dueLimit=${dueLimit}`}
             className="inline-block rounded bg-blue-600 px-5 py-3 font-medium text-white"
           >
-            Start (По расписанию: Due)
+            Начать по расписанию
           </Link>
           <Link
             href={`/decks/${deck.id}/review?includeNew=1&newLimit=${newLimit}&dueLimit=${dueLimit}`}
             className="inline-block rounded border border-blue-300 bg-white px-5 py-3 font-medium text-blue-700"
           >
-            Start (Due + New)
+            Начать: повторение + новые
           </Link>
         </div>
       ) : (
@@ -109,10 +109,10 @@ export default async function TodayPage({ params, searchParams }: Props) {
         <div className="mb-2 text-sm font-medium text-slate-800">Хочешь повторить в любое время?</div>
         <div className="flex flex-wrap gap-2">
           <Link href={`/decks/${deck.id}/review-all`} className="rounded border bg-white px-3 py-2 text-sm">
-            Review All (вся колода)
+            Повторить всю колоду
           </Link>
           <Link href="/review/all" className="rounded border bg-white px-3 py-2 text-sm">
-            Global Review (choose mode)
+            Общее повторение
           </Link>
         </div>
       </div>

@@ -34,13 +34,14 @@ export default async function DeckDetailPage({ params }: Props) {
   const dueTodayCount = deck.cards.filter(
     (card) => card.reviewState && card.reviewState.dueDate <= today
   ).length;
+  const newCardsCount = deck.cards.filter((card) => !card.reviewState).length;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">{deck.name}</h1>
-          <p className="text-sm text-slate-600">{deck.cards.length} cards</p>
+          <p className="text-sm text-slate-600">Карточек: {deck.cards.length}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {deck.cards.length > 0 ? (
@@ -60,7 +61,7 @@ export default async function DeckDetailPage({ params }: Props) {
             </>
           ) : (
             <Link
-              href={`/decks/${deck.id}/add`}
+              href={`/decks/${deck.id}/add-smart`}
               className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700"
             >
               Сначала создать карточку
@@ -78,14 +79,25 @@ export default async function DeckDetailPage({ params }: Props) {
               Карточки на сегодня (0)
             </span>
           )}
-          <Link href={`/decks/${deck.id}/add`} className="rounded border px-3 py-2 text-sm">
-            Создать карточку
-          </Link>
+          {newCardsCount > 0 ? (
+            <Link
+              href={`/decks/${deck.id}/review?onlyNew=1`}
+              className="rounded border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700"
+            >
+              Учить новые ({newCardsCount})
+            </Link>
+          ) : null}
           <Link
             href={`/decks/${deck.id}/add-smart`}
-            className="rounded border border-slate-300 px-3 py-2 text-sm font-semibold text-emerald-700 shadow-[inset_0_-2px_0_0_rgba(16,185,129,0.35)] hover:border-emerald-300 hover:text-emerald-800"
+            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700"
           >
-            Создать с AI
+            Добавить карточку с AI
+          </Link>
+          <Link
+            href={`/decks/${deck.id}/add`}
+            className="rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+          >
+            Добавить карточку вручную
           </Link>
         </div>
       </div>

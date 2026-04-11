@@ -21,15 +21,15 @@ export default async function EditCardPage({ params }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Edit Card: {deck.name}</h1>
+        <h1 className="text-xl font-semibold">Редактировать карточку: {deck.name}</h1>
         <Link href={`/decks/${deck.id}`} className="text-sm">
-          Back to deck
+          Назад в колоду
         </Link>
       </div>
 
       <form action={action} className="space-y-4 rounded-lg border bg-white p-4">
         <div>
-          <label className="mb-1 block text-sm font-medium">Target word (optional)</label>
+          <label className="mb-1 block text-sm font-medium">Изучаемое слово (опционально)</label>
           <input
             name="targetWord"
             type="text"
@@ -38,7 +38,7 @@ export default async function EditCardPage({ params }: Props) {
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium">Front phrase</label>
+          <label className="mb-1 block text-sm font-medium">Лицевая сторона</label>
           <textarea
             name="frontText"
             defaultValue={card.frontText}
@@ -48,7 +48,7 @@ export default async function EditCardPage({ params }: Props) {
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium">Back definition</label>
+          <label className="mb-1 block text-sm font-medium">Обратная сторона</label>
           <textarea
             name="backText"
             defaultValue={card.backText}
@@ -59,7 +59,7 @@ export default async function EditCardPage({ params }: Props) {
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1 block text-sm font-medium">Phonetic (optional)</label>
+            <label className="mb-1 block text-sm font-medium">Транскрипция (опционально)</label>
             <input
               name="phonetic"
               type="text"
@@ -68,7 +68,7 @@ export default async function EditCardPage({ params }: Props) {
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium">Audio URL (optional)</label>
+            <label className="mb-1 block text-sm font-medium">Ссылка на аудио (опционально)</label>
             <input
               name="audioUrl"
               type="url"
@@ -78,7 +78,7 @@ export default async function EditCardPage({ params }: Props) {
           </div>
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium">Image URL (optional)</label>
+          <label className="mb-1 block text-sm font-medium">Ссылка на картинку (опционально)</label>
           <input
             name="imageUrl"
             type="url"
@@ -87,11 +87,11 @@ export default async function EditCardPage({ params }: Props) {
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium">Tags (comma-separated)</label>
+          <label className="mb-1 block text-sm font-medium">Теги (через запятую)</label>
           <input name="tags" type="text" defaultValue={card.tags ?? ""} className="w-full rounded border px-3 py-2" />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium">Level (1-10)</label>
+          <label className="mb-1 block text-sm font-medium">Уровень (1-10)</label>
           <input
             name="level"
             type="number"
@@ -103,10 +103,10 @@ export default async function EditCardPage({ params }: Props) {
         </div>
         <div className="flex gap-2">
           <button type="submit" className="rounded bg-slate-900 px-4 py-2 text-white">
-            Save Changes
+            Сохранить
           </button>
           <Link href={`/decks/${deck.id}`} className="rounded border px-4 py-2">
-            Cancel
+            Отмена
           </Link>
         </div>
       </form>

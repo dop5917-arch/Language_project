@@ -30,7 +30,7 @@ export default function DeckAddMenu({ deckId }: Props) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        aria-label="Open add menu"
+        aria-label="Открыть меню добавления"
         className="rounded border px-3 py-2 text-sm font-semibold"
       >
         +
@@ -43,14 +43,14 @@ export default function DeckAddMenu({ deckId }: Props) {
             onClick={() => setOpen(false)}
             className="block rounded border px-3 py-2 text-sm"
           >
-            Add
+            Создать карточку
           </Link>
           <Link
             href={`/decks/${deckId}/add-smart`}
             onClick={() => setOpen(false)}
             className="block rounded border px-3 py-2 text-sm"
           >
-            Smart Add
+            Создать с AI
           </Link>
         </div>
       ) : null}

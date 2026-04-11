@@ -1,0 +1,30 @@
+<svg width="960" height="360" viewBox="0 0 960 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="960" height="360" rx="28" fill="#F8FAFC"/>
+  <text x="80" y="52" fill="#64748B" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="600">
+    Концепт. AI и Cards одного размера, AI на небрежном черном мазке
+  </text>
+
+  <g transform="translate(84 82)">
+    <rect x="500" y="36" width="122" height="164" rx="22" transform="rotate(-15 500 36)" fill="#E5E7EB"/>
+    <rect x="536" y="22" width="128" height="168" rx="22" transform="rotate(-7 536 22)" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="2"/>
+    <rect x="574" y="44" width="134" height="174" rx="22" fill="white" stroke="#D1D5DB" stroke-width="2"/>
+
+    <path
+      d="M8 118C14 95 42 84 92 81L178 77C206 75 230 78 243 86C252 92 257 100 255 109C253 116 248 121 240 126C229 132 220 138 202 141L95 147C60 149 22 145 8 136C0 130 3 122 8 118Z"
+      fill="#111111"
+    />
+    <path
+      d="M250 87C256 88 260 92 260 99C260 108 254 114 245 116L224 120L219 88L250 87Z"
+      fill="#111111"
+      fill-opacity="0.9"
+    />
+
+    <text x="128" y="131" text-anchor="middle" fill="white" font-family="Inter, Arial, sans-serif" font-size="62" font-weight="700" letter-spacing="-1.8">
+      AI
+    </text>
+
+    <text x="216" y="131" fill="#111111" font-family="Inter, Arial, sans-serif" font-size="62" font-weight="700" letter-spacing="-1.8">
+      Cards
+    </text>
+  </g>
+</svg>

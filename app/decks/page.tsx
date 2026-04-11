@@ -1,6 +1,7 @@
 import DecksHeaderCreateButton from "@/components/DecksHeaderCreateButton";
 import DeckCard from "@/components/DeckCard";
 import HomeActionPanel from "@/components/HomeActionPanel";
+import InfoPanel from "@/components/InfoPanel";
 import { startOfLocalDay } from "@/lib/date";
 import { prisma } from "@/lib/prisma";
 
@@ -87,6 +88,7 @@ export default async function DecksPage() {
           aiDeckOptions={decks.map((deck) => ({ id: deck.id, name: deck.name }))}
         />
       ) : null}
+      {!dbError ? <InfoPanel /> : null}
 
       <div className="space-y-4">
         <section className="px-1">
@@ -138,6 +140,16 @@ export default async function DecksPage() {
           )}
         </section>
       </div>
+
+      <footer className="px-1 pb-2 pt-1 text-[12px] text-[#94A3B8]">
+        <span>Обратная связь: </span>
+        <a
+          href="mailto:pavlovsckydmitry@yandex.ru"
+          className="underline decoration-[#CBD5E1] underline-offset-4"
+        >
+          pavlovsckydmitry@yandex.ru
+        </a>
+      </footer>
     </div>
   );
 }

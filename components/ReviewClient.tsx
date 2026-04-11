@@ -68,14 +68,14 @@ type WordMeaningResponse = {
 
 const ratingControls: Array<{ label: string; hint: string; rating: Rating; className: string }> = [
   {
-    label: "Don't know",
-    hint: "Repeat sooner",
+    label: "Не знаю",
+    hint: "Показать позже снова",
     rating: "Again",
     className: "bg-[#FFFFFF] text-[#111111] ring-1 ring-[#E5E7EB] hover:bg-[#F5F5F5]"
   },
   {
-    label: "Know it",
-    hint: "Move forward",
+    label: "Знаю",
+    hint: "Перейти дальше",
     rating: "Easy",
     className: "bg-[#059669] text-white hover:bg-[#047857]"
   }
@@ -195,7 +195,7 @@ export default function ReviewClient({
   const remaining = useMemo(() => Math.max(0, queue.length - index), [queue.length, index]);
   const position = Math.min(index + 1, queue.length);
   const finalHref = returnHref ?? `/decks/${deckId}/today`;
-  const finalLabel = returnLabel ?? "Back to Today";
+  const finalLabel = returnLabel ?? "На главную";
   const isAgainHelpOpenForCurrent = Boolean(againHelp && current && againHelp.card.id === current.id);
   const progressStorageKey = `review-progress:${sessionKey ?? deckId}`;
 
@@ -247,7 +247,7 @@ export default function ReviewClient({
   }, [enableResume, mounted, index, queue, progressStorageKey]);
 
   if (!mounted) {
-    return <div className="rounded-lg border bg-white p-6 text-sm">Loading review...</div>;
+    return <div className="rounded-lg border bg-white p-6 text-sm">Загрузка повторения...</div>;
   }
 
   async function rate(rating: Rating) {
@@ -373,10 +373,8 @@ export default function ReviewClient({
     if (queue.length === 0 && done === 0) {
       return (
         <div className="space-y-4 rounded-2xl bg-white p-8 shadow-sm ring-1 ring-[#E5E7EB]">
-          <h2 className="text-2xl font-semibold text-[#0F172A]">No cards for now</h2>
-          <p className="text-[15px] text-[#64748B]">
-            В этой сессии сейчас нет карточек. Добавь карточки или выбери другой режим повторения.
-          </p>
+          <h2 className="text-2xl font-semibold text-[#0F172A]">Сейчас карточек нет</h2>
+          <p className="text-[15px] text-[#64748B]">В этой сессии сейчас нет карточек. Добавь карточки или выбери другой режим повторения.</p>
           <a
             href={finalHref}
             className="inline-flex rounded-xl bg-[#059669] px-5 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#047857]"
@@ -390,17 +388,20 @@ export default function ReviewClient({
     const uniqueLatestResults = Array.from(
       new Map(sessionResults.map((item) => [item.cardId, item])).values()
     );
+    const ratedCardIds = new Set(uniqueLatestResults.map((item) => item.cardId));
     const notRemembered = uniqueLatestResults.filter((item) => item.rating === "Again");
-    const hardRemembered = uniqueLatestResults.filter((item) => item.rating === "Hard");
     const remembered = uniqueLatestResults.filter(
       (item) => item.rating === "Good" || item.rating === "Easy"
     );
+    const skipped = queue
+      .filter((item) => !ratedCardIds.has(item.id))
+      .map((item) => ({ cardId: item.id, card: item, rating: "Again" as Rating }));
     const percent =
       uniqueLatestResults.length > 0
         ? Math.round((remembered.length / uniqueLatestResults.length) * 100)
         : 0;
 
-    function startRetrySession(target: "Again" | "Hard") {
+    function startRetrySession(target: "Again") {
       const subset = uniqueLatestResults
         .filter((item) => item.rating === target)
         .map((item) => ({ ...item.card, isNew: false }));
@@ -417,7 +418,23 @@ export default function ReviewClient({
     }
 
     function startRetryAllSession() {
-      const subset = uniqueLatestResults.map((item) => ({ ...item.card, isNew: false }));
+      const subset = [
+        ...uniqueLatestResults.map((item) => ({ ...item.card, isNew: false })),
+        ...skipped.map((item) => ({ ...item.card, isNew: false }))
+      ];
+      if (subset.length === 0) return;
+
+      setQueue(subset);
+      setIndex(0);
+      setDone(0);
+      setFlipped(false);
+      setError(null);
+      setSessionResults([]);
+      setAgainHelp(null);
+    }
+
+    function startRetrySkippedSession() {
+      const subset = skipped.map((item) => ({ ...item.card, isNew: false }));
       if (subset.length === 0) return;
 
       setQueue(subset);
@@ -433,34 +450,19 @@ export default function ReviewClient({
       <div className="space-y-5 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-[#E5E7EB]">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-semibold text-[#0F172A]">Session result</h2>
-            <p className="text-sm text-[#64748B]">Reviewed cards: {done}</p>
+            <h2 className="text-2xl font-semibold text-[#0F172A]">Результат сессии</h2>
+            <p className="text-sm text-[#64748B]">Карточек пройдено: {done}</p>
           </div>
           <div className="rounded-xl bg-[#F1F5F9] px-4 py-3 text-center ring-1 ring-[#E5E7EB]">
-            <div className="text-xs uppercase tracking-wide text-[#64748B]">Retention</div>
+            <div className="text-xs uppercase tracking-wide text-[#64748B]">Запоминание</div>
             <div className="text-2xl font-semibold text-[#0F172A]">{percent}%</div>
-          </div>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-xl bg-[#ECFDF5] p-3">
-            <div className="text-sm font-semibold text-[#065F46]">Вспомнил</div>
-            <div className="text-2xl font-semibold text-[#14532D]">{remembered.length}</div>
-          </div>
-          <div className="rounded-xl bg-[#FEE2E2] p-3">
-            <div className="text-sm font-semibold text-[#991B1B]">Не вспомнил</div>
-            <div className="text-2xl font-semibold text-[#7F1D1D]">{notRemembered.length}</div>
-          </div>
-          <div className="rounded-xl bg-[#FEF3C7] p-3">
-            <div className="text-sm font-semibold text-[#92400E]">Трудно</div>
-            <div className="text-2xl font-semibold text-[#78350F]">{hardRemembered.length}</div>
           </div>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3">
           <CollapsibleResultList title="Вспомнил" items={remembered} />
           <CollapsibleResultList title="Не вспомнил" items={notRemembered} />
-          <CollapsibleResultList title="Трудно" items={hardRemembered} />
+          <CollapsibleResultList title="Пропустил" items={skipped} />
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -468,25 +470,25 @@ export default function ReviewClient({
             type="button"
             onClick={startRetryAllSession}
             disabled={uniqueLatestResults.length === 0}
-            className="rounded-xl bg-[#059669] px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#047857] disabled:opacity-50"
+            className="rounded-xl bg-[#F59E0B] px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#D97706] disabled:opacity-50"
           >
-            Repeat all
+            Повторить все
           </button>
           <button
             type="button"
             onClick={() => startRetrySession("Again")}
             disabled={notRemembered.length === 0}
-            className="rounded-xl bg-white px-4 py-2 text-sm font-medium text-[#0F172A] ring-1 ring-[#E5E7EB] transition-colors duration-200 hover:bg-[#F8FAFC] disabled:opacity-50"
+            className="rounded-xl bg-[#059669] px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#047857] disabled:opacity-50"
           >
             Повторить только "Не вспомнил"
           </button>
           <button
             type="button"
-            onClick={() => startRetrySession("Hard")}
-            disabled={hardRemembered.length === 0}
+            onClick={startRetrySkippedSession}
+            disabled={skipped.length === 0}
             className="rounded-xl bg-white px-4 py-2 text-sm font-medium text-[#0F172A] ring-1 ring-[#E5E7EB] transition-colors duration-200 hover:bg-[#F8FAFC] disabled:opacity-50"
           >
-            Повторить "Трудно"
+            Повторить "Пропустил"
           </button>
         </div>
 
@@ -507,10 +509,10 @@ export default function ReviewClient({
           <div className="space-y-8">
             <header className="space-y-2">
               <h1 className="text-[30px] font-semibold leading-tight text-[#111111]">
-                {deckName || current.deckName || "Flashcards"}
+                {deckName || current.deckName || "Карточки"}
               </h1>
               <p className="text-[14px] text-[#6B7280]">
-                {modeLabel || "Study session"}
+                {modeLabel || "Сессия повторения"}
               </p>
               <p className="text-[14px] text-[#6B7280]">
                 {position} / {queue.length}
@@ -550,7 +552,7 @@ export default function ReviewClient({
                 >
                   <button
                     type="button"
-                    aria-label="Hint"
+                    aria-label="Подсказка"
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
@@ -558,7 +560,7 @@ export default function ReviewClient({
                     }}
                     className="absolute right-4 top-4 z-20 rounded-xl bg-[#F5F5F5] px-3 py-2 text-sm font-medium text-[#111111] transition-colors duration-150 hover:bg-[#ECECEC]"
                   >
-                    Hint
+                    Подсказка
                   </button>
                   <div className="space-y-4">
                     <p className={cardTextClass}>
@@ -582,7 +584,7 @@ export default function ReviewClient({
                   <p className={cardTextClass}>
                     {renderHighlightedText(
                       `${backDetails?.word || resolveStudyWord(current)} — ${
-                        backDetails?.definitionEn || "common everyday meaning"
+                        backDetails?.definitionEn || "основное значение"
                         }`,
                         resolveStudyWord(current),
                         { interactive: true, onWordClick: openWordMeaning }
@@ -593,7 +595,7 @@ export default function ReviewClient({
                   </p>
                   {backDetails?.synonyms && backDetails.synonyms.length > 0 ? (
                     <div className="flex flex-wrap items-center justify-center gap-2">
-                      <span className="text-xs font-medium uppercase tracking-wide text-[#9CA3AF]">Synonyms</span>
+                      <span className="text-xs font-medium uppercase tracking-wide text-[#9CA3AF]">Синонимы</span>
                       {backDetails.synonyms.map((item) => (
                         <span
                           key={`syn-${item}`}
@@ -606,7 +608,7 @@ export default function ReviewClient({
                   ) : null}
                   {backDetails?.emojiCue && backDetails.emojiCue.length > 0 ? (
                     <div className="flex items-center justify-center gap-2">
-                      <span className="text-xs font-medium uppercase tracking-wide text-[#9CA3AF]">Emoji</span>
+                      <span className="text-xs font-medium uppercase tracking-wide text-[#9CA3AF]">Эмодзи</span>
                       <span className="text-2xl">{backDetails.emojiCue.join(" ")}</span>
                     </div>
                   ) : null}
@@ -614,7 +616,7 @@ export default function ReviewClient({
                     <div className="flex flex-wrap items-center justify-center gap-2">
                       {backDetails?.frequency ? (
                         <span className="rounded-lg border border-[#E5E7EB] bg-[#F5F5F5] px-2 py-1 text-sm text-[#111111]">
-                          Частотность: {backDetails.frequency}/5
+                          Часто: {backDetails.frequency}/5
                         </span>
                       ) : null}
                       {backDetails?.usageDomain?.map((item) => (
@@ -680,14 +682,14 @@ export default function ReviewClient({
 
             {againHelp && againHelp.card.id === current.id ? (
               <div className="mt-5 rounded-2xl bg-[#F1F5F9] p-4 ring-1 ring-[#E5E7EB]">
-                <div className="mb-2 text-sm font-semibold text-[#0F172A]">Need another angle?</div>
+                <div className="mb-2 text-sm font-semibold text-[#0F172A]">Нужна ещё подсказка?</div>
                 <div className="space-y-3">
                   <div className="rounded-xl bg-white p-3 ring-1 ring-[#E5E7EB]">
-                    <div className="mb-1 text-xs uppercase tracking-wide text-[#64748B]">Example</div>
+                    <div className="mb-1 text-xs uppercase tracking-wide text-[#64748B]">Пример</div>
                     <p className="text-sm">{againHelp.examples[againHelp.exampleIndex]}</p>
                   </div>
                   <div className="rounded-xl bg-white p-3 ring-1 ring-[#E5E7EB]">
-                    <div className="mb-1 text-xs uppercase tracking-wide text-[#64748B]">Simple definition</div>
+                    <div className="mb-1 text-xs uppercase tracking-wide text-[#64748B]">Простое объяснение</div>
                     <p className="text-sm">{againHelp.definitions[againHelp.definitionIndex]}</p>
                   </div>
                 </div>
@@ -697,14 +699,14 @@ export default function ReviewClient({
                     onClick={continueAfterAgainHelp}
                     className="rounded-xl bg-[#059669] px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#047857]"
                   >
-                    Continue
+                    Продолжить
                   </button>
                   <button
                     type="button"
                     onClick={continueAfterAgainHelp}
                     className="rounded-xl bg-white px-4 py-2 text-sm text-[#0F172A] ring-1 ring-[#E5E7EB] transition-colors duration-200 hover:bg-[#F8FAFC]"
                   >
-                    Close
+                    Закрыть
                   </button>
                 </div>
               </div>
@@ -719,7 +721,7 @@ export default function ReviewClient({
         <>
           <button
             type="button"
-            aria-label="Close dictionary"
+            aria-label="Закрыть словарь"
             onClick={() => setMeaningModalOpen(false)}
             className="fixed inset-0 z-[300] bg-black/30"
           />
@@ -730,23 +732,23 @@ export default function ReviewClient({
                   {meaningData?.word ?? resolveStudyWord(current)}
                   {meaningData?.phonetic ? <span className="ml-2 text-sm text-slate-600">{meaningData.phonetic}</span> : null}
                 </h3>
-                <p className="text-xs text-[#64748B]">Russian meanings</p>
+                <p className="text-xs text-[#64748B]">Русские значения</p>
               </div>
               <button
                 type="button"
                 onClick={() => setMeaningModalOpen(false)}
                 className="rounded-xl bg-white px-3 py-1 text-sm text-[#0F172A] ring-1 ring-[#E5E7EB]"
               >
-                Close
+                Закрыть
               </button>
             </div>
 
-            {meaningLoading ? <p className="text-sm text-slate-600">Loading...</p> : null}
+            {meaningLoading ? <p className="text-sm text-slate-600">Загрузка...</p> : null}
             {meaningError ? <p className="text-sm text-red-600">{meaningError}</p> : null}
             {!meaningLoading && !meaningError && meaningData ? (
               <div className="max-h-[56vh] space-y-3 overflow-auto pr-1">
                 <div className="rounded-xl bg-[#F1F5F9] p-3">
-                  <div className="text-xs uppercase tracking-wide text-[#64748B]">Russian meanings</div>
+                  <div className="text-xs uppercase tracking-wide text-[#64748B]">Русские значения</div>
                   <div className="mt-1 flex flex-wrap gap-2">
                     {getRuMeaningsList(meaningData).length > 0 ? (
                       getRuMeaningsList(meaningData).map((term) => (
@@ -816,7 +818,7 @@ function PronunciationBar({
             onClick={speakFallback}
             className="rounded-lg bg-white px-2 py-1 text-xs text-[#0F172A] ring-1 ring-[#E5E7EB]"
           >
-            ▶ Pronounce
+            ▶ Озвучить
           </button>
         ) : null
       )}
@@ -968,7 +970,7 @@ function parseCardFrontDetails(card: QueueCard): {
   const parts = raw.split(/\n\s*\n/);
   const sentence = parts[0]?.trim() || raw.trim();
   const hintLine = parts.slice(1).join(" ").trim();
-  const hint = hintLine.replace(/^hint:\s*/i, "").trim();
+  const hint = hintLine.replace(/^(hint|подсказка):\s*/i, "").trim();
   return {
     sentence,
     hint: hint || undefined
@@ -1067,13 +1069,20 @@ function CollapsibleResultList({
   title: string;
   items: SessionResultItem[];
 }) {
+  const styleMap: Record<string, string> = {
+    "Вспомнил": "border-[#BBF7D0] bg-[#ECFDF5] text-[#166534]",
+    "Не вспомнил": "border-[#FECACA] bg-[#FEF2F2] text-[#991B1B]",
+    "Пропустил": "border-[#CBD5E1] bg-[#F8FAFC] text-[#475569]"
+  };
+  const panelClass = styleMap[title] ?? "border-[#E5E7EB] bg-white text-[#111111]";
+
   return (
-    <details className="rounded-xl border border-[#E5E7EB] bg-white p-3">
-      <summary className="cursor-pointer list-none text-sm font-semibold text-[#111111]">
+    <details className={`rounded-xl border p-3 ${panelClass}`}>
+      <summary className="cursor-pointer list-none text-sm font-semibold">
         {title} ({items.length})
       </summary>
       {items.length === 0 ? (
-        <p className="mt-2 text-xs text-[#9CA3AF]">Пусто</p>
+        <p className="mt-2 text-xs text-[#64748B]">Пусто</p>
       ) : (
         <ul className="mt-2 space-y-1 text-sm">
           {items.map((item) => (

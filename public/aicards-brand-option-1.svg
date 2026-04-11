@@ -1,0 +1,20 @@
+<svg width="980" height="380" viewBox="0 0 980 380" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="980" height="380" rx="28" fill="#F8FAFC"/>
+  <text x="72" y="52" fill="#64748B" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="600">
+    Вариант 1. Чистый фирменный знак
+  </text>
+
+  <g transform="translate(90 92)">
+    <rect x="0" y="18" width="114" height="114" rx="34" fill="#111111"/>
+    <rect x="16" y="32" width="82" height="86" rx="24" fill="#111111" stroke="#2A2A2A" stroke-width="2"/>
+    <path d="M34 94L56 52H58L80 94H68L63 82H51L46 94H34ZM54 74H60L57 66L54 74Z" fill="white"/>
+    <path d="M99 52H108V94H99V52Z" fill="white"/>
+
+    <text x="142" y="92" fill="#111111" font-family="Inter, Arial, sans-serif" font-size="72" font-weight="700" letter-spacing="-2">
+      Cards
+    </text>
+    <text x="144" y="128" fill="#64748B" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="500">
+      умные карточки для изучения слов
+    </text>
+  </g>
+</svg>

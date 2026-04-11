@@ -14,13 +14,13 @@ const lora = Lora({
 });
 
 export const metadata: Metadata = {
-  title: "English SRS",
-  description: "Simple Anki-like English study app",
+  title: "AICards",
+  description: "Умные карточки для изучения слов в контексте",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "English SRS"
+    title: "AICards"
   }
 };
 
@@ -40,7 +40,7 @@ export default function RootLayout({
         <header className="sticky top-0 z-20 border-b border-[#E5E7EB] bg-white/95 backdrop-blur">
           <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
             <Link href="/decks" className="text-lg font-semibold text-[#111111]">
-              English SRS
+              AICards
             </Link>
             <TopNavLinks />
           </div>

@@ -588,7 +588,7 @@ export default function SmartAddClient({ deckId }: Props) {
   function buildWordList() {
     const words = parseWords(wordInput);
     if (words.length === 0) {
-      setGlobalError("Add at least one English word");
+      setGlobalError("Добавь хотя бы одно английское слово");
       return;
     }
     setCards(words.map((word) => createWordCard(word)));
@@ -699,7 +699,7 @@ export default function SmartAddClient({ deckId }: Props) {
           ...(item.front_sentence_options ?? [])
         ])[0] ?? "";
         const frontHint = normalizeText(item.front_hint ?? item.why_this_word_here ?? "");
-        const front = frontHint ? `${frontBase}\n\nHint: ${frontHint}` : frontBase;
+        const front = frontHint ? `${frontBase}\n\nПодсказка: ${frontHint}` : frontBase;
         const backExample = uniqueStrings([
           ...(item.back ? [item.back] : []),
           ...(item.back_sentence ? [item.back_sentence] : []),

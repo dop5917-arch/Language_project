@@ -1,4 +1,4 @@
-const CACHE_NAME = "english-srs-v2";
+const CACHE_NAME = "aicards-v2";
 const APP_SHELL = ["/", "/decks", "/manifest.webmanifest", "/icon", "/apple-icon"];
 
 function isStaticAssetRequest(req) {

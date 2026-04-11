@@ -1,0 +1,26 @@
+<svg width="980" height="400" viewBox="0 0 980 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="980" height="400" rx="28" fill="#F8FAFC"/>
+  <text x="64" y="48" fill="#64748B" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="600">
+    Вариант 2. Edtech-логотип с акцентом на карточки
+  </text>
+
+  <g transform="translate(90 106)">
+    <rect x="10" y="24" width="106" height="138" rx="26" transform="rotate(-10 10 24)" fill="#DBEAFE"/>
+    <rect x="42" y="10" width="110" height="144" rx="26" transform="rotate(-4 42 10)" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="2"/>
+    <rect x="76" y="28" width="116" height="150" rx="28" fill="white" stroke="#D1D5DB" stroke-width="2"/>
+    <rect x="102" y="60" width="64" height="32" rx="16" fill="#2563EB"/>
+    <text x="134" y="82" text-anchor="middle" fill="white" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700">
+      AI
+    </text>
+    <rect x="102" y="106" width="36" height="8" rx="999" fill="#CBD5E1"/>
+    <rect x="102" y="122" width="52" height="8" rx="999" fill="#CBD5E1"/>
+    <rect x="102" y="138" width="42" height="8" rx="999" fill="#CBD5E1"/>
+
+    <text x="230" y="92" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="74" font-weight="700" letter-spacing="-2.6">
+      AICards
+    </text>
+    <text x="232" y="128" fill="#64748B" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="500">
+      контекст, карточки, интервальное повторение
+    </text>
+  </g>
+</svg>

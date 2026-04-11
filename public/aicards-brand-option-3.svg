@@ -1,0 +1,27 @@
+<svg width="980" height="380" viewBox="0 0 980 380" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="980" height="380" rx="28" fill="#F8FAFC"/>
+  <text x="72" y="52" fill="#64748B" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="600">
+    Вариант 3. Живой wordmark с акцентом на AI
+  </text>
+
+  <g transform="translate(92 96)">
+    <path d="M0 72C8 45 43 35 103 35H144C166 35 183 39 194 47C202 53 206 61 204 71C202 83 192 90 177 95C165 99 149 101 132 101H75C34 101 9 95 2 84C-1 80 -1 76 0 72Z" fill="#111111"/>
+    <path d="M188 48C195 48 201 53 202 59C204 67 201 74 194 79L182 86L177 50L188 48Z" fill="#111111"/>
+    <text x="96" y="85" text-anchor="middle" fill="white" font-family="Inter, Arial, sans-serif" font-size="50" font-weight="700" letter-spacing="-1.2">
+      AI
+    </text>
+    <text x="194" y="86" fill="#111111" font-family="Inter, Arial, sans-serif" font-size="68" font-weight="700" letter-spacing="-2">
+      Cards
+    </text>
+
+    <g transform="translate(478 10)">
+      <rect x="0" y="30" width="88" height="116" rx="22" transform="rotate(-10 0 30)" fill="#E2E8F0"/>
+      <rect x="34" y="14" width="92" height="122" rx="22" transform="rotate(-3 34 14)" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="2"/>
+      <rect x="68" y="32" width="98" height="128" rx="24" fill="white" stroke="#D1D5DB" stroke-width="2"/>
+    </g>
+
+    <text x="2" y="132" fill="#64748B" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="500">
+      запоминание слов через AI, контекст и повторение
+    </text>
+  </g>
+</svg>

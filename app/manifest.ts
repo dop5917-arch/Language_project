@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "English SRS",
-    short_name: "English SRS",
-    description: "Simple Anki-like English study app",
+    name: "AICards",
+    short_name: "AICards",
+    description: "Умные карточки для изучения слов в контексте",
     start_url: "/decks",
     display: "standalone",
     background_color: "#f8fafc",

@@ -121,7 +121,7 @@ export default function DueNowPanel({
         <>
           <button
             type="button"
-            aria-label="Close due picker"
+            aria-label="Закрыть окно выбора карточек"
             onClick={() => setPickerOpen(false)}
             className="fixed inset-0 z-[600] bg-black/30"
           />

@@ -1,0 +1,52 @@
+<svg width="980" height="380" viewBox="0 0 980 380" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="980" height="380" rx="28" fill="#F8FAFC"/>
+  <text x="72" y="52" fill="#64748B" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="600">
+    Концепт. Короткий черный мазок под AI, Cards вплотную, веер карточек сзади
+  </text>
+
+  <g transform="translate(88 92)">
+    <rect x="498" y="38" width="122" height="166" rx="22" transform="rotate(-16 498 38)" fill="#E2E8F0"/>
+    <rect x="536" y="22" width="128" height="170" rx="22" transform="rotate(-7 536 22)" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="2"/>
+    <rect x="578" y="44" width="134" height="176" rx="22" fill="white" stroke="#D1D5DB" stroke-width="2"/>
+
+    <path
+      d="M10 124C16 97 44 82 93 79L176 75C194 74 214 76 229 83C240 88 247 96 245 107C243 117 233 124 217 129C201 134 180 137 161 138L95 141C61 143 28 141 14 134C5 129 4 126 10 124Z"
+      fill="#111111"
+    />
+    <path
+      d="M6 116C11 111 16 109 20 112C24 114 24 120 18 125C13 129 8 130 5 127C2 124 2 120 6 116Z"
+      fill="#111111"
+    />
+    <path
+      d="M222 83C233 82 244 87 248 95C252 102 249 109 241 113L224 120L216 84L222 83Z"
+      fill="#111111"
+    />
+    <path
+      d="M38 78L46 71L52 81L44 86L38 78Z"
+      fill="#111111"
+      fill-opacity="0.88"
+    />
+    <path
+      d="M64 76L71 69L77 80L69 84L64 76Z"
+      fill="#111111"
+      fill-opacity="0.78"
+    />
+    <path
+      d="M92 75L98 69L103 79L96 84L92 75Z"
+      fill="#111111"
+      fill-opacity="0.74"
+    />
+    <path
+      d="M122 75L128 69L133 79L126 84L122 75Z"
+      fill="#111111"
+      fill-opacity="0.7"
+    />
+
+    <text x="125" y="131" text-anchor="middle" fill="white" font-family="Inter, Arial, sans-serif" font-size="60" font-weight="700" letter-spacing="-1.6">
+      AI
+    </text>
+    <text x="210" y="131" fill="#111111" font-family="Inter, Arial, sans-serif" font-size="60" font-weight="700" letter-spacing="-1.6">
+      Cards
+    </text>
+  </g>
+</svg>

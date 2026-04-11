@@ -26,11 +26,11 @@ export default async function ImportWordsPage({ params, searchParams }: Props) {
         <div>
           <h1 className="text-xl font-semibold">Импорт слов из CSV</h1>
           <p className="text-sm text-slate-600">
-            Загрузи CSV как есть. Система автоматически найдет колонку с английскими словами (обычно C) и создаст карточки через Smart Add.
+            Загрузи CSV как есть. Система автоматически найдет колонку с английскими словами (обычно C) и создаст карточки через создание с AI.
           </p>
         </div>
         <Link href={`/decks/${deck.id}`} className="text-sm">
-          Back to deck
+          Назад в колоду
         </Link>
       </div>
 
@@ -43,24 +43,24 @@ export default async function ImportWordsPage({ params, searchParams }: Props) {
       {searchParams?.imported ? (
         <div className="space-y-2 rounded border border-green-200 bg-green-50 p-3 text-sm text-green-700">
           <p>
-            Imported: {searchParams.imported}
-            {searchParams.skipped ? ` • Skipped: ${searchParams.skipped}` : ""}
-            {searchParams.errors ? ` • Errors: ${searchParams.errors}` : ""}
-            {searchParams.column ? ` • Detected column: ${searchParams.column}` : ""}
+            Импортировано: {searchParams.imported}
+            {searchParams.skipped ? ` • Пропущено: ${searchParams.skipped}` : ""}
+            {searchParams.errors ? ` • Ошибок: ${searchParams.errors}` : ""}
+            {searchParams.column ? ` • Найдена колонка: ${searchParams.column}` : ""}
           </p>
           {searchParams.imported_examples ? (
             <p className="text-green-800">
-              Imported examples: {searchParams.imported_examples.split(" | ").join(", ")}
+              Примеры импорта: {searchParams.imported_examples.split(" | ").join(", ")}
             </p>
           ) : null}
           {searchParams.skipped_examples ? (
             <p className="text-green-800">
-              Skipped examples: {searchParams.skipped_examples.split(" | ").join(", ")}
+              Примеры пропущенных: {searchParams.skipped_examples.split(" | ").join(", ")}
             </p>
           ) : null}
           {searchParams.error_examples ? (
             <p className="text-green-800">
-              Error examples: {searchParams.error_examples.split(" | ").join(", ")}
+              Примеры ошибок: {searchParams.error_examples.split(" | ").join(", ")}
             </p>
           ) : null}
         </div>
@@ -73,7 +73,7 @@ export default async function ImportWordsPage({ params, searchParams }: Props) {
           <li>Заменяем “умные” апострофы: can’t -&gt; can&apos;t</li>
           <li>Пустые строки пропускаем</li>
           <li>Неанглийские значения и повторы пропускаем</li>
-          <li>Для каждого слова создаем карточку через Smart Add</li>
+          <li>Для каждого слова создаем карточку через создание с AI</li>
         </ul>
       </div>
 
@@ -84,11 +84,11 @@ export default async function ImportWordsPage({ params, searchParams }: Props) {
         className="space-y-4 rounded-lg border bg-white p-4"
       >
         <div>
-          <label className="mb-1 block text-sm font-medium">CSV file</label>
+          <label className="mb-1 block text-sm font-medium">CSV-файл</label>
           <input name="file" type="file" accept=".csv,text/csv" required className="block w-full text-sm" />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium">Limit (optional)</label>
+          <label className="mb-1 block text-sm font-medium">Лимит (опционально)</label>
           <input
             name="limit"
             type="number"
@@ -99,7 +99,7 @@ export default async function ImportWordsPage({ params, searchParams }: Props) {
           />
         </div>
         <button type="submit" className="rounded bg-slate-900 px-4 py-2 text-white">
-          Auto Import Words
+          Импортировать слова автоматически
         </button>
       </form>
     </div>

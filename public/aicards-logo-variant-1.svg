@@ -1,0 +1,13 @@
+<svg width="960" height="360" viewBox="0 0 960 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="960" height="360" rx="28" fill="#F8FAFC"/>
+  <text x="80" y="52" fill="#64748B" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="600">Вариант 1. AI в овале, Cards справа, веер сзади</text>
+
+  <g transform="translate(100 78)">
+    <rect x="356" y="32" width="126" height="168" rx="22" transform="rotate(-15 356 32)" fill="#E5E7EB"/>
+    <rect x="392" y="18" width="132" height="172" rx="22" transform="rotate(-7 392 18)" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="2"/>
+    <rect x="430" y="40" width="138" height="178" rx="22" fill="white" stroke="#D1D5DB" stroke-width="2"/>
+    <rect x="0" y="78" width="286" height="110" rx="55" fill="#111111"/>
+    <text x="143" y="147" text-anchor="middle" fill="white" font-family="Inter, Arial, sans-serif" font-size="52" font-weight="700">AI</text>
+    <text x="304" y="155" fill="#111111" font-family="Inter, Arial, sans-serif" font-size="72" font-weight="650" letter-spacing="-1.2">Cards</text>
+  </g>
+</svg>

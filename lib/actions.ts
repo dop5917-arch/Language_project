@@ -87,7 +87,8 @@ export async function createCardAction(deckId: string, formData: FormData) {
 
   revalidatePath(`/decks/${deckId}`);
   revalidatePath(`/decks/${deckId}/today`);
-  redirect(`/decks/${deckId}/cards/${card.id}/edit`);
+  revalidatePath(`/decks/${deckId}/review`);
+  redirect(`/decks/${deckId}`);
 }
 
 export async function updateCardAction(deckId: string, cardId: string, formData: FormData) {

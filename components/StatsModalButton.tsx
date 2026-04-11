@@ -12,7 +12,6 @@ type Props = {
   masteryPercent: number;
   retentionPercent: number;
   dailyGoalPercent: number;
-  difficultPercent: number;
 };
 
 function percentLabel(value: number): string {
@@ -37,7 +36,7 @@ export default function StatsModalButton(props: Props) {
         <>
           <button
             type="button"
-            aria-label="Close stats"
+            aria-label="Закрыть статистику"
             onClick={() => setOpen(false)}
             className="fixed inset-0 z-[600] bg-black/30"
           />
@@ -68,7 +67,6 @@ export default function StatsModalButton(props: Props) {
               <Stat label="Освоение" value={percentLabel(props.masteryPercent)} />
               <Stat label="Удержание" value={percentLabel(props.retentionPercent)} />
               <Stat label="Цель дня" value={percentLabel(props.dailyGoalPercent)} />
-              <Stat label="Трудные" value={percentLabel(props.difficultPercent)} />
             </div>
           </div>
         </>

@@ -40,7 +40,6 @@ export default async function GlobalReviewPage({ searchParams }: Props) {
     presetRaw === "due" ||
     presetRaw === "daily" ||
     presetRaw === "unpassed" ||
-    presetRaw === "difficult" ||
     presetRaw === "easy" ||
     presetRaw === "full"
       ? presetRaw
@@ -74,7 +73,6 @@ export default async function GlobalReviewPage({ searchParams }: Props) {
     }
   }
   const latestRatings = Array.from(latestByCard.values());
-  const difficultCount = latestRatings.filter((r) => r === "Again" || r === "Hard").length;
   const easyCount = latestRatings.filter((r) => r === "Easy").length;
   const unpassedCount = Math.max(0, allCards - latestRatings.length);
 
@@ -100,12 +98,6 @@ export default async function GlobalReviewPage({ searchParams }: Props) {
             subtitle={`${unpassedCount} шт.`}
             description="Карточки, которые ещё не проходились."
             href="/review/all?preset=unpassed"
-          />
-          <ModeCard
-            title="Трудные"
-            subtitle={`${difficultCount} шт.`}
-            description="Последняя оценка: Again или Hard."
-            href="/review/all?preset=difficult"
           />
           <ModeCard
             title="Легкие"
@@ -149,12 +141,6 @@ export default async function GlobalReviewPage({ searchParams }: Props) {
     ratingFilter = "all";
     modeTitle = "Быстрый день";
     modeDescription = `Карточки на сегодня + ограниченное число новых. Повторов: до ${dueLimit}.`;
-  }
-  if (preset === "difficult") {
-    baseQueue = await getGlobalFullQueue();
-    ratingFilter = "Difficult";
-    modeTitle = "Трудные";
-    modeDescription = "Только трудные карточки (Again/Hard).";
   }
   if (preset === "unpassed") {
     baseQueue = await getGlobalFullQueue();
@@ -212,11 +198,11 @@ export default async function GlobalReviewPage({ searchParams }: Props) {
       ) : (
         <ReviewClient
           deckId=""
-          deckName="Global Review"
+          deckName="Общее повторение"
           modeLabel={modeTitle}
           initialQueue={serializedQueue}
-          returnHref="/review/all"
-          returnLabel="Назад к режимам"
+          returnHref="/decks"
+          returnLabel="На главную страницу"
         />
       )}
     </div>

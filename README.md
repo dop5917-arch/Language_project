@@ -1,6 +1,6 @@
-# English SRS (Next.js + Prisma + SQLite)
+# AICards (Next.js + Prisma + SQLite)
 
-Minimal Anki-like English study app with spaced repetition.
+Minimal English study app with smart cards and spaced repetition.
 
 ## Stack
 

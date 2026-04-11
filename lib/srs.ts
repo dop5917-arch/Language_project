@@ -201,6 +201,33 @@ export async function getFullDeckQueue(deckId: string): Promise<QueueItem[]> {
   }));
 }
 
+export async function getNewOnlyQueue(deckId: string): Promise<QueueItem[]> {
+  const cards = await prisma.card.findMany({
+    where: {
+      deckId,
+      reviewState: { is: null }
+    },
+    orderBy: [{ createdAt: "asc" }]
+  });
+
+  return cards.map((card) => ({
+    card: {
+      id: card.id,
+      deckId: card.deckId,
+      targetWord: card.targetWord,
+      phonetic: card.phonetic,
+      audioUrl: card.audioUrl,
+      frontText: card.frontText,
+      backText: card.backText,
+      imageUrl: card.imageUrl,
+      tags: card.tags,
+      level: card.level
+    },
+    reviewState: null,
+    isNew: true
+  }));
+}
+
 export async function getGlobalTodayQueue(date: Date, newLimit: number, dueLimit: number): Promise<QueueItem[]> {
   const today = startOfLocalDay(date);
 

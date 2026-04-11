@@ -55,7 +55,7 @@ export default function TopNavLinks() {
           }}
           className="rounded-xl bg-white px-3 py-2 text-sm font-medium text-[#111111] shadow-sm ring-1 ring-[#E5E7EB] hover:bg-[#F5F5F5]"
         >
-          Статистика
+          Моя статистика
         </button>
       </div>
 

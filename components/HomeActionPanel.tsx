@@ -72,10 +72,11 @@ export default function HomeActionPanel({
               Math.max(1, dueToday || 1),
               normalizeDueLimit(dueLimitInput)
             )}`}
-            className="text-center font-semibold hover:opacity-90"
+            className="text-center font-semibold text-white hover:opacity-90"
           >
             <span className="text-sm">
-              Пора повторить (интервальное повторение){dueToday > 0 ? ` • ${dueToday}` : ""}
+              Пора повторить <span className="text-white">(интервальное повторение)</span>
+              {dueToday > 0 ? ` • ${dueToday}` : ""}
             </span>
           </Link>
           <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
@@ -130,7 +131,7 @@ export default function HomeActionPanel({
         </div>
         <Link
           href="/review/all"
-          className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#111111] px-3 py-2 text-center font-semibold text-white shadow-sm hover:opacity-90 md:min-h-[76px]"
+          className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#2563EB] px-3 py-2 text-center font-semibold text-white shadow-sm hover:bg-[#1D4ED8] md:min-h-[76px]"
         >
           <span className="text-sm">Повторение всех колод</span>
         </Link>
