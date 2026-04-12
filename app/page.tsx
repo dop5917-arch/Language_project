@@ -1,6 +1,10 @@
 import Link from "next/link";
+import PublicDemoActionPanel from "@/components/PublicDemoActionPanel";
+import { STARTER_CARDS } from "@/lib/starter-deck";
 
 export default function HomePage() {
+  const cardsCount = STARTER_CARDS.length;
+
   return (
     <div className="mx-auto flex min-h-[calc(100vh-112px)] w-full max-w-5xl flex-col">
       <div className="flex-1 space-y-8">
@@ -21,26 +25,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="grid grid-cols-1 gap-2 md:grid-cols-2">
-          <Link
-            href="/demo/review"
-            className="flex min-h-11 flex-col justify-center gap-2 rounded-xl bg-[#059669] px-3 py-3 text-white shadow-sm transition hover:opacity-95 md:min-h-[76px]"
-          >
-            <div className="text-center font-semibold text-white">
-              <span className="text-sm">Пора повторить (интервальное повторение) • 6</span>
-            </div>
-            <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
-              <span className="whitespace-nowrap text-white/85">Лимит в день</span>
-              <span className="w-16 rounded-lg bg-white/15 px-2 py-1 text-center text-sm text-white">6</span>
-            </div>
-          </Link>
-          <Link
-            href="/demo/review"
-            className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#E5E7EB] px-3 py-2 text-center font-semibold text-[#111111] shadow-sm transition hover:bg-[#D1D5DB] md:min-h-[76px]"
-          >
-            <span className="text-sm">Повторение всех колод</span>
-          </Link>
-        </section>
+        <PublicDemoActionPanel dueToday={cardsCount} />
 
         <section className="space-y-4">
           <div className="flex items-center">
@@ -53,24 +38,27 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Link
-              href="/demo/deck"
-              className="relative min-h-[132px] rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-[0_4px_12px_rgba(0,0,0,0.04)] transition hover:-translate-y-0.5"
-            >
+            <article className="relative min-h-[132px] rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-[0_4px_12px_rgba(0,0,0,0.04)] transition hover:-translate-y-0.5">
               <div className="relative z-10 space-y-3">
                 <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 break-words text-lg font-semibold leading-tight text-[#111111] sm:text-xl">
+                  <Link
+                    href="/demo/deck"
+                    className="min-w-0 break-words text-lg font-semibold leading-tight text-[#111111] sm:text-xl"
+                  >
                     Демо-колода
-                  </div>
+                  </Link>
                   <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F5F5] text-sm font-semibold text-[#059669] ring-1 ring-[#E5E7EB]">
                     i
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="rounded-xl bg-[#059669] px-3 py-1.5 text-xs font-medium text-white">
+                  <Link
+                    href="/demo/review"
+                    className="rounded-xl bg-[#059669] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#047857]"
+                  >
                     Продолжить
-                  </span>
+                  </Link>
                   <div className="text-sm font-medium text-[#6B7280]">Выучено 0%</div>
                 </div>
 
@@ -79,11 +67,11 @@ export default function HomePage() {
                     <div className="h-full w-[0%] bg-[#059669]" />
                   </div>
                   <div className="text-[11px] text-slate-600">
-                    Карточек: 10 • Пройдено: 0 • Выучено: 0
+                    Карточек: {cardsCount} • Пройдено: 0 • Выучено: 0
                   </div>
                 </div>
               </div>
-            </Link>
+            </article>
           </div>
         </section>
       </div>
