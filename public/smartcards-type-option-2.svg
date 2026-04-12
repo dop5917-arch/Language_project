@@ -1,0 +1,15 @@
+<svg width="980" height="320" viewBox="0 0 980 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="980" height="320" rx="28" fill="#F8FAFC"/>
+  <text x="64" y="44" fill="#64748B" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="600">
+    Вариант 2. Геометричный и более брендовый
+  </text>
+  <g transform="translate(110 120)">
+    <text x="0" y="64" fill="#111111" font-family="Futura, Century Gothic, Avenir Next, Inter, Arial, sans-serif" font-size="72" font-weight="700" letter-spacing="-2.2">
+      SmartCards
+    </text>
+    <circle cx="404" cy="6" r="15" fill="#059669"/>
+    <text x="404" y="11" text-anchor="middle" fill="white" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="700">
+      AI
+    </text>
+  </g>
+</svg>

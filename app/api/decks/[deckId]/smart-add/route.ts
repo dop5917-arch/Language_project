@@ -1,5 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
+import { getCurrentUserId } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
 import { cardSchema } from "@/lib/validations";
 
@@ -9,6 +10,7 @@ type Context = {
 
 export async function POST(req: NextRequest, { params }: Context) {
   try {
+    const userId = await getCurrentUserId();
     const body = await req.json();
     const parsed = cardSchema.safeParse(body);
     if (!parsed.success) {
@@ -18,7 +20,7 @@ export async function POST(req: NextRequest, { params }: Context) {
       );
     }
 
-    const deck = await prisma.deck.findUnique({ where: { id: params.deckId } });
+    const deck = await prisma.deck.findFirst({ where: { id: params.deckId, userId } });
     if (!deck) {
       return NextResponse.json({ error: "Deck not found" }, { status: 404 });
     }

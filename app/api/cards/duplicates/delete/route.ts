@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { getCurrentUserId } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
 
 const deleteSchema = z.object({
@@ -9,6 +10,7 @@ const deleteSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    const userId = await getCurrentUserId();
     const body = await req.json();
     const parsed = deleteSchema.safeParse(body);
     if (!parsed.success) {
@@ -16,7 +18,10 @@ export async function POST(req: NextRequest) {
     }
 
     const cards = await prisma.card.findMany({
-      where: { id: { in: parsed.data.cardIds } },
+      where: {
+        id: { in: parsed.data.cardIds },
+        deck: { userId }
+      },
       select: { id: true, deckId: true }
     });
     if (cards.length === 0) {

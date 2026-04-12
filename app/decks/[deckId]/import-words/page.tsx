@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getCurrentUserId } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
 
 type Props = {
@@ -17,7 +18,8 @@ type Props = {
 };
 
 export default async function ImportWordsPage({ params, searchParams }: Props) {
-  const deck = await prisma.deck.findUnique({ where: { id: params.deckId } });
+  const userId = await getCurrentUserId();
+  const deck = await prisma.deck.findFirst({ where: { id: params.deckId, userId } });
   if (!deck) notFound();
 
   return (

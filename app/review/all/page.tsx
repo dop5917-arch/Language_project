@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import ReviewClient from "@/components/ReviewClient";
+import { getCurrentUserId } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
 import {
   filterQueueByLatestRating,
@@ -20,6 +21,7 @@ type Props = {
 export const dynamic = "force-dynamic";
 
 export default async function GlobalReviewPage({ searchParams }: Props) {
+  const userId = await getCurrentUserId();
   const newLimit = Math.max(1, Math.min(100, Number(searchParams?.newLimit ?? 20) || 20));
   const cookieStore = cookies();
   const dueLimit = normalizeDueLimit(
@@ -48,19 +50,32 @@ export default async function GlobalReviewPage({ searchParams }: Props) {
   const today = startOfLocalDay(new Date());
 
   const [decks, dueCount, newCount, allCards, latestLogs] = await Promise.all([
-    prisma.deck.findMany({ select: { id: true, name: true } }),
+    prisma.deck.findMany({ where: { userId }, select: { id: true, name: true } }),
     prisma.reviewState.count({
       where: {
+        card: {
+          deck: {
+            userId
+          }
+        },
         dueDate: { lte: today }
       }
     }),
     prisma.card.count({
       where: {
+        deck: { userId },
         reviewState: { is: null }
       }
     }),
-    prisma.card.count(),
+    prisma.card.count({ where: { deck: { userId } } }),
     prisma.reviewLog.findMany({
+      where: {
+        card: {
+          deck: {
+            userId
+          }
+        }
+      },
       orderBy: { reviewedAt: "desc" },
       select: { cardId: true, rating: true }
     })

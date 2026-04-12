@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { getCurrentUserId } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
 import { cardFormSchema, deckSchema } from "@/lib/validations";
 
@@ -11,6 +12,7 @@ function formValue(formData: FormData, key: string) {
 }
 
 export async function createDeckAction(formData: FormData) {
+  const userId = await getCurrentUserId();
   const parsed = deckSchema.safeParse({
     name: formValue(formData, "name")
   });
@@ -20,7 +22,10 @@ export async function createDeckAction(formData: FormData) {
   }
 
   await prisma.deck.create({
-    data: { name: parsed.data.name }
+    data: {
+      name: parsed.data.name,
+      userId
+    }
   });
 
   revalidatePath("/decks");
@@ -28,6 +33,7 @@ export async function createDeckAction(formData: FormData) {
 }
 
 export async function renameDeckAction(deckId: string, formData: FormData) {
+  const userId = await getCurrentUserId();
   const parsed = deckSchema.safeParse({
     name: formValue(formData, "name")
   });
@@ -36,10 +42,13 @@ export async function renameDeckAction(deckId: string, formData: FormData) {
     throw new Error(parsed.error.issues[0]?.message ?? "Invalid deck name");
   }
 
-  await prisma.deck.update({
-    where: { id: deckId },
+  const result = await prisma.deck.updateMany({
+    where: { id: deckId, userId },
     data: { name: parsed.data.name }
   });
+  if (result.count === 0) {
+    throw new Error("Deck not found");
+  }
 
   revalidatePath("/decks");
   revalidatePath(`/decks/${deckId}`);
@@ -47,15 +56,20 @@ export async function renameDeckAction(deckId: string, formData: FormData) {
 }
 
 export async function deleteDeckAction(deckId: string) {
-  await prisma.deck.delete({
-    where: { id: deckId }
+  const userId = await getCurrentUserId();
+  const result = await prisma.deck.deleteMany({
+    where: { id: deckId, userId }
   });
+  if (result.count === 0) {
+    throw new Error("Deck not found");
+  }
 
   revalidatePath("/decks");
   redirect("/decks");
 }
 
 export async function createCardAction(deckId: string, formData: FormData) {
+  const userId = await getCurrentUserId();
   const parsed = cardFormSchema.safeParse({
     targetWord: formValue(formData, "targetWord"),
     frontText: formValue(formData, "frontText"),
@@ -69,6 +83,14 @@ export async function createCardAction(deckId: string, formData: FormData) {
 
   if (!parsed.success) {
     throw new Error(parsed.error.issues[0]?.message ?? "Invalid card");
+  }
+
+  const deck = await prisma.deck.findFirst({
+    where: { id: deckId, userId },
+    select: { id: true }
+  });
+  if (!deck) {
+    throw new Error("Deck not found");
   }
 
   const card = await prisma.card.create({
@@ -92,6 +114,7 @@ export async function createCardAction(deckId: string, formData: FormData) {
 }
 
 export async function updateCardAction(deckId: string, cardId: string, formData: FormData) {
+  const userId = await getCurrentUserId();
   const parsed = cardFormSchema.safeParse({
     targetWord: formValue(formData, "targetWord"),
     frontText: formValue(formData, "frontText"),
@@ -109,9 +132,9 @@ export async function updateCardAction(deckId: string, cardId: string, formData:
 
   const existing = await prisma.card.findUnique({
     where: { id: cardId },
-    select: { id: true, deckId: true }
+    select: { id: true, deckId: true, deck: { select: { userId: true } } }
   });
-  if (!existing || existing.deckId !== deckId) {
+  if (!existing || existing.deckId !== deckId || existing.deck.userId !== userId) {
     throw new Error("Card not found");
   }
 

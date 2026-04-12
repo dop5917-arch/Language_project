@@ -1,5 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
+import { getCurrentUserId } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
 
 type Context = {
@@ -8,10 +9,14 @@ type Context = {
 
 export async function POST(_: Request, { params }: Context) {
   try {
-    await prisma.deck.update({
-      where: { id: params.deckId },
+    const userId = await getCurrentUserId();
+    const result = await prisma.deck.updateMany({
+      where: { id: params.deckId, userId },
       data: { updatedAt: new Date() }
     });
+    if (result.count === 0) {
+      return NextResponse.json({ error: "Deck not found" }, { status: 404 });
+    }
     revalidatePath("/decks");
     return NextResponse.json({ ok: true });
   } catch (error) {

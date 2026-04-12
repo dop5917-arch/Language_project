@@ -1,5 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
+import { getCurrentUserId } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
 import { deckSchema } from "@/lib/validations";
 
@@ -9,6 +10,7 @@ type Context = {
 
 export async function PATCH(req: NextRequest, { params }: Context) {
   try {
+    const userId = await getCurrentUserId();
     const body = await req.json();
     const parsed = deckSchema.safeParse({ name: body?.name });
     if (!parsed.success) {
@@ -18,10 +20,13 @@ export async function PATCH(req: NextRequest, { params }: Context) {
       );
     }
 
-    await prisma.deck.update({
-      where: { id: params.deckId },
+    const result = await prisma.deck.updateMany({
+      where: { id: params.deckId, userId },
       data: { name: parsed.data.name }
     });
+    if (result.count === 0) {
+      return NextResponse.json({ error: "Deck not found" }, { status: 404 });
+    }
 
     revalidatePath("/decks");
     revalidatePath(`/decks/${params.deckId}`);
@@ -36,7 +41,11 @@ export async function PATCH(req: NextRequest, { params }: Context) {
 
 export async function DELETE(_: NextRequest, { params }: Context) {
   try {
-    await prisma.deck.delete({ where: { id: params.deckId } });
+    const userId = await getCurrentUserId();
+    const result = await prisma.deck.deleteMany({ where: { id: params.deckId, userId } });
+    if (result.count === 0) {
+      return NextResponse.json({ error: "Deck not found" }, { status: 404 });
+    }
     revalidatePath("/decks");
     return NextResponse.json({ ok: true });
   } catch (error) {

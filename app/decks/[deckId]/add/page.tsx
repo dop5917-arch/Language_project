@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import AddCardForm from "@/components/AddCardForm";
 import { createCardAction } from "@/lib/actions";
+import { getCurrentUserId } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
 
 type Props = {
@@ -9,7 +10,8 @@ type Props = {
 };
 
 export default async function AddCardPage({ params }: Props) {
-  const deck = await prisma.deck.findUnique({ where: { id: params.deckId } });
+  const userId = await getCurrentUserId();
+  const deck = await prisma.deck.findFirst({ where: { id: params.deckId, userId } });
   if (!deck) notFound();
 
   const action = createCardAction.bind(null, deck.id);

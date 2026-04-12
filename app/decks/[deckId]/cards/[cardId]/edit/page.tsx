@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { updateCardAction } from "@/lib/actions";
+import { getCurrentUserId } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
 
 type Props = {
@@ -8,11 +9,12 @@ type Props = {
 };
 
 export default async function EditCardPage({ params }: Props) {
-  const deck = await prisma.deck.findUnique({ where: { id: params.deckId } });
+  const userId = await getCurrentUserId();
+  const deck = await prisma.deck.findFirst({ where: { id: params.deckId, userId } });
   if (!deck) notFound();
 
   const card = await prisma.card.findFirst({
-    where: { id: params.cardId, deckId: params.deckId }
+    where: { id: params.cardId, deckId: params.deckId, deck: { userId } }
   });
   if (!card) notFound();
 

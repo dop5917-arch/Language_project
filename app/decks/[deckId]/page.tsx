@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
+import { getCurrentUserId } from "@/lib/current-user";
 import { startOfLocalDay } from "@/lib/date";
 import { prisma } from "@/lib/prisma";
 import { normalizeDueLimit, REVIEW_DUE_LIMIT_COOKIE } from "@/lib/review-settings";
@@ -14,8 +15,9 @@ export const dynamic = "force-dynamic";
 export default async function DeckDetailPage({ params }: Props) {
   const today = startOfLocalDay(new Date());
   const dueLimit = normalizeDueLimit(cookies().get(REVIEW_DUE_LIMIT_COOKIE)?.value);
-  const deck = await prisma.deck.findUnique({
-    where: { id: params.deckId },
+  const userId = await getCurrentUserId();
+  const deck = await prisma.deck.findFirst({
+    where: { id: params.deckId, userId },
     include: {
       cards: {
         include: { reviewState: true },
@@ -27,7 +29,7 @@ export default async function DeckDetailPage({ params }: Props) {
   if (!deck) notFound();
 
   await prisma.deck.update({
-    where: { id: params.deckId },
+    where: { id: deck.id },
     data: { updatedAt: new Date() }
   });
 
@@ -52,9 +54,29 @@ export default async function DeckDetailPage({ params }: Props) {
               >
                 Продолжить
               </Link>
+              {dueTodayCount > 0 ? (
+                <Link
+                  href={`/decks/${deck.id}/review?dueLimit=${dueLimit}`}
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-slate-50"
+                >
+                  Карточки на сегодня ({dueTodayCount})
+                </Link>
+              ) : (
+                <span className="rounded border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500">
+                  Карточки на сегодня (0)
+                </span>
+              )}
+              {newCardsCount > 0 ? (
+                <Link
+                  href={`/decks/${deck.id}/review?onlyNew=1`}
+                  className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  Учить новые ({newCardsCount})
+                </Link>
+              ) : null}
               <Link
                 href={`/decks/${deck.id}/review-all`}
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+                className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
               >
                 Начать с начала
               </Link>
@@ -67,38 +89,6 @@ export default async function DeckDetailPage({ params }: Props) {
               Сначала создать карточку
             </Link>
           )}
-          {dueTodayCount > 0 ? (
-            <Link
-              href={`/decks/${deck.id}/review?dueLimit=${dueLimit}`}
-              className="rounded border px-3 py-2 text-sm"
-            >
-              Карточки на сегодня ({dueTodayCount})
-            </Link>
-          ) : (
-            <span className="rounded border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500">
-              Карточки на сегодня (0)
-            </span>
-          )}
-          {newCardsCount > 0 ? (
-            <Link
-              href={`/decks/${deck.id}/review?onlyNew=1`}
-              className="rounded border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700"
-            >
-              Учить новые ({newCardsCount})
-            </Link>
-          ) : null}
-          <Link
-            href={`/decks/${deck.id}/add-smart`}
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700"
-          >
-            Добавить карточку с AI
-          </Link>
-          <Link
-            href={`/decks/${deck.id}/add`}
-            className="rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
-          >
-            Добавить карточку вручную
-          </Link>
         </div>
       </div>
 

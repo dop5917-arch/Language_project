@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import ReviewClient from "@/components/ReviewClient";
+import { getCurrentUserId } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
 import { filterQueueByLatestRating, getFullDeckQueue, type RatingFilter } from "@/lib/srs";
 
@@ -11,7 +12,8 @@ type Props = {
 export const dynamic = "force-dynamic";
 
 export default async function ReviewAllPage({ params, searchParams }: Props) {
-  const deck = await prisma.deck.findUnique({ where: { id: params.deckId } });
+  const userId = await getCurrentUserId();
+  const deck = await prisma.deck.findFirst({ where: { id: params.deckId, userId } });
   if (!deck) notFound();
 
   const requestedRating = searchParams?.rating;

@@ -5,11 +5,11 @@ export default function DecksHeaderCreateButton() {
     <button
       type="button"
       onClick={() => window.dispatchEvent(new CustomEvent("open-create-deck-modal"))}
-      aria-label="Создать колоду"
-      title="Создать колоду"
-      className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-[#059669] text-sm font-bold leading-none text-white shadow-sm hover:bg-[#047857]"
+      aria-label="Добавить колоду"
+      title="Добавить колоду"
+      className="inline-flex items-center rounded-lg border border-[#E5E7EB] bg-white px-3 py-1.5 text-sm font-medium text-[#059669] hover:bg-[#F5F5F5]"
     >
-      +
+      Добавить колоду
     </button>
   );
 }

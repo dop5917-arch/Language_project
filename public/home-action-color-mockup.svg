@@ -1,0 +1,65 @@
+<svg width="1600" height="520" viewBox="0 0 1600 520" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1600" height="520" fill="#F8FAFC"/>
+
+  <text x="120" y="88" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="600">
+    Первая строка главного экрана
+  </text>
+  <text x="120" y="122" fill="#64748B" font-family="Inter, Arial, sans-serif" font-size="18">
+    Цветовая иерархия: главное действие, AI-действие, сервисные блоки
+  </text>
+
+  <rect x="120" y="170" width="420" height="220" rx="28" fill="#059669"/>
+  <text x="160" y="226" fill="white" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="600">
+    Пора повторить
+  </text>
+  <text x="160" y="262" fill="white" fill-opacity="0.92" font-family="Inter, Arial, sans-serif" font-size="18">
+    Интервальное повторение
+  </text>
+  <text x="160" y="336" fill="white" font-family="Inter, Arial, sans-serif" font-size="56" font-weight="700">
+    24
+  </text>
+  <text x="232" y="336" fill="white" fill-opacity="0.92" font-family="Inter, Arial, sans-serif" font-size="22">
+    карточки сегодня
+  </text>
+
+  <rect x="568" y="170" width="420" height="220" rx="28" fill="#2563EB"/>
+  <text x="608" y="226" fill="white" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="600">
+    Создать карточки с AI
+  </text>
+  <text x="608" y="262" fill="white" fill-opacity="0.92" font-family="Inter, Arial, sans-serif" font-size="18">
+    Быстро собрать колоду из своих слов
+  </text>
+  <rect x="608" y="305" width="160" height="48" rx="14" fill="white" fill-opacity="0.14"/>
+  <text x="636" y="337" fill="white" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="600">
+    Открыть
+  </text>
+
+  <rect x="1016" y="170" width="220" height="220" rx="28" fill="#F3F4F6"/>
+  <text x="1050" y="226" fill="#111827" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="600">
+    Таймер
+  </text>
+  <text x="1050" y="262" fill="#6B7280" font-family="Inter, Arial, sans-serif" font-size="17">
+    Время на занятие
+  </text>
+  <rect x="1050" y="302" width="94" height="52" rx="16" fill="white"/>
+  <rect x="1156" y="302" width="46" height="52" rx="16" fill="#E5E7EB"/>
+  <text x="1081" y="335" text-anchor="middle" fill="#111827" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="600">
+    15
+  </text>
+  <polygon points="1173,318 1173,338 1191,328" fill="#111827"/>
+
+  <rect x="1260" y="170" width="220" height="220" rx="28" fill="#E5E7EB"/>
+  <text x="1294" y="226" fill="#111827" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="600">
+    Повторение
+  </text>
+  <text x="1294" y="258" fill="#111827" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="600">
+    всех колод
+  </text>
+  <text x="1294" y="296" fill="#4B5563" font-family="Inter, Arial, sans-serif" font-size="17">
+    Собрать всё в одну сессию
+  </text>
+  <rect x="1294" y="320" width="134" height="44" rx="14" fill="white" fill-opacity="0.75"/>
+  <text x="1331" y="349" fill="#111827" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="600">
+    Старт
+  </text>
+</svg>

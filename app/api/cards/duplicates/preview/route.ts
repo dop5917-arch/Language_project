@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { getCurrentUserId } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
 
 const previewSchema = z.object({
@@ -21,6 +22,7 @@ function normalizeKey(value: string): string {
 
 export async function POST(req: NextRequest) {
   try {
+    const userId = await getCurrentUserId();
     const body = await req.json();
     const parsed = previewSchema.safeParse(body);
     if (!parsed.success) {
@@ -29,7 +31,10 @@ export async function POST(req: NextRequest) {
 
     const createdIds = parsed.data.createdCardIds;
     const createdCards = await prisma.card.findMany({
-      where: { id: { in: createdIds } },
+      where: {
+        id: { in: createdIds },
+        deck: { userId }
+      },
       select: { id: true, targetWord: true }
     });
 
@@ -51,6 +56,7 @@ export async function POST(req: NextRequest) {
       FROM "Card" c
       JOIN "Deck" d ON d.id = c."deckId"
       WHERE c."targetWord" IS NOT NULL
+        AND d."userId" = ${userId}
         AND LOWER(TRIM(c."targetWord")) IN (${Prisma.join(createdWords)})
     `);
 

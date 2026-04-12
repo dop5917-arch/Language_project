@@ -1,6 +1,7 @@
 import Papa from "papaparse";
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
+import { getCurrentUserId } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
 import { buildPublicUrl } from "@/lib/request-url";
 
@@ -247,6 +248,7 @@ async function fetchDictionaryFallbackDraft(word: string): Promise<SmartDraft | 
 }
 
 export async function POST(req: NextRequest, { params }: Context) {
+  const userId = await getCurrentUserId();
   const formData = await req.formData();
   const file = formData.get("file");
   const limitRaw = formData.get("limit");
@@ -258,6 +260,14 @@ export async function POST(req: NextRequest, { params }: Context) {
   const redirectUrl = buildPublicUrl(req, `/decks/${params.deckId}/import-words`);
 
   try {
+    const deck = await prisma.deck.findFirst({
+      where: { id: params.deckId, userId },
+      select: { id: true, name: true }
+    });
+    if (!deck) {
+      throw new Error("Deck not found");
+    }
+
     if (!(file instanceof File) || file.size === 0) {
       throw new Error("Please upload a CSV file");
     }
@@ -272,11 +282,6 @@ export async function POST(req: NextRequest, { params }: Context) {
 
     if (words.length === 0) {
       throw new Error(`No English words found (detected column: ${detectedColumnLabel})`);
-    }
-
-    const deck = await prisma.deck.findUnique({ where: { id: params.deckId } });
-    if (!deck) {
-      throw new Error("Deck not found");
     }
 
     const existingCards = await prisma.card.findMany({

@@ -36,8 +36,10 @@ export default function StudyTimerOverlay() {
 
   const leftMs = useMemo(() => {
     if (!timer) return 0;
-    return timer.endAt - now;
+    return (timer.pausedAt ?? timer.endAt) - now;
   }, [timer, now]);
+
+  const isPaused = Boolean(timer?.pausedAt);
 
   useEffect(() => {
     if (!timer) return;
@@ -64,14 +66,39 @@ export default function StudyTimerOverlay() {
 
   function addTime(minutes: number) {
     if (!timer) return;
-    const base = Math.max(timer.endAt, Date.now());
+    const base = Math.max(timer.pausedAt ?? timer.endAt, Date.now());
     const next: StudyTimerState = {
       startedAt: Date.now(),
       durationMin: minutes,
-      endAt: base + minutes * 60 * 1000
+      endAt: base + minutes * 60 * 1000,
+      pausedAt: null
     };
     writeStudyTimerState(next);
     setHiddenUntilFinish(false);
+    alertedRef.current = false;
+  }
+
+  function pauseTimer() {
+    if (!timer || timer.pausedAt) return;
+    const next: StudyTimerState = {
+      ...timer,
+      pausedAt: timer.endAt
+    };
+    writeStudyTimerState(next);
+    setTimer(next);
+  }
+
+  function resumeTimer() {
+    if (!timer?.pausedAt) return;
+    const remaining = Math.max(0, timer.pausedAt - now);
+    const next: StudyTimerState = {
+      ...timer,
+      startedAt: Date.now(),
+      endAt: Date.now() + remaining,
+      pausedAt: null
+    };
+    writeStudyTimerState(next);
+    setTimer(next);
     alertedRef.current = false;
   }
 
@@ -91,8 +118,23 @@ export default function StudyTimerOverlay() {
           >
             Скрыть
           </button>
-          <button type="button" onClick={stopTimer} className="rounded border px-2 py-1 text-[11px]">
-            Стоп
+          <button
+            type="button"
+            onClick={isPaused ? resumeTimer : pauseTimer}
+            className="inline-flex h-8 w-8 items-center justify-center rounded border text-[11px]"
+            aria-label={isPaused ? "Продолжить таймер" : "Пауза"}
+            title={isPaused ? "Продолжить" : "Пауза"}
+          >
+            {isPaused ? "▶" : "❚❚"}
+          </button>
+          <button
+            type="button"
+            onClick={stopTimer}
+            className="inline-flex h-8 w-8 items-center justify-center rounded border text-[11px]"
+            aria-label="Сбросить таймер"
+            title="Сбросить"
+          >
+            ■
           </button>
         </div>
       ) : (

@@ -1,19 +1,37 @@
 import { NextResponse } from "next/server";
+import { getCurrentUserId } from "@/lib/current-user";
 import { startOfLocalDay } from "@/lib/date";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   try {
+    const userId = await getCurrentUserId();
     const today = startOfLocalDay(new Date());
 
     const [totalCards, dueToday, logs] = await Promise.all([
-      prisma.card.count(),
+      prisma.card.count({
+        where: {
+          deck: { userId }
+        }
+      }),
       prisma.reviewState.count({
         where: {
+          card: {
+            deck: {
+              userId
+            }
+          },
           dueDate: { lte: today }
         }
       }),
       prisma.reviewLog.findMany({
+        where: {
+          card: {
+            deck: {
+              userId
+            }
+          }
+        },
         orderBy: { reviewedAt: "desc" },
         select: { cardId: true, rating: true, reviewedAt: true }
       })

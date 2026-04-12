@@ -5,6 +5,7 @@ export type StudyTimerState = {
   endAt: number;
   startedAt: number;
   durationMin: number;
+  pausedAt?: number | null;
 };
 
 export function readStudyTimerState(): StudyTimerState | null {
@@ -23,7 +24,8 @@ export function readStudyTimerState(): StudyTimerState | null {
     return {
       endAt: parsed.endAt,
       startedAt: parsed.startedAt,
-      durationMin: parsed.durationMin
+      durationMin: parsed.durationMin,
+      pausedAt: typeof parsed.pausedAt === "number" ? parsed.pausedAt : null
     };
   } catch {
     return null;
@@ -39,4 +41,3 @@ export function writeStudyTimerState(state: StudyTimerState | null): void {
   }
   window.dispatchEvent(new Event(STUDY_TIMER_EVENT));
 }
-

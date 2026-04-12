@@ -1,0 +1,63 @@
+<svg width="1400" height="900" viewBox="0 0 1400 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1400" height="900" fill="#F8FAFC"/>
+
+  <text x="120" y="94" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="600">
+    Вариант: вертикальный список действий
+  </text>
+  <text x="120" y="130" fill="#64748B" font-family="Inter, Arial, sans-serif" font-size="18">
+    Одна строка = одно действие. Слева смысл, справа статус или быстрый запуск.
+  </text>
+
+  <rect x="120" y="186" width="1160" height="108" rx="28" fill="#FFFFFF"/>
+  <rect x="120" y="186" width="1160" height="108" rx="28" stroke="#E5E7EB"/>
+  <text x="160" y="240" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="600">
+    Пора повторить
+  </text>
+  <text x="160" y="270" fill="#64748B" font-family="Inter, Arial, sans-serif" font-size="17">
+    Интервальное повторение карточек на сегодня
+  </text>
+  <rect x="1112" y="216" width="128" height="48" rx="16" fill="#059669"/>
+  <text x="1176" y="247" text-anchor="middle" fill="white" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700">
+    24
+  </text>
+
+  <rect x="120" y="318" width="1160" height="108" rx="28" fill="#FFFFFF"/>
+  <rect x="120" y="318" width="1160" height="108" rx="28" stroke="#E5E7EB"/>
+  <text x="160" y="372" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="600">
+    Создать карточки с AI
+  </text>
+  <text x="160" y="402" fill="#64748B" font-family="Inter, Arial, sans-serif" font-size="17">
+    Сгенерировать содержательные карточки из списка слов
+  </text>
+  <rect x="1080" y="348" width="160" height="48" rx="16" fill="#2563EB"/>
+  <text x="1160" y="379" text-anchor="middle" fill="white" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="600">
+    Открыть
+  </text>
+
+  <rect x="120" y="450" width="1160" height="108" rx="28" fill="#FFFFFF"/>
+  <rect x="120" y="450" width="1160" height="108" rx="28" stroke="#E5E7EB"/>
+  <text x="160" y="504" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="600">
+    Таймер
+  </text>
+  <text x="160" y="534" fill="#64748B" font-family="Inter, Arial, sans-serif" font-size="17">
+    Время на текущую учебную сессию
+  </text>
+  <rect x="1080" y="480" width="160" height="48" rx="16" fill="#F3F4F6"/>
+  <rect x="1080" y="480" width="160" height="48" rx="16" stroke="#E5E7EB"/>
+  <text x="1160" y="511" text-anchor="middle" fill="#111827" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="600">
+    15 мин
+  </text>
+
+  <rect x="120" y="582" width="1160" height="108" rx="28" fill="#FFFFFF"/>
+  <rect x="120" y="582" width="1160" height="108" rx="28" stroke="#E5E7EB"/>
+  <text x="160" y="636" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="600">
+    Повторение всех колод
+  </text>
+  <text x="160" y="666" fill="#64748B" font-family="Inter, Arial, sans-serif" font-size="17">
+    Одна общая сессия по всем доступным карточкам
+  </text>
+  <rect x="1080" y="612" width="160" height="48" rx="16" fill="#E5E7EB"/>
+  <text x="1160" y="643" text-anchor="middle" fill="#111827" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="600">
+    Старт
+  </text>
+</svg>

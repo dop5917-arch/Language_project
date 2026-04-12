@@ -1,5 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
+import { getCurrentUserId } from "@/lib/current-user";
+import { prisma } from "@/lib/prisma";
 import { importCardsFromCsvText } from "@/lib/import-csv";
 import { buildPublicUrl } from "@/lib/request-url";
 
@@ -8,6 +10,7 @@ type Context = {
 };
 
 export async function POST(req: NextRequest, { params }: Context) {
+  const userId = await getCurrentUserId();
   const formData = await req.formData();
   const file = formData.get("file");
   const csvTextInput = formData.get("csvText");
@@ -22,6 +25,14 @@ export async function POST(req: NextRequest, { params }: Context) {
   const url = buildPublicUrl(req, `/decks/${params.deckId}/import`);
 
   try {
+    const deck = await prisma.deck.findFirst({
+      where: { id: params.deckId, userId },
+      select: { id: true }
+    });
+    if (!deck) {
+      throw new Error("Deck not found");
+    }
+
     if (!csvText.trim()) {
       throw new Error("Provide a CSV file or paste CSV text");
     }

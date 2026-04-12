@@ -1,0 +1,15 @@
+<svg width="980" height="300" viewBox="0 0 980 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="980" height="300" rx="28" fill="#F8FAFC"/>
+  <text x="64" y="46" fill="#64748B" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="600">
+    Вариант 2. AI ближе к слову, как технологический бейдж
+  </text>
+  <g transform="translate(110 110)">
+    <circle cx="104" cy="2" r="18" fill="#2563EB"/>
+    <text x="104" y="8" text-anchor="middle" fill="white" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700">
+      AI
+    </text>
+    <text x="0" y="56" fill="#111111" font-family="Inter, Arial, sans-serif" font-size="66" font-weight="700" letter-spacing="-2">
+      SmartCards
+    </text>
+  </g>
+</svg>

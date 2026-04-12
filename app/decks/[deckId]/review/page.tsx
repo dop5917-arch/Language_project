@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import ReviewClient from "@/components/ReviewClient";
+import { getCurrentUserId } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
 import { getDueOnlyQueue, getNewOnlyQueue, getTodayQueue } from "@/lib/srs";
 import { normalizeDueLimit, REVIEW_DUE_LIMIT_COOKIE } from "@/lib/review-settings";
@@ -20,7 +21,8 @@ type Props = {
 export const dynamic = "force-dynamic";
 
 export default async function ReviewPage({ params, searchParams }: Props) {
-  const deck = await prisma.deck.findUnique({ where: { id: params.deckId } });
+  const userId = await getCurrentUserId();
+  const deck = await prisma.deck.findFirst({ where: { id: params.deckId, userId } });
   if (!deck) notFound();
 
   const newLimit = Math.max(1, Math.min(100, Number(searchParams?.newLimit ?? 20) || 20));

@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import { getCurrentUserId } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
 import { addDaysLocal, startOfLocalDay } from "@/lib/date";
 
@@ -230,9 +231,11 @@ export async function getNewOnlyQueue(deckId: string): Promise<QueueItem[]> {
 
 export async function getGlobalTodayQueue(date: Date, newLimit: number, dueLimit: number): Promise<QueueItem[]> {
   const today = startOfLocalDay(date);
+  const userId = await getCurrentUserId();
 
   const dueCards = await prisma.card.findMany({
     where: {
+      deck: { userId },
       reviewState: {
         is: {
           dueDate: {
@@ -250,6 +253,7 @@ export async function getGlobalTodayQueue(date: Date, newLimit: number, dueLimit
 
   const newCards = await prisma.card.findMany({
     where: {
+      deck: { userId },
       reviewState: { is: null }
     },
     orderBy: { createdAt: "asc" },
@@ -303,9 +307,11 @@ export async function getGlobalTodayQueue(date: Date, newLimit: number, dueLimit
 
 export async function getGlobalDueQueue(date: Date, dueLimit: number): Promise<QueueItem[]> {
   const today = startOfLocalDay(date);
+  const userId = await getCurrentUserId();
 
   const dueCards = await prisma.card.findMany({
     where: {
+      deck: { userId },
       reviewState: {
         is: {
           dueDate: {
@@ -349,7 +355,11 @@ export async function getGlobalDueQueue(date: Date, dueLimit: number): Promise<Q
 }
 
 export async function getGlobalFullQueue(): Promise<QueueItem[]> {
+  const userId = await getCurrentUserId();
   const cards = await prisma.card.findMany({
+    where: {
+      deck: { userId }
+    },
     include: { reviewState: true },
     orderBy: [{ createdAt: "asc" }]
   });

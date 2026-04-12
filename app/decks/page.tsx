@@ -1,7 +1,7 @@
 import DecksHeaderCreateButton from "@/components/DecksHeaderCreateButton";
 import DeckCard from "@/components/DeckCard";
 import HomeActionPanel from "@/components/HomeActionPanel";
-import InfoPanel from "@/components/InfoPanel";
+import { getCurrentUserId } from "@/lib/current-user";
 import { startOfLocalDay } from "@/lib/date";
 import { prisma } from "@/lib/prisma";
 
@@ -15,8 +15,10 @@ export default async function DecksPage() {
   let dbError: string | null = null;
 
   try {
+    const userId = await getCurrentUserId();
     [decks, dueToday, logsWithDeck] = await Promise.all([
       prisma.deck.findMany({
+        where: { userId },
         include: {
           _count: {
             select: { cards: true }
@@ -41,10 +43,22 @@ export default async function DecksPage() {
       }),
       prisma.reviewState.count({
         where: {
+          card: {
+            deck: {
+              userId
+            }
+          },
           dueDate: { lte: today }
         }
       }),
       prisma.reviewLog.findMany({
+        where: {
+          card: {
+            deck: {
+              userId
+            }
+          }
+        },
         orderBy: { reviewedAt: "desc" },
         select: {
           rating: true,
@@ -76,72 +90,66 @@ export default async function DecksPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-5">
-      {dbError ? (
-        <section className="rounded-xl border border-[#E5E7EB] bg-[#FEF2F2] p-4 text-sm text-[#EF4444]">
-          База данных временно недоступна. Проверь подключение к интернету и `DATABASE_URL` (Neon), затем обнови страницу.
-        </section>
-      ) : null}
-      {!dbError ? (
-        <HomeActionPanel
-          dueToday={dueToday}
-          aiDeckOptions={decks.map((deck) => ({ id: deck.id, name: deck.name }))}
-        />
-      ) : null}
-      {!dbError ? <InfoPanel /> : null}
+    <div className="mx-auto flex min-h-[calc(100vh-112px)] w-full max-w-5xl flex-col">
+      <div className="flex-1 space-y-5">
+        {dbError ? (
+          <section className="rounded-xl border border-[#E5E7EB] bg-[#FEF2F2] p-4 text-sm text-[#EF4444]">
+            База данных временно недоступна. Проверь подключение к интернету и `DATABASE_URL` (Neon), затем обнови страницу.
+          </section>
+        ) : null}
+        {!dbError ? (
+          <HomeActionPanel dueToday={dueToday} />
+        ) : null}
+        <div className="space-y-4">
+          <section className="px-1">
+            <div className="flex items-center">
+              <DecksHeaderCreateButton />
+            </div>
+          </section>
 
-      <div className="space-y-4">
-        <section className="px-1">
-          <div className="flex items-center gap-2">
-            <span className="rounded-lg border border-[#E5E7EB] bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-[#111111]">
-              Колоды
-            </span>
-            <DecksHeaderCreateButton />
-          </div>
-        </section>
+          <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {decks.length === 0 ? (
+              <p className="text-sm text-slate-600">No decks yet.</p>
+            ) : (
+              decks.map((deck) => {
+                const rememberedCount = deck.cards.filter((card: any) => card.reviewLogs[0]?.rating === "Easy").length;
+                const passedCount = deck.cards.filter((card: any) => card.reviewLogs.length > 0).length;
+                const dueCount = deck.cards.filter(
+                  (card: any) => card.reviewState?.dueDate && card.reviewState.dueDate <= today
+                ).length;
+                const progressPercent =
+                  deck._count.cards > 0 ? Math.round((rememberedCount / deck._count.cards) * 100) : 0;
 
-        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {decks.length === 0 ? (
-            <p className="text-sm text-slate-600">No decks yet.</p>
-          ) : (
-            decks.map((deck) => {
-              const rememberedCount = deck.cards.filter((card: any) => card.reviewLogs[0]?.rating === "Easy").length;
-              const passedCount = deck.cards.filter((card: any) => card.reviewLogs.length > 0).length;
-              const dueCount = deck.cards.filter(
-                (card: any) => card.reviewState?.dueDate && card.reviewState.dueDate <= today
-              ).length;
-              const progressPercent =
-                deck._count.cards > 0 ? Math.round((rememberedCount / deck._count.cards) * 100) : 0;
-
-              return (
-                <DeckCard
-                  key={deck.id}
-                  deckId={deck.id}
-                  initialName={deck.name}
-                  createdAt={deck.createdAt.toISOString()}
-                  lastActivityAt={deckLastActivity.get(deck.id)?.toISOString() ?? null}
-                  accuracyPercent={
-                    (deckAccuracy.get(deck.id)?.total ?? 0) > 0
-                      ? Math.round(
-                          ((deckAccuracy.get(deck.id)?.success ?? 0) /
-                            (deckAccuracy.get(deck.id)?.total ?? 1)) *
-                            100
-                        )
-                      : null
-                  }
-                  cardsCount={deck._count.cards}
-                  passedCount={passedCount}
-                  rememberedCount={rememberedCount}
-                  dueCount={dueCount}
-                  progressPercent={progressPercent}
-                />
-              );
-            })
-          )}
-        </section>
+                return (
+                  <DeckCard
+                    key={deck.id}
+                    deckId={deck.id}
+                    initialName={deck.name}
+                    createdAt={deck.createdAt.toISOString()}
+                    lastActivityAt={deckLastActivity.get(deck.id)?.toISOString() ?? null}
+                    accuracyPercent={
+                      (deckAccuracy.get(deck.id)?.total ?? 0) > 0
+                        ? Math.round(
+                            ((deckAccuracy.get(deck.id)?.success ?? 0) /
+                              (deckAccuracy.get(deck.id)?.total ?? 1)) *
+                              100
+                          )
+                        : null
+                    }
+                    cardsCount={deck._count.cards}
+                    passedCount={passedCount}
+                    rememberedCount={rememberedCount}
+                    dueCount={dueCount}
+                    progressPercent={progressPercent}
+                  />
+                );
+              })
+            )}
+          </section>
+        </div>
       </div>
 
-      <footer className="px-1 pb-2 pt-1 text-[12px] text-[#94A3B8]">
+      <footer className="px-1 pb-2 pt-10 text-[12px] text-[#94A3B8]">
         <span>Обратная связь: </span>
         <a
           href="mailto:pavlovsckydmitry@yandex.ru"

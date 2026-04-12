@@ -1,0 +1,58 @@
+<svg width="1500" height="520" viewBox="0 0 1500 520" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1500" height="520" fill="#F8FAFC"/>
+
+  <text x="120" y="88" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="600">
+    Вариант: действия в одну строку
+  </text>
+  <text x="120" y="122" fill="#64748B" font-family="Inter, Arial, sans-serif" font-size="18">
+    Горизонтальные разделы, ближе к навигации сайта, чем к карточкам.
+  </text>
+
+  <rect x="120" y="176" width="1260" height="88" rx="22" fill="#FFFFFF"/>
+  <rect x="120" y="176" width="1260" height="88" rx="22" stroke="#E5E7EB"/>
+
+  <rect x="136" y="192" width="292" height="56" rx="16" fill="#ECFDF5"/>
+  <text x="164" y="226" fill="#059669" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="600">
+    Пора повторить
+  </text>
+  <text x="398" y="226" text-anchor="end" fill="#059669" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="700">
+    24
+  </text>
+
+  <line x1="456" y1="194" x2="456" y2="246" stroke="#E5E7EB"/>
+  <text x="486" y="226" fill="#2563EB" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="600">
+    Создать карточки с AI
+  </text>
+  <text x="772" y="226" text-anchor="end" fill="#2563EB" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="600">
+    Открыть
+  </text>
+
+  <line x1="800" y1="194" x2="800" y2="246" stroke="#E5E7EB"/>
+  <text x="830" y="226" fill="#111827" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="600">
+    Таймер
+  </text>
+  <text x="1030" y="226" text-anchor="end" fill="#111827" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="600">
+    15 мин
+  </text>
+
+  <line x1="1058" y1="194" x2="1058" y2="246" stroke="#E5E7EB"/>
+  <text x="1088" y="226" fill="#111827" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="600">
+    Повторение всех колод
+  </text>
+  <text x="1348" y="226" text-anchor="end" fill="#111827" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="600">
+    Старт
+  </text>
+
+  <text x="120" y="340" fill="#64748B" font-family="Inter, Arial, sans-serif" font-size="18">
+    Сильные стороны такого варианта:
+  </text>
+  <text x="150" y="380" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="18">
+    • всё компактно и в одном уровне
+  </text>
+  <text x="150" y="414" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="18">
+    • не выглядит как четыре большие карточки
+  </text>
+  <text x="150" y="448" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="18">
+    • легко превратить в адаптивную строку или перенос в два ряда
+  </text>
+</svg>

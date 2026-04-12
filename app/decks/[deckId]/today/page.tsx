@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
+import { getCurrentUserId } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
 import { formatLocalDate, startOfLocalDay } from "@/lib/date";
 import { normalizeDueLimit, REVIEW_DUE_LIMIT_COOKIE } from "@/lib/review-settings";
@@ -13,7 +14,8 @@ type Props = {
 export const dynamic = "force-dynamic";
 
 export default async function TodayPage({ params, searchParams }: Props) {
-  const deck = await prisma.deck.findUnique({ where: { id: params.deckId } });
+  const userId = await getCurrentUserId();
+  const deck = await prisma.deck.findFirst({ where: { id: params.deckId, userId } });
   if (!deck) notFound();
 
   const today = startOfLocalDay(new Date());
@@ -25,19 +27,20 @@ export default async function TodayPage({ params, searchParams }: Props) {
   const [dueCount, newCount, nextDueReview] = await Promise.all([
     prisma.reviewState.count({
       where: {
-        card: { deckId: deck.id },
+        card: { deckId: deck.id, deck: { userId } },
         dueDate: { lte: today }
       }
     }),
     prisma.card.count({
       where: {
         deckId: deck.id,
+        deck: { userId },
         reviewState: { is: null }
       }
     }),
     prisma.reviewState.findFirst({
       where: {
-        card: { deckId: deck.id },
+        card: { deckId: deck.id, deck: { userId } },
         dueDate: { gt: today }
       },
       orderBy: { dueDate: "asc" },

@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "AICards",
-    short_name: "AICards",
+    name: "SmartCards",
+    short_name: "SmartCards",
     description: "Умные карточки для изучения слов в контексте",
     start_url: "/decks",
     display: "standalone",

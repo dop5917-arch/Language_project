@@ -32,6 +32,7 @@ type WhyResponse = {
 
 type WordCard = {
   word: string;
+  targetMeaning?: string;
   ruMeaningOptions: string[];
   selectedRuMeaning: string[];
   definitionOptions: string[];
@@ -58,6 +59,11 @@ type WordCard = {
   error?: string;
 };
 
+type WordInputItem = {
+  word: string;
+  targetMeaning?: string;
+};
+
 type TranslateResponse = {
   translation?: string;
   error?: string;
@@ -65,6 +71,9 @@ type TranslateResponse = {
 
 type AiCardPayload = {
   word: string;
+  phonetic_ipa?: string;
+  phonetic?: string;
+  transcription?: string;
   front_sentence?: string;
   front_hint?: string;
   definition_en_main?: string;
@@ -143,9 +152,15 @@ function mapStudyLevelToCardLevel(level: StudyLevel): number {
   return 2;
 }
 
-function buildExternalAiPrompt(words: string[], level: StudyLevel): string {
-  const wordsList = words.join(", ");
-  const wordsBlock = words.map((word, index) => `${index + 1}. ${word}`).join("\n");
+function buildExternalAiPrompt(words: WordInputItem[], level: StudyLevel): string {
+  const wordsList = words
+    .map((item) => (item.targetMeaning ? `${item.word} (${item.targetMeaning})` : item.word))
+    .join(", ");
+  const wordsBlock = words
+    .map((item, index) =>
+      `${index + 1}. ${item.targetMeaning ? `${item.word} (${item.targetMeaning})` : item.word}`
+    )
+    .join("\n");
   const levelConfig = getLevelPromptConfig(level);
   return `You are creating production-ready English vocabulary flashcards for a learner app.
 
@@ -164,12 +179,17 @@ Critical requirement:
 - If a word has a typo, autocorrect it and continue.
 - If autocorrection confidence is low, still return the best probable correction and continue.
 - You are NOT allowed to return fewer cards silently.
+- If an input item contains a Russian hint in parentheses, treat it as the target meaning.
+- Example: "charge (плата)" means the card must be built for the meaning "fee/payment", not for other senses like "attack" or "accusation".
+- If a Russian hint in parentheses is present, use that meaning as the main sense and keep additional Russian meanings close to that sense only.
 
 Task for each target word/item:
 1) Pick ONE best front sentence (natural, common, recognizable, real-life).
-2) Add a useful front hint that explains why this word fits this sentence.
+2) Add a short indirect clue from the situation for the front side.
 3) Provide ONE main learner-friendly English definition.
-4) Provide 4-7 common Russian meanings (popular + context-applicable, not one).
+4) Provide 4-7 common Russian meanings.
+   - If no target meaning is given, use the most popular meaning first and then other common meanings.
+   - If a target meaning in parentheses is given, use that meaning first and include only close, context-compatible Russian meanings.
 5) Provide ONE second example sentence for back side (different scene from front).
 6) Add a short "why this word here" explanation. This should match the front hint logic.
 7) Add simple synonyms:
@@ -190,6 +210,10 @@ Task for each target word/item:
    - field: "usage_domain"
    - one short label or 1-3 short labels
    - examples: everyday, work, business, travel, emotions, relationships, psychology, home, news
+11) Add IPA transcription:
+   - field: "phonetic_ipa"
+   - return standard IPA for the target word
+   - example: "/ˈwɪspər/"
 
 Target words:
 ${wordsList || "(no words provided)"}
@@ -203,18 +227,25 @@ Quality rules:
 - Back sentence must be a different context from front
 - No school-style meta language
 - Never mention: English, word, vocabulary, dictionary, translate, translation, learn, study, language, grammar
+- "front_hint" must be a short indirect clue from the situation
 - "front_hint" must be short (6-14 words), concrete, and context-based
-- "front_hint" should explain the role of the word in this exact sentence
-- "front_hint" must be a clue only, NOT a direct definition
-- "front_hint" must help guess the word from situation/context
-- Do not start with "means", "is", "to + verb definition", or dictionary phrasing
+- "front_hint" must describe the situation, role, intention, effect, or scene
+- "front_hint" must help guess the word indirectly from context
+- "front_hint" must NOT be a direct definition
+- do not define the word
+- do not explain the word in dictionary style
+- do not start with "means", "is", "to ...", "someone who", "something that"
 - "front_hint" should NOT repeat the definition text
 - avoid vague hints like "common word", "real conversation", "everyday use"
 - bad hint example: "heard this in real conversation yesterday"
 - bad hint example: "to speak very quietly" (this is a definition)
+- bad hint example: "a tool for rain" (still too close to definition)
 - good hint example: "he speaks quietly so other people cannot hear him"
 - good hint example: "very quiet voice so others nearby miss it"
+- good hint example: "you grab this when rain suddenly starts"
+- good hint example: "not amazing, but good enough for this situation"
 - "definition_en_main" should be the most common meaning for learners
+- if a target meaning in parentheses is provided, "definition_en_main" must match that target meaning
 - "ru_meanings" must contain several meanings, ordered by relevance for this context
 - include only common and actually used Russian meanings (no rare/obsolete senses)
 - "why_this_word_here" must be short (6-12 words), contextual, not dictionary-like
@@ -234,7 +265,7 @@ Return strict JSON only in this shape:
     {
       "word": "whisper",
       "front_sentence": "He whispered my name so nobody else could hear.",
-      "front_hint": "very quiet speech so others cannot hear",
+      "front_hint": "he says it so quietly others barely hear it",
       "definition_en_main": "to speak very quietly so only nearby people hear",
       "ru_meanings": ["шептать", "прошептать", "говорить шепотом"],
       "back_sentence": "She whispered the address while they stood near the door.",
@@ -242,7 +273,8 @@ Return strict JSON only in this shape:
       "synonyms": ["murmur", "speak softly"],
       "emoji_cue": ["🤫", "👂"],
       "frequency": 4,
-      "usage_domain": ["everyday", "conversation"]
+      "usage_domain": ["everyday", "conversation"],
+      "phonetic_ipa": "/ˈwɪspər/"
     }
   ],
   "report": {
@@ -383,14 +415,25 @@ function normalizeText(value: string): string {
   return value.trim().replace(/\s+/g, " ");
 }
 
-function parseWords(text: string): string[] {
+function parseWords(text: string): WordInputItem[] {
   const latinPhraseRe = /[A-Za-z]+(?:'[A-Za-z]+)?(?:[ -][A-Za-z]+(?:'[A-Za-z]+)?){0,4}/g;
-  const raw: string[] = [];
+  const raw: WordInputItem[] = [];
+  const lineMeaningRe = /^\s*([A-Za-z][A-Za-z' -]{0,80})\s*\(([^)]+)\)\s*$/;
 
   const lines = text.split(/\r?\n/g);
   for (const line of lines) {
     const trimmedLine = line.trim();
     if (!trimmedLine) continue;
+
+    const withMeaning = trimmedLine.match(lineMeaningRe);
+    if (withMeaning) {
+      const normalizedWord = normalizeWord(withMeaning[1]);
+      const targetMeaning = normalizeText(withMeaning[2]);
+      if (normalizedWord && /^[a-z][a-z' -]*$/.test(normalizedWord)) {
+        raw.push({ word: normalizedWord, targetMeaning: targetMeaning || undefined });
+        continue;
+      }
+    }
 
     // Typical bilingual formats:
     // "manipulation — манипуляция", "манипуляция - manipulation", "word: перевод"
@@ -404,18 +447,18 @@ function parseWords(text: string): string[] {
       const matches = segment.match(latinPhraseRe) ?? [];
       for (const match of matches) {
         const normalized = normalizeWord(match);
-        if (normalized) raw.push(normalized);
+        if (normalized) raw.push({ word: normalized });
       }
     }
   }
 
-  const unique: string[] = [];
+  const unique: WordInputItem[] = [];
   const seen = new Set<string>();
-  for (const word of raw) {
-    if (!/^[a-z][a-z' -]*$/.test(word)) continue;
-    if (seen.has(word)) continue;
-    seen.add(word);
-    unique.push(word);
+  for (const item of raw) {
+    if (!/^[a-z][a-z' -]*$/.test(item.word)) continue;
+    if (seen.has(item.word)) continue;
+    seen.add(item.word);
+    unique.push(item);
   }
   return unique.slice(0, 100);
 }
@@ -510,7 +553,7 @@ function detectEnglishColumn(rows: string[][]): number {
   return bestCol;
 }
 
-function extractWordsFromDetectedColumn(rows: string[][], columnIndex: number): string[] {
+function extractWordsFromDetectedColumn(rows: string[][], columnIndex: number): WordInputItem[] {
   const values: string[] = [];
   for (let i = 0; i < rows.length; i += 1) {
     const raw = (rows[i]?.[columnIndex] ?? "").trim();
@@ -537,9 +580,10 @@ function similarity(a: string, b: string): number {
   return same / Math.max(Math.min(aSet.size, bSet.size), 1);
 }
 
-function createWordCard(word: string): WordCard {
+function createWordCard(word: string, targetMeaning?: string): WordCard {
   return {
     word,
+    targetMeaning,
     ruMeaningOptions: [],
     selectedRuMeaning: [],
     definitionOptions: [],
@@ -578,7 +622,10 @@ export default function SmartAddClient({ deckId }: Props) {
   const [selectedDuplicateIds, setSelectedDuplicateIds] = useState<string[]>([]);
   const [deletingDuplicates, setDeletingDuplicates] = useState(false);
 
-  const aiWords = useMemo(() => cards.map((card) => card.word), [cards]);
+  const aiWords = useMemo(
+    () => cards.map((card) => ({ word: card.word, targetMeaning: card.targetMeaning })),
+    [cards]
+  );
   const aiPrompt = useMemo(() => buildExternalAiPrompt(aiWords, studyLevel), [aiWords, studyLevel]);
 
   function updateCard(word: string, updater: (prev: WordCard) => WordCard) {
@@ -591,7 +638,7 @@ export default function SmartAddClient({ deckId }: Props) {
       setGlobalError("Добавь хотя бы одно английское слово");
       return;
     }
-    setCards(words.map((word) => createWordCard(word)));
+    setCards(words.map((item) => createWordCard(item.word, item.targetMeaning)));
     setDuplicateGroups([]);
     setSelectedDuplicateIds([]);
     setGlobalError(null);
@@ -714,7 +761,13 @@ export default function SmartAddClient({ deckId }: Props) {
           continue;
         }
 
+        const transcription = normalizeText(
+          item.phonetic_ipa ?? item.phonetic ?? item.transcription ?? ""
+        );
         const backLines = [`Word: ${item.word}`, `Definition (EN): ${definition}`];
+        if (transcription) {
+          backLines.push(`Transcription: ${transcription}`);
+        }
         if (ruMeanings.length > 0) {
           backLines.push(`RU meanings: ${ruMeanings.join(" | ")}`);
         }
@@ -760,7 +813,7 @@ export default function SmartAddClient({ deckId }: Props) {
               frontText: front,
               backText,
               targetWord: item.word,
-              phonetic: "",
+              phonetic: transcription,
               audioUrl: "",
               imageUrl: "",
               tags: `smart-add,vocab,${item.word}`,
@@ -861,8 +914,10 @@ export default function SmartAddClient({ deckId }: Props) {
       if (words.length === 0) {
         throw new Error("No English words found in file");
       }
-      setWordInput(words.join("\n"));
-      setCards(words.map((word) => createWordCard(word)));
+      setWordInput(
+        words.map((item) => (item.targetMeaning ? `${item.word} (${item.targetMeaning})` : item.word)).join("\n")
+      );
+      setCards(words.map((item) => createWordCard(item.word, item.targetMeaning)));
       setDuplicateGroups([]);
       setSelectedDuplicateIds([]);
       setGlobalSuccess(`Loaded ${words.length} words`);
@@ -910,12 +965,17 @@ export default function SmartAddClient({ deckId }: Props) {
         <p className="mt-1 text-sm text-slate-600">
           Введи одно слово или вставь список слов (каждое с новой строки).
         </p>
+        <p className="mt-1 text-sm text-slate-500">
+          AI формирует карточку по самому популярному значению слова. Если нужно учить слово в определённом значении, укажи нужный перевод в скобках после слова. Пример:
+          {" "}
+          <span className="font-medium text-slate-700">charge (плата)</span>
+        </p>
         <textarea
           value={wordInput}
           onChange={(e) => setWordInput(e.target.value)}
           rows={5}
           className="mt-3 w-full rounded border px-3 py-2"
-          placeholder={"whisper\nborrow\numbrella\nstubborn"}
+          placeholder={"whisper\ncharge (плата)\numbrella\nstubborn"}
         />
         <div className="mt-3">
           <label className="mb-1 block text-sm font-medium">Импорт из файла (.csv/.txt)</label>
@@ -948,9 +1008,9 @@ export default function SmartAddClient({ deckId }: Props) {
           <div className="mt-3 rounded border bg-slate-50 p-3">
             <p className="mb-2 text-xs uppercase tracking-wide text-slate-500">Слова для карточек</p>
             <div className="flex flex-wrap gap-2">
-              {aiWords.map((word) => (
-                <span key={`ai-word-${word}`} className="rounded border bg-white px-2 py-1 text-sm">
-                  {word}
+              {aiWords.map((item) => (
+                <span key={`ai-word-${item.word}`} className="rounded border bg-white px-2 py-1 text-sm">
+                  {item.targetMeaning ? `${item.word} (${item.targetMeaning})` : item.word}
                 </span>
               ))}
             </div>

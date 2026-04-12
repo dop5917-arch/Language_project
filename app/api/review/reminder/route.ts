@@ -1,22 +1,31 @@
 import { NextResponse } from "next/server";
+import { getCurrentUserId } from "@/lib/current-user";
 import { startOfLocalDay } from "@/lib/date";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   try {
+    const userId = await getCurrentUserId();
     const today = startOfLocalDay(new Date());
     const [dueTotal, newTotal, decks] = await Promise.all([
       prisma.reviewState.count({
         where: {
+          card: {
+            deck: {
+              userId
+            }
+          },
           dueDate: { lte: today }
         }
       }),
       prisma.card.count({
         where: {
+          deck: { userId },
           reviewState: { is: null }
         }
       }),
       prisma.deck.findMany({
+        where: { userId },
         select: {
           id: true,
           name: true,
@@ -59,4 +68,3 @@ export async function GET() {
     );
   }
 }
-

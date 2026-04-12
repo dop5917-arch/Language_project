@@ -154,7 +154,7 @@ export default function DeckCard({
           <Link
             href={`/decks/${deckId}/review-all?resume=1`}
             onClick={touchDeck}
-            className="rounded-xl bg-[#111111] px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:opacity-90"
+            className="rounded-xl bg-[#059669] px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-[#047857]"
             aria-label="Продолжить повторение"
             title="Продолжить повторение"
           >

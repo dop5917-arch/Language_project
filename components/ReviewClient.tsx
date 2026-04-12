@@ -10,7 +10,6 @@ type QueueCard = {
   deckName?: string;
   targetWord?: string | null;
   phonetic?: string | null;
-  audioUrl?: string | null;
   frontText: string;
   backText: string;
   imageUrl: string | null;
@@ -108,50 +107,10 @@ export default function ReviewClient({
   const [meaningData, setMeaningData] = useState<WordMeaningResponse | null>(null);
   const [meaningCache, setMeaningCache] = useState<Record<string, WordMeaningResponse>>({});
   const [mounted, setMounted] = useState(false);
-  const [autoPronounce, setAutoPronounce] = useState(true);
-
-  function pronounceCurrentWord(card: QueueCard) {
-    if (typeof window === "undefined") return;
-    const word = (card.targetWord ?? "").trim() || resolveStudyWord(card);
-    if (!word) return;
-
-    if (card.audioUrl) {
-      const audio = new Audio(card.audioUrl);
-      audio.play().catch(() => {
-        if (!("speechSynthesis" in window)) return;
-        const utterance = new SpeechSynthesisUtterance(word);
-        utterance.lang = "en-US";
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(utterance);
-      });
-      return;
-    }
-
-    if (!("speechSynthesis" in window)) return;
-    const utterance = new SpeechSynthesisUtterance(word);
-    utterance.lang = "en-US";
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
-  }
 
   useEffect(() => {
     setMounted(true);
-    try {
-      const saved = window.localStorage.getItem("review:auto-pronounce:v1");
-      if (saved === "0") setAutoPronounce(false);
-    } catch {
-      // ignore
-    }
   }, []);
-
-  useEffect(() => {
-    if (!mounted) return;
-    try {
-      window.localStorage.setItem("review:auto-pronounce:v1", autoPronounce ? "1" : "0");
-    } catch {
-      // ignore
-    }
-  }, [autoPronounce, mounted]);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -198,13 +157,6 @@ export default function ReviewClient({
   const finalLabel = returnLabel ?? "На главную";
   const isAgainHelpOpenForCurrent = Boolean(againHelp && current && againHelp.card.id === current.id);
   const progressStorageKey = `review-progress:${sessionKey ?? deckId}`;
-
-  useEffect(() => {
-    if (!mounted || !autoPronounce || !current) return;
-    pronounceCurrentWord(current);
-    // pronounce only on card change / setting switch
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current?.id, autoPronounce, mounted]);
 
   useEffect(() => {
     if (!enableResume || !mounted) return;
@@ -460,20 +412,12 @@ export default function ReviewClient({
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3">
-          <CollapsibleResultList title="Вспомнил" items={remembered} />
           <CollapsibleResultList title="Не вспомнил" items={notRemembered} />
           <CollapsibleResultList title="Пропустил" items={skipped} />
+          <CollapsibleResultList title="Вспомнил" items={remembered} />
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={startRetryAllSession}
-            disabled={uniqueLatestResults.length === 0}
-            className="rounded-xl bg-[#F59E0B] px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#D97706] disabled:opacity-50"
-          >
-            Повторить все
-          </button>
           <button
             type="button"
             onClick={() => startRetrySession("Again")}
@@ -489,6 +433,14 @@ export default function ReviewClient({
             className="rounded-xl bg-white px-4 py-2 text-sm font-medium text-[#0F172A] ring-1 ring-[#E5E7EB] transition-colors duration-200 hover:bg-[#F8FAFC] disabled:opacity-50"
           >
             Повторить "Пропустил"
+          </button>
+          <button
+            type="button"
+            onClick={startRetryAllSession}
+            disabled={uniqueLatestResults.length === 0}
+            className="rounded-xl bg-white px-4 py-2 text-sm font-medium text-[#0F172A] ring-1 ring-[#E5E7EB] transition-colors duration-200 hover:bg-[#F8FAFC] disabled:opacity-50"
+          >
+            Повторить все
           </button>
         </div>
 
@@ -521,14 +473,11 @@ export default function ReviewClient({
 
             <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5 shadow-[0_4px_12px_rgba(0,0,0,0.04)] sm:p-8">
 
-            {(current.targetWord || current.phonetic || current.audioUrl) ? (
-              <PronunciationBar
-                targetWord={current.targetWord ?? undefined}
-                phonetic={current.phonetic ?? undefined}
-                audioUrl={current.audioUrl ?? undefined}
-                autoPronounce={autoPronounce}
-                onToggleAutoPronounce={() => setAutoPronounce((v) => !v)}
-              />
+            {current.phonetic ? (
+              <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl bg-[#F1F5F9] px-3 py-2 text-sm text-[#0F172A]">
+                <span className="font-medium">Транскрипция:</span>
+                <span className="text-[#64748B]">{current.phonetic}</span>
+              </div>
             ) : null}
 
             <div className="mt-4 grid gap-2 md:grid-cols-[minmax(0,1fr)_150px] md:items-stretch">
@@ -550,6 +499,11 @@ export default function ReviewClient({
                     flipped ? "pointer-events-none translate-y-1 opacity-0" : "pointer-events-auto translate-y-0 opacity-100"
                   }`}
                 >
+                  {(current.phonetic || backDetails?.transcription) ? (
+                    <div className="absolute left-4 top-4 z-20 rounded-xl bg-[#F5F5F5] px-3 py-2 text-sm text-[#64748B]">
+                      {current.phonetic || backDetails?.transcription}
+                    </div>
+                  ) : null}
                   <button
                     type="button"
                     aria-label="Подсказка"
@@ -558,7 +512,7 @@ export default function ReviewClient({
                       e.stopPropagation();
                       openFrontHint();
                     }}
-                    className="absolute right-4 top-4 z-20 rounded-xl bg-[#F5F5F5] px-3 py-2 text-sm font-medium text-[#111111] transition-colors duration-150 hover:bg-[#ECECEC]"
+                    className="absolute bottom-4 left-4 z-20 rounded-xl bg-[#F5F5F5] px-3 py-2 text-sm font-medium text-[#111111] transition-colors duration-150 hover:bg-[#ECECEC] sm:bottom-6 sm:left-6"
                   >
                     Подсказка
                   </button>
@@ -593,40 +547,57 @@ export default function ReviewClient({
                   <p className="text-[clamp(1rem,2vw,1.125rem)] leading-relaxed break-words text-[#6B7280]">
                     {renderHighlightedText(backDetails?.example || buildBackContextExample(current), resolveStudyWord(current))}
                   </p>
-                  {backDetails?.synonyms && backDetails.synonyms.length > 0 ? (
-                    <div className="flex flex-wrap items-center justify-center gap-2">
-                      <span className="text-xs font-medium uppercase tracking-wide text-[#9CA3AF]">Синонимы</span>
-                      {backDetails.synonyms.map((item) => (
-                        <span
-                          key={`syn-${item}`}
-                          className="rounded-lg border border-[#E5E7EB] bg-[#F5F5F5] px-2 py-1 text-sm text-[#111111]"
-                        >
-                          {item}
-                        </span>
-                      ))}
-                    </div>
-                  ) : null}
-                  {backDetails?.emojiCue && backDetails.emojiCue.length > 0 ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <span className="text-xs font-medium uppercase tracking-wide text-[#9CA3AF]">Эмодзи</span>
-                      <span className="text-2xl">{backDetails.emojiCue.join(" ")}</span>
-                    </div>
-                  ) : null}
-                  {backDetails?.frequency || (backDetails?.usageDomain && backDetails.usageDomain.length > 0) ? (
-                    <div className="flex flex-wrap items-center justify-center gap-2">
-                      {backDetails?.frequency ? (
-                        <span className="rounded-lg border border-[#E5E7EB] bg-[#F5F5F5] px-2 py-1 text-sm text-[#111111]">
-                          Часто: {backDetails.frequency}/5
-                        </span>
+                  {backDetails?.synonyms?.length ||
+                  backDetails?.emojiCue?.length ||
+                  backDetails?.frequency ||
+                  backDetails?.usageDomain?.length ? (
+                    <div className="mx-auto w-full max-w-3xl space-y-2 text-left">
+                      {backDetails?.synonyms && backDetails.synonyms.length > 0 ? (
+                        <div className="flex items-start gap-3 rounded-xl bg-[#F5F5F5] px-4 py-3 text-sm text-[#111111]">
+                          <span className="min-w-24 text-xs font-medium uppercase tracking-wide text-[#9CA3AF]">
+                            Синонимы
+                          </span>
+                          <span className="break-words">{backDetails.synonyms.join(" • ")}</span>
+                        </div>
                       ) : null}
-                      {backDetails?.usageDomain?.map((item) => (
-                        <span
-                          key={`domain-${item}`}
-                          className="rounded-lg border border-[#E5E7EB] bg-[#F5F5F5] px-2 py-1 text-sm text-[#111111]"
-                        >
-                          {item}
-                        </span>
-                      ))}
+                      {backDetails?.emojiCue && backDetails.emojiCue.length > 0 ? (
+                        <div className="flex items-start gap-3 rounded-xl bg-[#F5F5F5] px-4 py-3 text-sm text-[#111111]">
+                          <span className="min-w-24 text-xs font-medium uppercase tracking-wide text-[#9CA3AF]">
+                            Эмодзи
+                          </span>
+                          <span className="text-2xl leading-none">{backDetails.emojiCue.join(" ")}</span>
+                        </div>
+                      ) : null}
+                      {backDetails?.frequency
+                        ? (() => {
+                            const frequency = backDetails.frequency;
+                            return (
+                              <div className="flex items-start gap-3 rounded-xl bg-[#F5F5F5] px-4 py-3 text-sm text-[#111111]">
+                                <span className="min-w-24 text-xs font-medium uppercase tracking-wide text-[#9CA3AF]">
+                                  Популярность
+                                </span>
+                                <span className="flex items-center gap-1.5">
+                                  {Array.from({ length: 5 }, (_, index) => (
+                                    <span
+                                      key={`freq-dot-${index}`}
+                                      className={`h-2.5 w-2.5 rounded-full ${
+                                        index < frequency ? "bg-[#059669]" : "bg-[#D1D5DB]"
+                                      }`}
+                                    />
+                                  ))}
+                                </span>
+                              </div>
+                            );
+                          })()
+                        : null}
+                      {backDetails?.usageDomain && backDetails.usageDomain.length > 0 ? (
+                        <div className="flex items-start gap-3 rounded-xl bg-[#F5F5F5] px-4 py-3 text-sm text-[#111111]">
+                          <span className="min-w-24 text-xs font-medium uppercase tracking-wide text-[#9CA3AF]">
+                            Сфера
+                          </span>
+                          <span className="break-words">{backDetails.usageDomain.join(" • ")}</span>
+                        </div>
+                      ) : null}
                     </div>
                   ) : null}
                 </div>
@@ -775,63 +746,33 @@ export default function ReviewClient({
   );
 }
 
-function PronunciationBar({
-  targetWord,
-  phonetic,
-  audioUrl,
-  autoPronounce,
-  onToggleAutoPronounce
-}: {
-  targetWord?: string;
-  phonetic?: string;
-  audioUrl?: string;
-  autoPronounce: boolean;
-  onToggleAutoPronounce: () => void;
-}) {
-  async function speakFallback() {
-    if (typeof window === "undefined" || !targetWord) return;
-    if (!("speechSynthesis" in window)) return;
-    const utterance = new SpeechSynthesisUtterance(targetWord);
-    utterance.lang = "en-US";
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
-  }
-
-  return (
-    <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl bg-[#F1F5F9] px-3 py-2 text-sm text-[#0F172A]">
-      {targetWord ? <span className="font-medium">Word: {targetWord}</span> : null}
-      {phonetic ? <span className="text-[#64748B]">{phonetic}</span> : null}
-      <button
-        type="button"
-        onClick={onToggleAutoPronounce}
-        className="rounded-lg bg-white px-2 py-1 text-xs text-[#0F172A] ring-1 ring-[#E5E7EB]"
-        title="Автоматически произносить слово при переходе на новую карточку"
-      >
-        {autoPronounce ? "🔊 Авто" : "🔇 Авто"}
-      </button>
-      {audioUrl ? (
-        <audio controls preload="none" src={audioUrl} className="h-8" />
-      ) : (
-        targetWord ? (
-          <button
-            type="button"
-            onClick={speakFallback}
-            className="rounded-lg bg-white px-2 py-1 text-xs text-[#0F172A] ring-1 ring-[#E5E7EB]"
-          >
-            ▶ Озвучить
-          </button>
-        ) : null
-      )}
-    </div>
-  );
-}
-
 function resolveStudyWord(card: QueueCard): string {
   return (card.targetWord?.trim() || guessStudyWord(card)).toLowerCase();
 }
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function buildWordForms(word: string): string[] {
+  const base = word.trim().toLowerCase();
+  if (!base || /\s|-/.test(base)) {
+    return [base].filter(Boolean);
+  }
+
+  const forms = new Set<string>([base, `${base}s`, `${base}ed`, `${base}ing`]);
+  if (base.endsWith("e")) {
+    forms.add(`${base}d`);
+    forms.add(`${base.slice(0, -1)}ing`);
+  }
+  if (/[sxz]$/.test(base) || /(ch|sh)$/.test(base)) {
+    forms.add(`${base}es`);
+  }
+  if (base.endsWith("y") && base.length > 1 && !/[aeiou]y$/.test(base)) {
+    forms.add(`${base.slice(0, -1)}ies`);
+    forms.add(`${base.slice(0, -1)}ied`);
+  }
+  return Array.from(forms).filter(Boolean);
 }
 
 function renderHighlightedText(
@@ -842,12 +783,17 @@ function renderHighlightedText(
   const normalized = word.trim();
   if (!normalized) return text;
 
-  const regex = new RegExp(`\\b(${escapeRegExp(normalized)})\\b`, "gi");
+  const wordForms = buildWordForms(normalized);
+  const formSet = new Set(wordForms.map((item) => item.toLowerCase()));
+  const forms = wordForms
+    .sort((a, b) => b.length - a.length)
+    .map((item) => escapeRegExp(item));
+  const regex = new RegExp(`\\b(${forms.join("|")})\\b`, "gi");
   const parts = text.split(regex);
   if (parts.length === 1) return text;
 
   return parts.map((part, index) => {
-    if (part.toLowerCase() === normalized.toLowerCase()) {
+    if (formSet.has(part.toLowerCase())) {
       if (options?.interactive && options.onWordClick) {
         return (
           <button
@@ -889,6 +835,7 @@ function guessStudyWord(card: QueueCard): string {
 function parseCardBackDetails(card: QueueCard): {
   word: string;
   definitionEn?: string;
+  transcription?: string;
   example?: string;
   whyThisWordHere?: string;
   ruMeanings: string[];
@@ -907,6 +854,7 @@ function parseCardBackDetails(card: QueueCard): {
 
   const word = findValue("Word:") || resolveStudyWord(card);
   const definitionEn = findValue("Definition (EN):");
+  const transcription = findValue("Transcription:");
   const ruLine = findValue("RU meanings:") || findValue("RU:");
   const example = findValue("Example:");
   const whyThisWordHere = findValue("Why this word here:");
@@ -952,6 +900,7 @@ function parseCardBackDetails(card: QueueCard): {
   return {
     word,
     definitionEn,
+    transcription,
     example,
     whyThisWordHere,
     ruMeanings,
@@ -1069,27 +1018,34 @@ function CollapsibleResultList({
   title: string;
   items: SessionResultItem[];
 }) {
+  const [open, setOpen] = useState(false);
   const styleMap: Record<string, string> = {
     "Вспомнил": "border-[#BBF7D0] bg-[#ECFDF5] text-[#166534]",
     "Не вспомнил": "border-[#FECACA] bg-[#FEF2F2] text-[#991B1B]",
-    "Пропустил": "border-[#CBD5E1] bg-[#F8FAFC] text-[#475569]"
+    "Пропустил": "border-[#FDE68A] bg-[#FFFBEB] text-[#92400E]"
   };
   const panelClass = styleMap[title] ?? "border-[#E5E7EB] bg-white text-[#111111]";
 
   return (
-    <details className={`rounded-xl border p-3 ${panelClass}`}>
-      <summary className="cursor-pointer list-none text-sm font-semibold">
-        {title} ({items.length})
+    <details
+      open={open}
+      onToggle={(event) => setOpen((event.currentTarget as HTMLDetailsElement).open)}
+      className={`rounded-xl border p-3 ${panelClass}`}
+    >
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold">
+        <span className="inline-flex items-center gap-2">
+          <span>
+            {title} ({items.length})
+          </span>
+        </span>
+        <span className={`text-base leading-none transition-transform ${open ? "rotate-180" : ""}`}>▾</span>
       </summary>
       {items.length === 0 ? (
         <p className="mt-2 text-xs text-[#64748B]">Пусто</p>
       ) : (
         <ul className="mt-2 space-y-1 text-sm">
           {items.map((item) => (
-            <li
-              key={`${title}-${item.cardId}`}
-              className="rounded-lg bg-[#F5F5F5] px-2 py-1 text-[#374151]"
-            >
+            <li key={`${title}-${item.cardId}`} className="px-1 py-0.5 text-[#374151]">
               {item.card.targetWord || guessStudyWord(item.card)}
             </li>
           ))}

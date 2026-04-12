@@ -14,13 +14,13 @@ const lora = Lora({
 });
 
 export const metadata: Metadata = {
-  title: "AICards",
+  title: "SmartCards",
   description: "Умные карточки для изучения слов в контексте",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "AICards"
+    title: "SmartCards"
   }
 };
 
@@ -39,8 +39,16 @@ export default function RootLayout({
         <PWARegister />
         <header className="sticky top-0 z-20 border-b border-[#E5E7EB] bg-white/95 backdrop-blur">
           <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-            <Link href="/decks" className="text-lg font-semibold text-[#111111]">
-              AICards
+            <Link href="/decks" className="inline-flex items-start text-[#111111]">
+              <span
+                className="text-xl font-bold tracking-[-0.04em]"
+                style={{ fontFamily: "Futura, 'Century Gothic', 'Avenir Next', Inter, Arial, sans-serif" }}
+              >
+                SmartCards
+              </span>
+              <span className="-mt-1 ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[#059669] px-1 text-[8px] font-bold uppercase leading-none text-white">
+                AI
+              </span>
             </Link>
             <TopNavLinks />
           </div>

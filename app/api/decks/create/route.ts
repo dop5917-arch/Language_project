@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
+import { getCurrentUserId } from "@/lib/current-user";
 import { deckSchema } from "@/lib/validations";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(req: Request) {
   try {
+    const userId = await getCurrentUserId();
     const body = await req.json();
     const parsed = deckSchema.safeParse({ name: body?.name });
     if (!parsed.success) {
@@ -15,7 +17,10 @@ export async function POST(req: Request) {
     }
 
     const deck = await prisma.deck.create({
-      data: { name: parsed.data.name },
+      data: {
+        name: parsed.data.name,
+        userId
+      },
       select: { id: true, name: true }
     });
 
