@@ -49,6 +49,7 @@ type Props = {
   enableResume?: boolean;
   deckName?: string;
   modeLabel?: string;
+  persistRatings?: boolean;
 };
 
 type WordMeaningItem = {
@@ -88,7 +89,8 @@ export default function ReviewClient({
   sessionKey,
   enableResume = false,
   deckName,
-  modeLabel
+  modeLabel,
+  persistRatings = true
 }: Props) {
   const cardTextClass =
     "font-card text-[clamp(1.2rem,2.2vw,1.9rem)] font-semibold leading-snug break-words [overflow-wrap:anywhere]";
@@ -208,18 +210,20 @@ export default function ReviewClient({
     setError(null);
 
     try {
-      const res = await fetch("/api/review-rate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          cardId: current.id,
-          rating
-        })
-      });
+      if (persistRatings) {
+        const res = await fetch("/api/review-rate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            cardId: current.id,
+            rating
+          })
+        });
 
-      const data = (await res.json()) as { error?: string };
-      if (!res.ok) {
-        throw new Error(data.error ?? "Failed to rate card");
+        const data = (await res.json()) as { error?: string };
+        if (!res.ok) {
+          throw new Error(data.error ?? "Failed to rate card");
+        }
       }
 
       setDone((value) => value + 1);

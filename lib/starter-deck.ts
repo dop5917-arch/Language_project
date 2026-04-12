@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/prisma";
 
-const STARTER_DECK_NAME = "Демо-колода";
+export const STARTER_DECK_NAME = "Демо-колода";
 
-const STARTER_CARDS = [
+export const STARTER_CARDS = [
   {
     word: "whisper",
     frontText: "He whispered something during the movie so no one heard.\n\nПодсказка: said very quietly so others don’t hear",
@@ -76,6 +76,23 @@ const STARTER_CARDS = [
     level: 3
   }
 ] as const;
+
+export function getPublicStarterQueue() {
+  return STARTER_CARDS.map((card, index) => ({
+    id: `public-demo-${index + 1}`,
+    deckId: "public-demo",
+    deckName: STARTER_DECK_NAME,
+    targetWord: card.word,
+    phonetic: null,
+    audioUrl: null,
+    frontText: card.frontText,
+    backText: card.backText,
+    imageUrl: null,
+    tags: card.tags,
+    level: card.level,
+    isNew: false
+  }));
+}
 
 export async function ensureStarterDeckForUser(userId: string) {
   const existingDecksCount = await prisma.deck.count({

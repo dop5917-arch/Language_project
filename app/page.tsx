@@ -23,7 +23,7 @@ export default function HomePage() {
 
         <section className="grid grid-cols-1 gap-2 md:grid-cols-2">
           <Link
-            href="/auth"
+            href="/demo/review"
             className="flex min-h-11 flex-col justify-center gap-2 rounded-xl bg-[#059669] px-3 py-3 text-white shadow-sm transition hover:opacity-95 md:min-h-[76px]"
           >
             <div className="text-center font-semibold text-white">
@@ -35,7 +35,7 @@ export default function HomePage() {
             </div>
           </Link>
           <Link
-            href="/auth"
+            href="/demo/review"
             className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#E5E7EB] px-3 py-2 text-center font-semibold text-[#111111] shadow-sm transition hover:bg-[#D1D5DB] md:min-h-[76px]"
           >
             <span className="text-sm">Повторение всех колод</span>
@@ -45,7 +45,7 @@ export default function HomePage() {
         <section className="space-y-4">
           <div className="flex items-center">
             <Link
-              href="/auth"
+              href="/demo/deck"
               className="inline-flex items-center rounded-lg border border-[#E5E7EB] bg-white px-3 py-1.5 text-sm font-medium text-[#059669] transition hover:bg-[#F5F5F5]"
             >
               Добавить колоду
@@ -54,7 +54,7 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Link
-              href="/auth"
+              href="/demo/deck"
               className="relative min-h-[132px] rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-[0_4px_12px_rgba(0,0,0,0.04)] transition hover:-translate-y-0.5"
             >
               <div className="relative z-10 space-y-3">
