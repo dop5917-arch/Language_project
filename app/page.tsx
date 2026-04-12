@@ -22,7 +22,10 @@ export default function HomePage() {
         </section>
 
         <section className="grid grid-cols-1 gap-2 md:grid-cols-2">
-          <div className="flex min-h-11 flex-col justify-center gap-2 rounded-xl bg-[#059669] px-3 py-3 text-white shadow-sm md:min-h-[76px]">
+          <Link
+            href="/auth"
+            className="flex min-h-11 flex-col justify-center gap-2 rounded-xl bg-[#059669] px-3 py-3 text-white shadow-sm transition hover:opacity-95 md:min-h-[76px]"
+          >
             <div className="text-center font-semibold text-white">
               <span className="text-sm">Пора повторить (интервальное повторение) • 6</span>
             </div>
@@ -30,21 +33,30 @@ export default function HomePage() {
               <span className="whitespace-nowrap text-white/85">Лимит в день</span>
               <span className="w-16 rounded-lg bg-white/15 px-2 py-1 text-center text-sm text-white">6</span>
             </div>
-          </div>
-          <div className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#E5E7EB] px-3 py-2 text-center font-semibold text-[#111111] shadow-sm md:min-h-[76px]">
+          </Link>
+          <Link
+            href="/auth"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#E5E7EB] px-3 py-2 text-center font-semibold text-[#111111] shadow-sm transition hover:bg-[#D1D5DB] md:min-h-[76px]"
+          >
             <span className="text-sm">Повторение всех колод</span>
-          </div>
+          </Link>
         </section>
 
         <section className="space-y-4">
           <div className="flex items-center">
-            <span className="inline-flex items-center rounded-lg border border-[#E5E7EB] bg-white px-3 py-1.5 text-sm font-medium text-[#059669]">
+            <Link
+              href="/auth"
+              className="inline-flex items-center rounded-lg border border-[#E5E7EB] bg-white px-3 py-1.5 text-sm font-medium text-[#059669] transition hover:bg-[#F5F5F5]"
+            >
               Добавить колоду
-            </span>
+            </Link>
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="relative min-h-[132px] rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
+            <Link
+              href="/auth"
+              className="relative min-h-[132px] rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-[0_4px_12px_rgba(0,0,0,0.04)] transition hover:-translate-y-0.5"
+            >
               <div className="relative z-10 space-y-3">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 break-words text-lg font-semibold leading-tight text-[#111111] sm:text-xl">
@@ -71,7 +83,7 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
-            </div>
+            </Link>
           </div>
         </section>
       </div>
