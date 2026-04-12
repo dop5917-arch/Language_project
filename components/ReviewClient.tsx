@@ -264,7 +264,9 @@ export default function ReviewClient({
 
   function openFrontHint() {
     if (!current) return;
-    const examples = buildFrontHintExamples(current);
+    const front = parseCardFrontDetails(current);
+    const examples = front.hint ? [front.hint] : [];
+    if (examples.length === 0) return;
     setFrontHint((prev) => {
       if (prev && prev.cardId === current.id) {
         return { ...prev, index: (prev.index + 1) % prev.examples.length };
@@ -504,25 +506,41 @@ export default function ReviewClient({
                       {current.phonetic || backDetails?.transcription}
                     </div>
                   ) : null}
-                  <button
-                    type="button"
-                    aria-label="Подсказка"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      openFrontHint();
-                    }}
-                    className="absolute bottom-4 left-4 z-20 rounded-xl bg-[#F5F5F5] px-3 py-2 text-sm font-medium text-[#111111] transition-colors duration-150 hover:bg-[#ECECEC] sm:bottom-6 sm:left-6"
-                  >
-                    Подсказка
-                  </button>
+                  {frontDetails?.hint ? (
+                    <button
+                      type="button"
+                      aria-label="Подсказка"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        openFrontHint();
+                      }}
+                      title="Подсказка"
+                      className="absolute bottom-4 left-4 z-20 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#111111] shadow-sm ring-1 ring-[#E5E7EB] transition-colors duration-150 hover:bg-[#F8FAFC] sm:bottom-6 sm:left-6"
+                    >
+                      <svg
+                        aria-hidden="true"
+                        viewBox="0 0 24 24"
+                        className="h-4.5 w-4.5"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M9 18h6" />
+                        <path d="M10 21h4" />
+                        <path d="M8.2 14.4A6.5 6.5 0 1 1 15.8 14.4c-.7.62-1.16 1.45-1.32 2.35l-.05.25h-4.86l-.05-.25c-.16-.9-.62-1.73-1.32-2.35Z" />
+                      </svg>
+                    </button>
+                  ) : null}
                   <div className="space-y-4">
                     <p className={cardTextClass}>
                       {renderHighlightedText(frontDetails?.sentence || current.frontText, resolveStudyWord(current))}
                     </p>
                   </div>
                   {frontHint && frontHint.cardId === current.id ? (
-                    <div className="absolute inset-x-4 bottom-4 rounded-xl bg-[#F5F5F5] p-3 text-sm text-[#6B7280] sm:inset-x-6 sm:bottom-6">
+                    <div className="absolute inset-x-4 bottom-4 text-sm text-[#6B7280] sm:inset-x-6 sm:bottom-6">
                       {renderHighlightedText(frontHint.examples[frontHint.index], resolveStudyWord(current))}
                     </div>
                   ) : null}
@@ -968,35 +986,6 @@ function buildAgainHelp(card: QueueCard): AgainHelpState {
     definitionIndex: 0,
     imageIndex: 0
   };
-}
-
-function buildFrontHintExamples(card: QueueCard): string[] {
-  const word = resolveStudyWord(card);
-  const back = parseCardBackDetails(card);
-  const front = parseCardFrontDetails(card);
-  const definition = (back.definitionEn ?? "")
-    .replace(/^[a-z]+:\s*/i, "")
-    .replace(/\s+/g, " ")
-    .trim();
-  const shortDefinition = definition.split(" ").slice(0, 10).join(" ");
-  const source = front.sentence.trim().toLowerCase();
-  const base = [
-    front.hint ?? "",
-    shortDefinition
-      ? `In this sentence, "${word}" means: ${shortDefinition}.`
-      : `Focus on what "${word}" is doing in this situation.`,
-    `Think about the situation first, then infer "${word}" from context.`,
-    `Use nearby words in the sentence to guess "${word}" naturally.`,
-    `Imagine this exact scene and match "${word}" to the action or idea.`
-  ];
-  return Array.from(
-    new Set(
-      base
-        .map((line) => line.trim())
-        .filter((line) => line.length > 0)
-        .filter((line) => line.toLowerCase() !== source)
-    )
-  );
 }
 
 function buildBackContextExample(card: QueueCard): string {

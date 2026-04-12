@@ -60,7 +60,7 @@ export default function TopNavLinks() {
   const [createOpen, setCreateOpen] = useState(false);
   const [aiModalOpen, setAiModalOpen] = useState(false);
   const [addCardsMode, setAddCardsMode] = useState<"ai" | "manual" | null>(null);
-  const [timerModalOpen, setTimerModalOpen] = useState(false);
+  const [timerSetupOpen, setTimerSetupOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [howItWorksOpen, setHowItWorksOpen] = useState(false);
@@ -99,7 +99,7 @@ export default function TopNavLinks() {
       setTimerStatus(null);
       return;
     }
-    const leftMs = Math.max(0, (timer.pausedAt ?? timer.endAt) - Date.now());
+    const leftMs = Math.max(0, timer.pausedAt ? timer.endAt - timer.pausedAt : timer.endAt - Date.now());
     const total = Math.max(0, Math.ceil(leftMs / 1000));
     const min = Math.floor(total / 60);
     const sec = total % 60;
@@ -116,7 +116,29 @@ export default function TopNavLinks() {
       startedAt: now,
       endAt: now + durationMin * 60 * 1000
     });
-    setTimerModalOpen(false);
+    setTimerSetupOpen(false);
+  }
+
+  function pauseOrResumeTimer() {
+    const timer = readStudyTimerState();
+    if (!timer) return;
+    const now = Date.now();
+
+    if (timer.pausedAt) {
+      const remaining = Math.max(0, timer.endAt - timer.pausedAt);
+      writeStudyTimerState({
+        ...timer,
+        startedAt: now,
+        endAt: now + remaining,
+        pausedAt: null
+      });
+      return;
+    }
+
+    writeStudyTimerState({
+      ...timer,
+      pausedAt: now
+    });
   }
 
   async function openAddCardsModal() {
@@ -153,6 +175,12 @@ export default function TopNavLinks() {
   }, []);
 
   useEffect(() => {
+    const openHelp = () => setMenuOpen(true);
+    window.addEventListener("open-help-drawer", openHelp);
+    return () => window.removeEventListener("open-help-drawer", openHelp);
+  }, []);
+
+  useEffect(() => {
     void refreshSession();
   }, [pathname]);
 
@@ -173,27 +201,78 @@ export default function TopNavLinks() {
         <button
           type="button"
           onClick={() => void openAddCardsModal()}
-          className="inline-flex h-10 items-center rounded-xl bg-[#059669] px-3 text-sm font-medium text-white shadow-sm hover:bg-[#047857]"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#059669] text-[28px] font-semibold leading-none text-white shadow-sm hover:bg-[#047857]"
+          aria-label="Добавить карточки"
+          title="Добавить карточки"
         >
-          Добавить карточки
+          +
         </button>
 
-        <button
-          type="button"
-          onClick={() => setTimerModalOpen(true)}
-          className="inline-flex h-10 items-center rounded-xl bg-white px-3 text-sm font-medium text-[#111111] shadow-sm ring-1 ring-[#E5E7EB] hover:bg-[#F5F5F5]"
-        >
-          {timerStatus ? `Таймер • ${timerStatus}` : "Таймер"}
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setMenuOpen(true)}
-          className="inline-flex h-10 items-center rounded-xl bg-white px-3 text-sm font-medium text-[#111111] shadow-sm ring-1 ring-[#E5E7EB] hover:bg-[#F5F5F5]"
-          aria-label="Открыть справку"
-        >
-          <span>Справка</span>
-        </button>
+        <div className="inline-flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              if (timerStatus) {
+                writeStudyTimerState(null);
+                setTimerSetupOpen(false);
+                return;
+              }
+              setTimerSetupOpen((prev) => !prev);
+            }}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#111111] shadow-sm ring-1 ring-[#E5E7EB] hover:bg-[#F5F5F5]"
+            aria-label={timerStatus ? `Сбросить таймер: ${timerStatus}` : "Таймер"}
+            title={timerStatus ? `Сбросить таймер: ${timerStatus}` : "Таймер"}
+          >
+            <span className="text-[31px] leading-none">⏱</span>
+          </button>
+          {timerSetupOpen ? (
+            <div className="inline-flex items-center gap-2">
+              <input
+                type="number"
+                min={1}
+                max={180}
+                value={minutesInput}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  if (!/^\d{0,3}$/.test(next)) return;
+                  setMinutesInput(next);
+                }}
+                className="h-10 w-20 rounded-full bg-[#F5F5F5] px-3 text-center text-sm text-[#111111] outline-none ring-1 ring-[#E5E7EB]"
+                inputMode="numeric"
+                aria-label="Количество минут"
+                title="Количество минут"
+              />
+              <button
+                type="button"
+                onClick={startTimer}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#111111] text-base text-white hover:opacity-90"
+                aria-label="Запустить таймер"
+                title="Запустить таймер"
+              >
+                ▶
+              </button>
+            </div>
+          ) : null}
+          {timerStatus ? (
+            <button
+              type="button"
+              onClick={pauseOrResumeTimer}
+              className="inline-flex h-10 items-center rounded-full bg-white px-3 text-sm font-medium text-[#111111] shadow-sm ring-1 ring-[#E5E7EB]"
+              aria-label={
+                timerStatus.startsWith("Пауза")
+                  ? `Продолжить таймер: ${timerStatus}`
+                  : `Пауза: ${timerStatus}`
+              }
+              title={
+                timerStatus.startsWith("Пауза")
+                  ? `Продолжить таймер: ${timerStatus}`
+                  : `Пауза: ${timerStatus}`
+              }
+            >
+              {timerStatus}
+            </button>
+          ) : null}
+        </div>
 
         {sessionUser ? (
           <button
@@ -367,61 +446,6 @@ export default function TopNavLinks() {
                       ))}
                     </div>
                   )}
-                </div>
-              </div>
-            </>,
-            document.body
-          )
-        : null}
-
-      {timerModalOpen && typeof document !== "undefined"
-        ? createPortal(
-            <>
-              <button
-                type="button"
-                onClick={() => setTimerModalOpen(false)}
-                className="fixed inset-0 z-[600] bg-black/30"
-                aria-label="Закрыть таймер"
-              />
-              <div className="fixed inset-0 z-[610] flex items-center justify-center p-4">
-                <div className="w-[92vw] max-w-sm rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-[0_10px_24px_rgba(0,0,0,0.08)]">
-                  <div className="mb-3 flex items-center justify-between gap-3">
-                    <h3 className="text-base font-semibold text-[#111111]">Таймер</h3>
-                    <button
-                      type="button"
-                      onClick={() => setTimerModalOpen(false)}
-                      className="inline-flex h-7 w-7 items-center justify-center rounded bg-red-50 text-sm font-semibold text-red-700 hover:bg-red-100"
-                      aria-label="Закрыть"
-                    >
-                      ✕
-                    </button>
-                  </div>
-
-                  <div className="space-y-3">
-                    <label className="block text-sm text-[#64748B]">
-                      Сколько минут уделить карточкам
-                    </label>
-                    <input
-                      type="number"
-                      min={1}
-                      max={180}
-                      value={minutesInput}
-                      onChange={(e) => {
-                        const next = e.target.value;
-                        if (!/^\d{0,3}$/.test(next)) return;
-                        setMinutesInput(next);
-                      }}
-                      className="w-full rounded-xl bg-[#F5F5F5] px-3 py-2 text-sm text-[#111111] outline-none ring-1 ring-[#E5E7EB]"
-                      inputMode="numeric"
-                    />
-                    <button
-                      type="button"
-                      onClick={startTimer}
-                      className="w-full rounded-xl bg-[#111111] px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
-                    >
-                      Запустить таймер
-                    </button>
-                  </div>
                 </div>
               </div>
             </>,

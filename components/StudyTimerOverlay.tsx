@@ -36,7 +36,7 @@ export default function StudyTimerOverlay() {
 
   const leftMs = useMemo(() => {
     if (!timer) return 0;
-    return (timer.pausedAt ?? timer.endAt) - now;
+    return timer.pausedAt ? timer.endAt - timer.pausedAt : timer.endAt - now;
   }, [timer, now]);
 
   const isPaused = Boolean(timer?.pausedAt);
@@ -66,7 +66,9 @@ export default function StudyTimerOverlay() {
 
   function addTime(minutes: number) {
     if (!timer) return;
-    const base = Math.max(timer.pausedAt ?? timer.endAt, Date.now());
+    const base = timer.pausedAt
+      ? Date.now() + Math.max(0, timer.endAt - timer.pausedAt)
+      : Math.max(timer.endAt, Date.now());
     const next: StudyTimerState = {
       startedAt: Date.now(),
       durationMin: minutes,
@@ -82,7 +84,7 @@ export default function StudyTimerOverlay() {
     if (!timer || timer.pausedAt) return;
     const next: StudyTimerState = {
       ...timer,
-      pausedAt: timer.endAt
+      pausedAt: now
     };
     writeStudyTimerState(next);
     setTimer(next);
@@ -90,7 +92,7 @@ export default function StudyTimerOverlay() {
 
   function resumeTimer() {
     if (!timer?.pausedAt) return;
-    const remaining = Math.max(0, timer.pausedAt - now);
+    const remaining = Math.max(0, timer.endAt - timer.pausedAt);
     const next: StudyTimerState = {
       ...timer,
       startedAt: Date.now(),

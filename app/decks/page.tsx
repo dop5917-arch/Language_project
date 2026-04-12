@@ -1,4 +1,4 @@
-import DecksHeaderCreateButton from "@/components/DecksHeaderCreateButton";
+import DecksHeaderActions from "@/components/DecksHeaderActions";
 import DeckCard from "@/components/DeckCard";
 import HomeActionPanel from "@/components/HomeActionPanel";
 import { getCurrentUserId } from "@/lib/current-user";
@@ -103,7 +103,7 @@ export default async function DecksPage() {
         <div className="space-y-4">
           <section className="px-1">
             <div className="flex items-center">
-              <DecksHeaderCreateButton />
+              <DecksHeaderActions />
             </div>
           </section>
 
