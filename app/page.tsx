@@ -71,15 +71,15 @@ export default function HomePage() {
                   <span className="rounded-xl bg-[#059669] px-3 py-1.5 text-xs font-medium text-white">
                     Продолжить
                   </span>
-                  <div className="text-sm font-medium text-[#6B7280]">Выучено 30%</div>
+                  <div className="text-sm font-medium text-[#6B7280]">Выучено 0%</div>
                 </div>
 
                 <div className="space-y-2">
                   <div className="h-2 w-full overflow-hidden rounded-full bg-[#E5E7EB]">
-                    <div className="h-full w-[30%] bg-[#059669]" />
+                    <div className="h-full w-[0%] bg-[#059669]" />
                   </div>
                   <div className="text-[11px] text-slate-600">
-                    Карточек: 10 • Пройдено: 4 • Выучено: 3
+                    Карточек: 10 • Пройдено: 0 • Выучено: 0
                   </div>
                 </div>
               </div>
