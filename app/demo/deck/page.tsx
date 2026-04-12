@@ -64,9 +64,12 @@ export default function PublicDemoDeckPage() {
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="rounded-xl bg-[#059669] px-3 py-1.5 text-xs font-medium text-white">
+                <Link
+                  href="/demo/review"
+                  className="rounded-xl bg-[#059669] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#047857]"
+                >
                   Продолжить
-                </span>
+                </Link>
                 <div className="text-sm font-medium text-[#6B7280]">Выучено 0%</div>
               </div>
 
