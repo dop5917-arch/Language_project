@@ -17,12 +17,6 @@ export default function HomePage() {
               >
                 Войти или создать аккаунт
               </Link>
-              <Link
-                href="/decks"
-                className="rounded-xl border border-[#E5E7EB] bg-white px-4 py-2 text-sm font-medium text-[#111111] hover:bg-[#F5F5F5]"
-              >
-                Открыть приложение
-              </Link>
             </div>
           </div>
         </section>
