@@ -223,7 +223,22 @@ export default function TopNavLinks() {
             aria-label={timerStatus ? `Сбросить таймер: ${timerStatus}` : "Таймер"}
             title={timerStatus ? `Сбросить таймер: ${timerStatus}` : "Таймер"}
           >
-            <span className="text-[31px] leading-none">⏱</span>
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              className="h-8 w-8"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="13" r="7" />
+              <path d="M12 13V9.5" />
+              <path d="M12 13l2.5 1.5" />
+              <path d="M9.5 2h5" />
+              <path d="M12 6V4" />
+            </svg>
           </button>
           {timerSetupOpen ? (
             <div className="inline-flex items-center gap-2">

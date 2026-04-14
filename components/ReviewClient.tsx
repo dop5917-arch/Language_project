@@ -463,21 +463,12 @@ export default function ReviewClient({
   return (
     <div className="space-y-0 rounded-2xl bg-[#FAFAFA] md:p-0">
       <div className="w-full">
-        <section className="mx-auto w-full max-w-[1400px] px-3 py-8 sm:px-4 lg:px-6">
-          <div className="space-y-8">
-            <header className="space-y-2">
-              <h1 className="text-[30px] font-semibold leading-tight text-[#111111]">
-                {deckName || current.deckName || "Карточки"}
-              </h1>
-              <p className="text-[14px] text-[#6B7280]">
-                {modeLabel || "Сессия повторения"}
-              </p>
-              <p className="text-[14px] text-[#6B7280]">
-                {position} / {queue.length}
-              </p>
-            </header>
-
-            <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5 shadow-[0_4px_12px_rgba(0,0,0,0.04)] sm:p-8">
+        <section className="mx-auto w-full max-w-[1400px] px-3 py-4 sm:px-4 sm:py-5 lg:px-6">
+          <div className="space-y-4">
+            <div className="text-[14px] text-[#6B7280]">
+              {position} / {queue.length}
+            </div>
+            <div className="p-1 sm:p-2">
 
             {current.phonetic ? (
               <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl bg-[#F1F5F9] px-3 py-2 text-sm text-[#0F172A]">
@@ -510,7 +501,7 @@ export default function ReviewClient({
                       {current.phonetic || backDetails?.transcription}
                     </div>
                   ) : null}
-                  {frontDetails?.hint ? (
+                  {frontDetails?.hint && !(frontHint && frontHint.cardId === current.id) ? (
                     <button
                       type="button"
                       aria-label="Подсказка"
