@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import ReviewClient from "@/components/ReviewClient";
@@ -53,15 +52,7 @@ export default async function ReviewPage({ params, searchParams }: Props) {
   const resume = searchParams?.resume === "1";
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#E5E7EB]">
-        <h1 className="text-2xl font-semibold text-[#0F172A]">
-          {onlyNew ? "Повторение: только новые" : includeNew ? "Повторение: по расписанию + новые" : "Повторение: по расписанию"}
-        </h1>
-        <Link href={`/decks/${deck.id}/today`} className="text-sm text-[#059669] hover:text-[#047857]">
-          Назад
-        </Link>
-      </div>
+    <div>
       <ReviewClient
         deckId={deck.id}
         deckName={deck.name}

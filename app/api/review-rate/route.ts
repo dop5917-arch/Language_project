@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { applyRating } from "@/lib/srs";
 import { ratingSchema } from "@/lib/validations";
 
@@ -11,6 +12,8 @@ export async function POST(req: NextRequest) {
     }
 
     const reviewState = await applyRating(parsed.data.cardId, parsed.data.rating, new Date());
+    revalidatePath("/decks");
+    revalidatePath("/review/all");
     return NextResponse.json({
       ok: true,
       reviewState: {

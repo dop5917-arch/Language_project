@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Lora } from "next/font/google";
 import Link from "next/link";
 import PWARegister from "@/components/PWARegister";
+import StudyTimerFinishNotifier from "@/components/StudyTimerFinishNotifier";
 import TopNavLinks from "@/components/TopNavLinks";
 import "./globals.css";
 
@@ -52,6 +53,7 @@ export default function RootLayout({
           </div>
         </header>
         <main className="mx-auto max-w-5xl px-4 py-6">{children}</main>
+        <StudyTimerFinishNotifier />
       </body>
     </html>
   );

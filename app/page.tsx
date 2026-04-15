@@ -1,4 +1,5 @@
 import Link from "next/link";
+import HelpDrawerButton from "@/components/HelpDrawerButton";
 import PublicDemoActionPanel from "@/components/PublicDemoActionPanel";
 import { STARTER_CARDS } from "@/lib/starter-deck";
 
@@ -28,13 +29,14 @@ export default function HomePage() {
         <PublicDemoActionPanel dueToday={cardsCount} />
 
         <section className="space-y-4">
-          <div className="flex items-center">
+          <div className="flex flex-wrap items-center gap-2">
             <Link
               href="/demo/deck"
               className="inline-flex items-center rounded-lg border border-[#E5E7EB] bg-white px-3 py-1.5 text-sm font-medium text-[#059669] transition hover:bg-[#F5F5F5]"
             >
               Добавить колоду
             </Link>
+            <HelpDrawerButton />
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

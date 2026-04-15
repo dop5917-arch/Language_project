@@ -342,7 +342,6 @@ export default function TopNavLinks() {
                 <div className="space-y-2">
                   <MenuButton
                     label="О приложении"
-                    description="Философия приложения и подход к карточкам"
                     onClick={() => {
                       setMenuOpen(false);
                       setAboutOpen(true);
@@ -350,7 +349,6 @@ export default function TopNavLinks() {
                   />
                   <MenuButton
                     label="Как работает приложение"
-                    description="Пошаговая схема создания карточек"
                     onClick={() => {
                       setMenuOpen(false);
                       setHowItWorksOpen(true);
@@ -358,7 +356,6 @@ export default function TopNavLinks() {
                   />
                   <MenuButton
                     label="Где взять слова"
-                    description="Готовая платформа со списками слов"
                     onClick={() => {
                       setMenuOpen(false);
                       setWhereToGetWordsOpen(true);
@@ -812,11 +809,9 @@ export default function TopNavLinks() {
 
 function MenuButton({
   label,
-  description,
   onClick
 }: {
   label: string;
-  description: string;
   onClick: () => void | Promise<void>;
 }) {
   return (
@@ -826,7 +821,6 @@ function MenuButton({
       className="w-full rounded-2xl bg-[#F8FAFC] px-4 py-3 text-left ring-1 ring-[#E5E7EB] transition-colors hover:bg-[#F1F5F9]"
     >
       <div className="text-sm font-semibold text-[#111111]">{label}</div>
-      <div className="mt-1 text-sm text-[#64748B]">{description}</div>
     </button>
   );
 }

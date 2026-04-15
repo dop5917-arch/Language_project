@@ -465,8 +465,8 @@ export default function ReviewClient({
       <div className="w-full">
         <section className="mx-auto w-full max-w-[1400px] px-3 py-4 sm:px-4 sm:py-5 lg:px-6">
           <div className="space-y-4">
-            <div className="text-[14px] text-[#6B7280]">
-              {position} / {queue.length}
+            <div className="text-[14px] font-normal text-[#6B7280]">
+              {modeLabel || deckName || current.deckName || "Повторение"} • {position} / {queue.length}
             </div>
             <div className="p-1 sm:p-2">
 

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import HelpDrawerButton from "@/components/HelpDrawerButton";
 import { STARTER_DECK_NAME, STARTER_CARDS } from "@/lib/starter-deck";
 
 export default function PublicDemoDeckPage() {
@@ -14,12 +15,15 @@ export default function PublicDemoDeckPage() {
               Публичная демо-колода. Здесь можно попробовать интерфейс без регистрации.
             </p>
           </div>
-          <Link
-            href="/"
-            className="rounded-xl bg-white px-3 py-2 text-sm text-[#111111] ring-1 ring-[#E5E7EB] hover:bg-[#F5F5F5]"
-          >
-            На главную
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <HelpDrawerButton />
+            <Link
+              href="/"
+              className="rounded-lg border border-[#E5E7EB] bg-white px-3 py-1.5 text-sm font-medium text-[#111111] hover:bg-[#F5F5F5]"
+            >
+              На главную
+            </Link>
+          </div>
         </div>
       </div>
 
