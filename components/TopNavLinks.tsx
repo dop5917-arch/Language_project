@@ -56,6 +56,7 @@ type StatsResponse = {
 export default function TopNavLinks() {
   const pathname = usePathname();
   const router = useRouter();
+  const isPublicDemoRoute = pathname === "/" || pathname.startsWith("/demo");
   const [menuOpen, setMenuOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [aiModalOpen, setAiModalOpen] = useState(false);
@@ -198,15 +199,17 @@ export default function TopNavLinks() {
   return (
     <>
       <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => void openAddCardsModal()}
-          className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#059669] text-[28px] font-semibold leading-none text-white shadow-sm hover:bg-[#047857]"
-          aria-label="Добавить карточки"
-          title="Добавить карточки"
-        >
-          +
-        </button>
+        {!isPublicDemoRoute ? (
+          <button
+            type="button"
+            onClick={() => void openAddCardsModal()}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#059669] text-[28px] font-semibold leading-none text-white shadow-sm hover:bg-[#047857]"
+            aria-label="Добавить карточки"
+            title="Добавить карточки"
+          >
+            +
+          </button>
+        ) : null}
 
         <div className="inline-flex items-center gap-2">
           <button
@@ -260,11 +263,20 @@ export default function TopNavLinks() {
               <button
                 type="button"
                 onClick={startTimer}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#111111] text-base text-white hover:opacity-90"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#059669] text-white shadow-sm hover:bg-[#047857]"
                 aria-label="Запустить таймер"
                 title="Запустить таймер"
               >
-                ▶
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  className="h-4 w-4 translate-x-[1px] shrink-0"
+                  fill="currentColor"
+                >
+                  <path d="M8 6.5v11l9-5.5-9-5.5Z" />
+                </svg>
               </button>
             </div>
           ) : null}

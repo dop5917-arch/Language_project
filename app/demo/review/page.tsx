@@ -14,6 +14,8 @@ export default function PublicDemoReviewPage() {
         returnHref="/demo/deck"
         returnLabel="Назад к демо-колоде"
         persistRatings={false}
+        enableResume
+        sessionKey="demo:public-review"
       />
     </div>
   );

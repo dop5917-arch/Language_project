@@ -89,12 +89,12 @@ export default function HomeActionPanel({
             className="text-center font-semibold text-white hover:opacity-90"
           >
             <span className="text-sm">
-              Пора повторить <span className="text-white">(интервальное повторение)</span>
+              Пора повторить
               {currentDueToday > 0 ? ` • ${currentDueToday}` : ""}
             </span>
           </Link>
           <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
-            <span className="whitespace-nowrap text-white/85">Лимит в день</span>
+            <span className="whitespace-nowrap text-white/85">Установить лимит на сегодня</span>
             <input
               type="number"
               min={1}

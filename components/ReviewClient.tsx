@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import GuidedOnboarding from "@/components/GuidedOnboarding";
 
 type Rating = "Again" | "Hard" | "Good" | "Easy";
 
@@ -159,6 +160,7 @@ export default function ReviewClient({
   const finalLabel = returnLabel ?? "На главную";
   const isAgainHelpOpenForCurrent = Boolean(againHelp && current && againHelp.card.id === current.id);
   const progressStorageKey = `review-progress:${sessionKey ?? deckId}`;
+  const reviewOnboardingKey = deckId === "public-demo" ? "onboarding:demo-review:v1" : "onboarding:app-review:v1";
 
   useEffect(() => {
     if (!enableResume || !mounted) return;
@@ -184,15 +186,17 @@ export default function ReviewClient({
   useEffect(() => {
     if (!enableResume || !mounted) return;
     try {
-      if (index >= queue.length) {
-        window.localStorage.removeItem(progressStorageKey);
-        return;
-      }
+      const nextProgress = JSON.stringify({
+        index: Math.max(0, Math.min(queue.length, index)),
+        queueIds: queue.map((item) => item.id)
+      });
       window.localStorage.setItem(
         progressStorageKey,
-        JSON.stringify({
-          index,
-          queueIds: queue.map((item) => item.id)
+        nextProgress
+      );
+      window.dispatchEvent(
+        new CustomEvent("review-progress-updated", {
+          detail: { key: progressStorageKey, value: nextProgress }
         })
       );
     } catch {
@@ -269,7 +273,7 @@ export default function ReviewClient({
   function openFrontHint() {
     if (!current) return;
     const front = parseCardFrontDetails(current);
-    const examples = front.hint ? [front.hint] : [];
+    const examples = front.hints;
     if (examples.length === 0) return;
     setFrontHint((prev) => {
       if (prev && prev.cardId === current.id) {
@@ -462,6 +466,32 @@ export default function ReviewClient({
 
   return (
     <div className="space-y-0 rounded-2xl bg-[#FAFAFA] md:p-0">
+      <GuidedOnboarding
+        storageKey={reviewOnboardingKey}
+        enabled={queue.length > 0}
+        steps={[
+          {
+            selector: '[data-guide="review-card"]',
+            title: "Карточка",
+            description: "Нажми на карточку, чтобы перевернуть её и увидеть обратную сторону."
+          },
+          {
+            selector: '[data-guide="review-hint"]',
+            title: "Подсказки",
+            description: "Здесь находятся подсказки. Нажми на лампочку, чтобы открыть их."
+          },
+          {
+            selector: '[data-guide="review-ratings"]',
+            title: "Оценка ответа",
+            description: "Кнопками «Не знаю» и «Знаю» ты отмечаешь, вспомнил слово или нет."
+          },
+          {
+            selector: '[data-guide="review-nav"]',
+            title: "Навигация",
+            description: "Здесь можно перейти между карточками вперёд и назад."
+          }
+        ]}
+      />
       <div className="w-full">
         <section className="mx-auto w-full max-w-[1400px] px-3 py-4 sm:px-4 sm:py-5 lg:px-6">
           <div className="space-y-4">
@@ -479,6 +509,7 @@ export default function ReviewClient({
 
             <div className="mt-4 grid gap-2 md:grid-cols-[minmax(0,1fr)_150px] md:items-stretch">
               <div
+                data-guide="review-card"
                 role="button"
                 tabIndex={0}
                 onClick={() => setFlipped((prev) => !prev)}
@@ -501,8 +532,9 @@ export default function ReviewClient({
                       {current.phonetic || backDetails?.transcription}
                     </div>
                   ) : null}
-                  {frontDetails?.hint && !(frontHint && frontHint.cardId === current.id) ? (
+                  {frontDetails && frontDetails.hints.length > 0 && !(frontHint && frontHint.cardId === current.id) ? (
                     <button
+                      data-guide="review-hint"
                       type="button"
                       aria-label="Подсказка"
                       onClick={(e) => {
@@ -511,12 +543,14 @@ export default function ReviewClient({
                         openFrontHint();
                       }}
                       title="Подсказка"
-                      className="absolute bottom-4 left-4 z-20 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#111111] shadow-sm ring-1 ring-[#E5E7EB] transition-colors duration-150 hover:bg-[#F8FAFC] sm:bottom-6 sm:left-6"
+                      className="absolute bottom-5 left-5 z-30 inline-flex h-10 w-10 touch-manipulation items-center justify-center rounded-full bg-white/95 text-[#111111] shadow-sm ring-1 ring-[#D1D5DB] transition-colors duration-150 hover:bg-[#F8FAFC] sm:bottom-6 sm:left-6"
                     >
                       <svg
                         aria-hidden="true"
                         viewBox="0 0 24 24"
-                        className="h-4.5 w-4.5"
+                        width="18"
+                        height="18"
+                        className="h-[18px] w-[18px] shrink-0"
                         fill="none"
                         stroke="currentColor"
                         strokeWidth="1.8"
@@ -535,9 +569,25 @@ export default function ReviewClient({
                     </p>
                   </div>
                   {frontHint && frontHint.cardId === current.id ? (
-                    <div className="absolute inset-x-4 bottom-4 text-sm text-[#6B7280] sm:inset-x-6 sm:bottom-6">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setFrontHint((prev) => {
+                          if (!prev || prev.cardId !== current.id || prev.examples.length <= 1) return prev;
+                          return { ...prev, index: (prev.index + 1) % prev.examples.length };
+                        });
+                      }}
+                      className="absolute inset-x-4 bottom-4 text-left text-sm text-[#6B7280] sm:inset-x-6 sm:bottom-6"
+                    >
                       {renderHighlightedText(frontHint.examples[frontHint.index], resolveStudyWord(current))}
-                    </div>
+                      {frontHint.examples.length > 1 ? (
+                        <span className="mt-2 block text-[11px] text-[#94A3B8]">
+                          {frontHint.index + 1} / {frontHint.examples.length}
+                        </span>
+                      ) : null}
+                    </button>
                   ) : null}
                 </div>
 
@@ -617,7 +667,7 @@ export default function ReviewClient({
               </div>
             </div>
 
-              <div className="grid grid-cols-2 gap-2 md:grid-cols-1 md:gap-2 md:py-0.5">
+              <div data-guide="review-ratings" className="grid grid-cols-2 gap-2 md:grid-cols-1 md:gap-2 md:py-0.5">
                 {ratingControls.map((control) => (
                   <button
                     key={flipped ? control.label : `front-${control.label}`}
@@ -640,7 +690,7 @@ export default function ReviewClient({
               />
             </div>
 
-            <div className="mt-4 flex items-center justify-center gap-2">
+            <div data-guide="review-nav" className="mt-4 flex items-center justify-center gap-2">
               <button
                 type="button"
                 onClick={goPrev}
@@ -926,16 +976,24 @@ function parseCardBackDetails(card: QueueCard): {
 
 function parseCardFrontDetails(card: QueueCard): {
   sentence: string;
-  hint?: string;
+  hints: string[];
 } {
   const raw = card.frontText ?? "";
   const parts = raw.split(/\n\s*\n/);
   const sentence = parts[0]?.trim() || raw.trim();
   const hintLine = parts.slice(1).join(" ").trim();
-  const hint = hintLine.replace(/^(hint|подсказка):\s*/i, "").trim();
+  const hintRaw = hintLine.replace(/^(hint|подсказка):\s*/i, "").trim();
+  const hints = Array.from(
+    new Set(
+      hintRaw
+        .split(/\s*(?:\|\|\||\|\||&&|\n|;)\s*/g)
+        .map((hint) => hint.trim())
+        .filter((hint) => hint.length > 0)
+    )
+  );
   return {
     sentence,
-    hint: hint || undefined
+    hints
   };
 }
 

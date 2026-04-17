@@ -1,6 +1,8 @@
 import Link from "next/link";
 import HelpDrawerButton from "@/components/HelpDrawerButton";
+import PublicAddDeckPromptButton from "@/components/PublicAddDeckPromptButton";
 import PublicDemoActionPanel from "@/components/PublicDemoActionPanel";
+import PublicDemoDeckCard from "@/components/PublicDemoDeckCard";
 import { STARTER_CARDS } from "@/lib/starter-deck";
 
 export default function HomePage() {
@@ -30,50 +32,12 @@ export default function HomePage() {
 
         <section className="space-y-4">
           <div className="flex flex-wrap items-center gap-2">
-            <Link
-              href="/demo/deck"
-              className="inline-flex items-center rounded-lg border border-[#E5E7EB] bg-white px-3 py-1.5 text-sm font-medium text-[#059669] transition hover:bg-[#F5F5F5]"
-            >
-              Добавить колоду
-            </Link>
+            <PublicAddDeckPromptButton />
             <HelpDrawerButton />
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <article className="relative min-h-[132px] rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-[0_4px_12px_rgba(0,0,0,0.04)] transition hover:-translate-y-0.5">
-              <div className="relative z-10 space-y-3">
-                <div className="flex items-start justify-between gap-2">
-                  <Link
-                    href="/demo/deck"
-                    className="min-w-0 break-words text-lg font-semibold leading-tight text-[#111111] sm:text-xl"
-                  >
-                    Демо-колода
-                  </Link>
-                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F5F5] text-sm font-semibold text-[#059669] ring-1 ring-[#E5E7EB]">
-                    i
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <Link
-                    href="/demo/review"
-                    className="rounded-xl bg-[#059669] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#047857]"
-                  >
-                    Продолжить
-                  </Link>
-                  <div className="text-sm font-medium text-[#6B7280]">Выучено 0%</div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-[#E5E7EB]">
-                    <div className="h-full w-[0%] bg-[#059669]" />
-                  </div>
-                  <div className="text-[11px] text-slate-600">
-                    Карточек: {cardsCount} • Пройдено: 0 • Выучено: 0
-                  </div>
-                </div>
-              </div>
-            </article>
+            <PublicDemoDeckCard cardsCount={cardsCount} />
           </div>
         </section>
       </div>

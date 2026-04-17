@@ -75,6 +75,7 @@ type AiCardPayload = {
   phonetic?: string;
   transcription?: string;
   front_sentence?: string;
+  front_hints?: string[] | string;
   front_hint?: string;
   definition_en_main?: string;
   back_sentence?: string;
@@ -185,7 +186,7 @@ Critical requirement:
 
 Task for each target word/item:
 1) Pick ONE best front sentence (natural, common, recognizable, real-life).
-2) Add a short indirect clue from the situation for the front side.
+2) Add 2-3 short indirect clues from the situation for the front side.
 3) Provide ONE main learner-friendly English definition.
 4) Provide 4-7 common Russian meanings.
    - If no target meaning is given, use the most popular meaning first and then other common meanings.
@@ -227,15 +228,16 @@ Quality rules:
 - Back sentence must be a different context from front
 - No school-style meta language
 - Never mention: English, word, vocabulary, dictionary, translate, translation, learn, study, language, grammar
-- "front_hint" must be a short indirect clue from the situation
-- "front_hint" must be short (6-14 words), concrete, and context-based
-- "front_hint" must describe the situation, role, intention, effect, or scene
-- "front_hint" must help guess the word indirectly from context
-- "front_hint" must NOT be a direct definition
+- "front_hints" must be an array of 2-3 short indirect clues from the situation
+- clues must go from softer to more explicit
+- each clue must be short (6-14 words), concrete, and context-based
+- each clue must describe the situation, role, intention, effect, or scene
+- each clue must help guess the word indirectly from context
+- clues must NOT be direct definitions
 - do not define the word
 - do not explain the word in dictionary style
 - do not start with "means", "is", "to ...", "someone who", "something that"
-- "front_hint" should NOT repeat the definition text
+- "front_hints" should NOT repeat the definition text
 - avoid vague hints like "common word", "real conversation", "everyday use"
 - bad hint example: "heard this in real conversation yesterday"
 - bad hint example: "to speak very quietly" (this is a definition)
@@ -265,7 +267,11 @@ Return strict JSON only in this shape:
     {
       "word": "whisper",
       "front_sentence": "He whispered my name so nobody else could hear.",
-      "front_hint": "he says it so quietly others barely hear it",
+      "front_hints": [
+        "he says it so quietly others barely hear it",
+        "this is softer than normal speech",
+        "people use this when they do not want others to hear"
+      ],
       "definition_en_main": "to speak very quietly so only nearby people hear",
       "ru_meanings": ["шептать", "прошептать", "говорить шепотом"],
       "back_sentence": "She whispered the address while they stood near the door.",
@@ -669,6 +675,14 @@ export default function SmartAddClient({ deckId }: Props) {
       cleaned.push({
         word,
         front_sentence: normalizeText(item.front_sentence ?? item.front ?? ""),
+        front_hints: uniqueStrings([
+          ...ensureArray(item.front_hints)
+            .flatMap((value) => value.split(/\s*(?:\|\|\||\|\||&&|\n|;)\s*/g))
+            .map((value) => value.trim()),
+          ...ensureArray(item.front_hint)
+            .flatMap((value) => value.split(/\s*(?:\|\|\||\|\||&&|\n|;)\s*/g))
+            .map((value) => value.trim())
+        ]),
         front_hint: normalizeText(item.front_hint ?? item.why_this_word_here ?? ""),
         definition_en_main: normalizeText(item.definition_en_main ?? item.definition_en ?? ""),
         back_sentence: normalizeText(item.back_sentence ?? item.back ?? ""),
@@ -745,7 +759,18 @@ export default function SmartAddClient({ deckId }: Props) {
           ...(item.front_sentence ? [item.front_sentence] : []),
           ...(item.front_sentence_options ?? [])
         ])[0] ?? "";
-        const frontHint = normalizeText(item.front_hint ?? item.why_this_word_here ?? "");
+        const frontHints = uniqueStrings([
+          ...ensureArray(item.front_hints)
+            .flatMap((value) => value.split(/\s*(?:\|\|\||\|\||&&|\n|;)\s*/g))
+            .map((value) => value.trim()),
+          ...ensureArray(item.front_hint)
+            .flatMap((value) => value.split(/\s*(?:\|\|\||\|\||&&|\n|;)\s*/g))
+            .map((value) => value.trim()),
+          ...ensureArray(item.why_this_word_here)
+            .flatMap((value) => value.split(/\s*(?:\|\|\||\|\||&&|\n|;)\s*/g))
+            .map((value) => value.trim())
+        ]).slice(0, 3);
+        const frontHint = frontHints.join(" ||| ");
         const front = frontHint ? `${frontBase}\n\nПодсказка: ${frontHint}` : frontBase;
         const backExample = uniqueStrings([
           ...(item.back ? [item.back] : []),
@@ -1090,7 +1115,7 @@ export default function SmartAddClient({ deckId }: Props) {
               onChange={(e) => setAiJsonInput(e.target.value)}
               rows={12}
                 className="mt-2 w-full rounded-lg border px-3 py-2 font-mono text-xs"
-              placeholder='{"cards":[{"word":"whisper","front_sentence":"He whispered my name so nobody else could hear.","front_hint":"very quiet voice so others nearby miss it","definition_en_main":"to speak very quietly so only nearby people hear","ru_meanings":["шептать","говорить шепотом"],"back_sentence":"She whispered the address while they stood near the door.","why_this_word_here":"because he speaks quietly to avoid being overheard","synonyms":["murmur","speak softly"],"emoji_cue":["🤫","👂"],"frequency":4,"usage_domain":["everyday","conversation"]}]}'
+              placeholder='{"cards":[{"word":"whisper","front_sentence":"He whispered my name so nobody else could hear.","front_hints":["he says it so quietly others barely hear it","this is softer than normal speech","people use this when they do not want others to hear"],"definition_en_main":"to speak very quietly so only nearby people hear","ru_meanings":["шептать","говорить шепотом"],"back_sentence":"She whispered the address while they stood near the door.","why_this_word_here":"because he speaks quietly to avoid being overheard","synonyms":["murmur","speak softly"],"emoji_cue":["🤫","👂"],"frequency":4,"usage_domain":["everyday","conversation"]}]}'
             />
             <div className="mt-2 flex flex-wrap gap-2">
               <button
