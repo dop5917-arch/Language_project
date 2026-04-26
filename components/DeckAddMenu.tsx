@@ -5,9 +5,15 @@ import { useEffect, useRef, useState } from "react";
 
 type Props = {
   deckId: string;
+  label?: string;
+  className?: string;
 };
 
-export default function DeckAddMenu({ deckId }: Props) {
+export default function DeckAddMenu({
+  deckId,
+  label = "+",
+  className = "rounded border px-3 py-2 text-sm font-semibold"
+}: Props) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
 
@@ -31,26 +37,26 @@ export default function DeckAddMenu({ deckId }: Props) {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-label="Открыть меню добавления"
-        className="rounded border px-3 py-2 text-sm font-semibold"
+        className={className}
       >
-        +
+        {label}
       </button>
 
       {open ? (
         <div className="absolute right-0 z-20 mt-2 w-64 space-y-2 rounded-lg border bg-white p-3 shadow-lg">
           <Link
-            href={`/decks/${deckId}/add`}
-            onClick={() => setOpen(false)}
-            className="block rounded border px-3 py-2 text-sm"
-          >
-            Создать карточку
-          </Link>
-          <Link
             href={`/decks/${deckId}/add-smart`}
             onClick={() => setOpen(false)}
             className="block rounded border px-3 py-2 text-sm"
           >
-            Создать с AI
+            Добавить карточки с ИИ
+          </Link>
+          <Link
+            href={`/decks/${deckId}/add`}
+            onClick={() => setOpen(false)}
+            className="block rounded border px-3 py-2 text-sm"
+          >
+            Добавить карточки вручную
           </Link>
         </div>
       ) : null}

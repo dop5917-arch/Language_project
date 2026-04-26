@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
+import type { Prisma } from "@prisma/client";
+import DeckAddMenu from "@/components/DeckAddMenu";
 import { getCurrentUserId } from "@/lib/current-user";
 import { startOfLocalDay } from "@/lib/date";
 import { prisma } from "@/lib/prisma";
@@ -10,28 +12,47 @@ type Props = {
   params: { deckId: string };
 };
 
+type DeckWithCards = Prisma.DeckGetPayload<{
+  include: {
+    cards: {
+      include: { reviewState: true };
+      orderBy: { createdAt: "asc" };
+    };
+  };
+}>;
+
 export const dynamic = "force-dynamic";
 
 export default async function DeckDetailPage({ params }: Props) {
   const today = startOfLocalDay(new Date());
   const dueLimit = normalizeDueLimit(cookies().get(REVIEW_DUE_LIMIT_COOKIE)?.value);
-  const userId = await getCurrentUserId();
-  const deck = await prisma.deck.findFirst({
-    where: { id: params.deckId, userId },
-    include: {
-      cards: {
-        include: { reviewState: true },
-        orderBy: { createdAt: "asc" }
+  let deck: DeckWithCards | null = null;
+  let dbError: string | null = null;
+
+  try {
+    const userId = await getCurrentUserId();
+    deck = await prisma.deck.findFirst({
+      where: { id: params.deckId, userId },
+      include: {
+        cards: {
+          include: { reviewState: true },
+          orderBy: { createdAt: "asc" }
+        }
       }
-    }
-  });
+    });
+  } catch (error) {
+    dbError = error instanceof Error ? error.message : "Database is unavailable";
+  }
+
+  if (dbError) {
+    return (
+      <section className="rounded-xl border border-[#E5E7EB] bg-[#FEF2F2] p-4 text-sm text-[#EF4444]">
+        База данных временно недоступна. Проверь подключение к интернету и `DATABASE_URL` (Neon), затем обнови страницу.
+      </section>
+    );
+  }
 
   if (!deck) notFound();
-
-  await prisma.deck.update({
-    where: { id: deck.id },
-    data: { updatedAt: new Date() }
-  });
 
   const dueTodayCount = deck.cards.filter(
     (card) => card.reviewState && card.reviewState.dueDate <= today
@@ -82,12 +103,11 @@ export default async function DeckDetailPage({ params }: Props) {
               </Link>
             </>
           ) : (
-            <Link
-              href={`/decks/${deck.id}/add-smart`}
+            <DeckAddMenu
+              deckId={deck.id}
+              label="Добавить карточки"
               className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700"
-            >
-              Сначала создать карточку
-            </Link>
+            />
           )}
         </div>
       </div>
